@@ -71,3 +71,7 @@ include(":05-file-transfer-cloud:transfer-file-cloud")
 
 // modules for code samples ------------------------------------------------------------------------
 include(":other:custom-runtime")
+include("BlockchainCatalog:blockchain-catalog-api")
+include("BlockchainCatalog:blockchain-catalog-listener")
+include("BlockchainCatalog:blockchain-catalog-prosumer")
+findProject(":BlockchainCatalog:blockchain-catalog-prosumer")?.name = "blockchain-catalog-prosumer"
