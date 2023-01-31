@@ -1,7 +1,7 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener.model;
 
 
-import org.eclipse.edc.connector.api.datamanagement.policy.model.PolicyDefinitionResponseDto;
+import org.eclipse.edc.connector.api.management.policy.model.PolicyDefinitionResponseDto;
 
 public class TokenizedPolicyDefinition {
     String token_id;

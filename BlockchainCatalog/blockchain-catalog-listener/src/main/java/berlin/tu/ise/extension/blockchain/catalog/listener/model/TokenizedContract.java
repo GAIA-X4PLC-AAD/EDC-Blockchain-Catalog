@@ -1,6 +1,6 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener.model;
 
-import org.eclipse.edc.connector.api.datamanagement.contractdefinition.model.ContractDefinitionResponseDto;
+import org.eclipse.edc.connector.api.management.contractdefinition.model.ContractDefinitionResponseDto;
 
 public class TokenizedContract {
     String token_id;

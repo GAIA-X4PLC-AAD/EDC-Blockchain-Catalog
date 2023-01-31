@@ -1,7 +1,7 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener.model;
 
 
-import org.eclipse.edc.connector.api.datamanagement.asset.model.AssetEntryDto;
+import org.eclipse.edc.connector.api.management.asset.model.AssetEntryDto;
 
 public class TokenziedAsset {
     String token_id;

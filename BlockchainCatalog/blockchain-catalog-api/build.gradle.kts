@@ -18,7 +18,7 @@ dependencies {
     implementation("$groupId:iam-mock:$edcVersion")
 
     implementation("$groupId:auth-tokenbased:$edcVersion")
-    implementation("$groupId:data-management-api:$edcVersion")
+    implementation("$groupId:management-api:$edcVersion")
 
 
     //implementation("$groupId:federated-catalog-api:\${VERSION}")
@@ -28,7 +28,8 @@ dependencies {
 
     implementation("$groupId:ids:$edcVersion")
 
-    implementation(project(":04.1-file-transfer-listener:listener"))
+    api("$groupId:control-plane-spi:$edcVersion")
+    implementation("$groupId:http:$edcVersion")
     implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
 
 

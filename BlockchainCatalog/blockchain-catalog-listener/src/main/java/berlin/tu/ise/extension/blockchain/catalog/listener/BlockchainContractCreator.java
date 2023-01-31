@@ -5,7 +5,7 @@ import berlin.tu.ise.extension.blockchain.catalog.listener.model.TokenizedContra
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.api.model.CriterionDto;
-import org.eclipse.edc.connector.api.datamanagement.contractdefinition.model.ContractDefinitionResponseDto;
+import org.eclipse.edc.connector.api.management.contractdefinition.model.ContractDefinitionResponseDto;
 import org.eclipse.edc.connector.contract.spi.definition.observe.ContractDefinitionListener;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.spi.monitor.Monitor;

@@ -4,9 +4,9 @@ package berlin.tu.ise.extension.blockchain.catalog.listener;
 
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.eclipse.edc.connector.api.datamanagement.asset.model.AssetEntryDto;
-import org.eclipse.edc.connector.api.datamanagement.asset.model.AssetRequestDto;
-import org.eclipse.edc.connector.api.datamanagement.asset.model.DataAddressDto;
+import org.eclipse.edc.connector.api.management.asset.model.AssetEntryDto;
+import org.eclipse.edc.connector.api.management.asset.model.AssetRequestDto;
+import org.eclipse.edc.connector.api.management.asset.model.DataAddressDto;
 import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.monitor.Monitor;

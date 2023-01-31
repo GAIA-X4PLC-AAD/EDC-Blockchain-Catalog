@@ -3,7 +3,7 @@ package berlin.tu.ise.extension.blockchain.catalog.listener;
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.edc.connector.api.datamanagement.policy.model.PolicyDefinitionResponseDto;
+import org.eclipse.edc.connector.api.management.policy.model.PolicyDefinitionResponseDto;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 import org.eclipse.edc.connector.policy.spi.observe.PolicyDefinitionListener;
 import org.eclipse.edc.spi.monitor.Monitor;

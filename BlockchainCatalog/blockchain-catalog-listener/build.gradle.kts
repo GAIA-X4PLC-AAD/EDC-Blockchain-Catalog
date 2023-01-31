@@ -13,11 +13,13 @@ dependencies {
 
     implementation("$groupId:http:$edcVersion")
 
+    //implementation("$groupId:api-observability:$edcVersion")
+
     implementation("$groupId:configuration-filesystem:$edcVersion")
     implementation("$groupId:iam-mock:$edcVersion")
 
     implementation("$groupId:auth-tokenbased:$edcVersion")
-    implementation("$groupId:data-management-api:$edcVersion")
+    implementation("$groupId:management-api:$edcVersion")
 
 
     //implementation("$groupId:federated-catalog-api:\${VERSION}")
