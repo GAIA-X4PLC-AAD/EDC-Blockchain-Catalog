@@ -26,6 +26,7 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     @Inject
     private AssetService assetService;
 
+
     // Needs to be injected to get Access to PolicyDefinitionObservable
     @Inject
     private PolicyDefinitionService policyDefinitionService;
@@ -59,6 +60,7 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex);
         eventRouter.register(blockchainAssetCreator); // asynchronous dispatch
 
+        eventRouter.register(new BlockchainPolicyCreator(monitor, policyDefinitionService));
 
         //assetObservable.registerListener(new BlockchainAssetCreator(monitor, assetService, assetIndex));
 
@@ -67,7 +69,8 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         String idsWebhookAddress = context.getSetting("ids.webhook.address", "http://localhost:8282");
         // append /api/v1/ids/data to the webhook address to get the IDS data endpoint
         idsWebhookAddress = idsWebhookAddress + "/api/v1/ids/data";
-        //contractObservable.registerListener(new BlockchainContractCreator(monitor, idsWebhookAddress));
+
+        eventRouter.register(new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress));
 
     }
 
