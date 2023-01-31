@@ -22,6 +22,7 @@ import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
 import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessObservable;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.asset.AssetIndex;
+import org.eclipse.edc.spi.event.EventRouter;
 import org.eclipse.edc.spi.observe.asset.AssetObservable;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
@@ -46,6 +47,9 @@ public class TransferListenerExtension implements ServiceExtension {
     @Inject
     private AssetIndex assetIndex;
 
+    @Inject
+    private EventRouter eventRouter;
+
 
     @Override
     public void initialize(ServiceExtensionContext context) {
@@ -53,24 +57,33 @@ public class TransferListenerExtension implements ServiceExtension {
 
         //var assetObservable = ((AssetServiceImpl) assetService).observable;
 
-        var assetObservable = context.getService(AssetObservable.class);
+        //var assetObservable = context.getService(AssetObservable.class);
 
-        var policyObservable = context.getService(PolicyDefinitionObservable.class);
+        //var policyObservable = context.getService(PolicyDefinitionObservable.class);
 
-        var contractObservable = context.getService(ContractDefinitionObservable.class);
+        //var contractObservable = context.getService(ContractDefinitionObservable.class);
 
         var monitor = context.getMonitor();
 
 
 
-        transferProcessObservable.registerListener(new MarkerFileCreator(monitor));
-        assetObservable.registerListener(new BlockchainAssetCreator(monitor, assetService, assetIndex));
 
-        policyObservable.registerListener(new BlockchainPolicyCreator(monitor));
+
+        transferProcessObservable.registerListener(new MarkerFileCreator(monitor));
+        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex);
+        eventRouter.register(new BlockchainAssetCreationSubscriber(blockchainAssetCreator, monitor)); // asynchronous dispatch
+        eventRouter.registerSync(new BlockchainAssetCreationSubscriber(blockchainAssetCreator, monitor)); // synchronous dispatch
+
+
+        //assetObservable.registerListener(blockchainAssetCreator);
+
+        //policyObservable.registerListener(new BlockchainPolicyCreator(monitor));
 
         String idsWebhookAddress = context.getSetting("ids.webhook.address", "http://localhost:8282");
         // append /api/v1/ids/data to the webhook address to get the IDS data endpoint
         idsWebhookAddress = idsWebhookAddress + "/api/v1/ids/data";
-        contractObservable.registerListener(new BlockchainContractCreator(monitor, idsWebhookAddress));
+        //contractObservable.registerListener(new BlockchainContractCreator(monitor, idsWebhookAddress));
+
+
     }
 }
