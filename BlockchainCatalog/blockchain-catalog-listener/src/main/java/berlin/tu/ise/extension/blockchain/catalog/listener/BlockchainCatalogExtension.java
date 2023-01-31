@@ -9,6 +9,7 @@ import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessObservable;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.asset.AssetIndex;
+import org.eclipse.edc.spi.event.EventRouter;
 import org.eclipse.edc.spi.observe.asset.AssetObservable;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
@@ -35,6 +36,9 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     @Inject
     private AssetIndex assetIndex;
 
+    @Inject
+    private EventRouter eventRouter;
+
 
     @Override
     public void initialize(ServiceExtensionContext context) {
@@ -52,9 +56,10 @@ public class BlockchainCatalogExtension implements ServiceExtension {
 
         var monitor = context.getMonitor();
 
+        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex);
+        eventRouter.register(blockchainAssetCreator); // asynchronous dispatch
 
 
-        transferProcessObservable.registerListener(new MarkerFileCreator(monitor));
         //assetObservable.registerListener(new BlockchainAssetCreator(monitor, assetService, assetIndex));
 
         //policyObservable.registerListener(new BlockchainPolicyCreator(monitor));

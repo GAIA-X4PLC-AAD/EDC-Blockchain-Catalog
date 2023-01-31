@@ -9,6 +9,9 @@ import org.eclipse.edc.connector.api.management.asset.model.AssetRequestDto;
 import org.eclipse.edc.connector.api.management.asset.model.DataAddressDto;
 import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.spi.asset.AssetIndex;
+import org.eclipse.edc.spi.event.Event;
+import org.eclipse.edc.spi.event.EventSubscriber;
+import org.eclipse.edc.spi.event.asset.AssetCreated;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.observe.asset.AssetListener;
 import org.eclipse.edc.spi.types.domain.DataAddress;
@@ -16,7 +19,7 @@ import org.eclipse.edc.spi.types.domain.asset.Asset;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class BlockchainAssetCreator implements AssetListener {
+public class BlockchainAssetCreator implements EventSubscriber {
 
 
     private final Monitor monitor;
@@ -35,7 +38,16 @@ public class BlockchainAssetCreator implements AssetListener {
     }
 
     @Override
-    public void created(Asset asset) {
+    public void on(Event event) {
+        if (!(event instanceof AssetCreated)) {
+            return;
+        }
+        // the event only returns the asset id, so we need to get the asset from the index
+        AssetCreated assetCreated = (AssetCreated) event;
+        String assetId = assetCreated.getPayload().getAssetId();
+        monitor.debug("AssetCreated event triggered for assetId: " + assetId);
+        Asset asset = assetIndex.findById(assetId);
+
         String jsonString = transformToJSON(asset);
         ReturnObject returnObject = BlockchainHelper.sendToAssetSmartContract(jsonString, monitor);
         if(returnObject == null) {
@@ -44,6 +56,7 @@ public class BlockchainAssetCreator implements AssetListener {
             System.out.printf("[%s] Created Asset %s and minted it successfully with the hash: %s", this.getClass().getSimpleName(), asset.getId(), returnObject.getHash());
         }
     }
+
 
     private String transformToJSON(Asset asset) {
 
