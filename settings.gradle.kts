@@ -42,32 +42,7 @@ dependencyResolutionManagement {
     }
 }
 
-include(":01-basic-connector")
-include(":02-health-endpoint")
-include(":03-configuration")
 
-include(":04.0-file-transfer:file-transfer-consumer")
-include(":04.0-file-transfer:file-transfer-provider")
-include(":04.0-file-transfer:file-transfer-integration-tests")
-include(":04.0-file-transfer:transfer-file-local")
-include(":04.0-file-transfer:status-checker")
-
-include(":04.1-file-transfer-listener:file-transfer-listener-consumer")
-include(":04.1-file-transfer-listener:file-transfer-listener-integration-tests")
-include(":04.1-file-transfer-listener:listener")
-
-include(":04.2-modify-transferprocess:api")
-include(":04.2-modify-transferprocess:modify-transferprocess-consumer")
-include(":04.2-modify-transferprocess:modify-transferprocess-integration-tests")
-include(":04.2-modify-transferprocess:simulator")
-include(":04.2-modify-transferprocess:watchdog")
-
-include(":04.3-open-telemetry:open-telemetry-consumer")
-include(":04.3-open-telemetry:open-telemetry-provider")
-
-include(":05-file-transfer-cloud:cloud-transfer-consumer")
-include(":05-file-transfer-cloud:cloud-transfer-provider")
-include(":05-file-transfer-cloud:transfer-file-cloud")
 
 // modules for code samples ------------------------------------------------------------------------
 include(":other:custom-runtime")
