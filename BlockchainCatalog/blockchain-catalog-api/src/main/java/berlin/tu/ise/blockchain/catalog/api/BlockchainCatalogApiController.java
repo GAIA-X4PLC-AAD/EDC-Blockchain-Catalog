@@ -21,6 +21,9 @@ import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 
 import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 import static java.lang.String.format;
@@ -77,8 +80,10 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
             monitor.info(format("[%s] fetching contract %s", this.getClass().getSimpleName(), contract.getId()));
 
             ContractOffer contractOffer = getContractOfferFromContractDefinitionDto(contract, assetEntryDtoList, policyDefinitionResponseDtoList);
+            if (contractOffer != null) {
+                contractOfferList.add(contractOffer);
+            }
 
-            contractOfferList.add(contractOffer);
         }
 
 
@@ -116,6 +121,14 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
             return null;
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime threeYearsFronNow = LocalDateTime.now().plusYears(3);
+        // convert LocalDateTime to ZonedDateTime, with default system zone id
+        ZonedDateTime nowZonedDateTime = now.atZone(ZoneId.systemDefault());
+        ZonedDateTime threeYearsFronNowZonedDateTime = threeYearsFronNow.atZone(ZoneId.systemDefault());
+
+
+
         Asset asset = Asset.Builder.newInstance().id(assetEntryDto.getAsset().getId()).properties(assetEntryDto.getAsset().getProperties()).build();
         Policy policy = Policy.Builder.newInstance()
                 .target(policyDefinitionResponseDto.getPolicy().getTarget())
@@ -125,7 +138,8 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
                 .permissions(policyDefinitionResponseDto.getPolicy().getPermissions())
                 .extensibleProperties(policyDefinitionResponseDto.getPolicy().getExtensibleProperties())
                 .duties(policyDefinitionResponseDto.getPolicy().getObligations()).build();
-        return  ContractOffer.Builder.newInstance().asset(asset).policy(policy).id(contract.getId()).provider(URI.create("http://localhost:8181")).build(); // TODO: remove static value! - contract.getDataUrl()
+
+        return  ContractOffer.Builder.newInstance().asset(asset).policy(policy).id(contract.getId()).provider(URI.create("http://localhost:8181")).contractStart(nowZonedDateTime).contractEnd(threeYearsFronNowZonedDateTime).build(); // TODO: remove static value! - contract.getDataUrl()
     }
 
     private PolicyDefinitionResponseDto getPolicyById(String policyId, List<PolicyDefinitionResponseDto> policyDefinitionResponseDtoList) {

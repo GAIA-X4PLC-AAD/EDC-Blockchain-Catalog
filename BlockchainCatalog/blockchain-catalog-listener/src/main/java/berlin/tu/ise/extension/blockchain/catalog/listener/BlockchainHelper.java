@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.connector.api.management.asset.model.AssetEntryDto;
-import org.eclipse.edc.connector.api.management.contractdefinition.model.ContractDefinitionResponseDto;
 import org.eclipse.edc.connector.api.management.policy.model.PolicyDefinitionResponseDto;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -39,7 +38,7 @@ public class BlockchainHelper {
 
     public static ReturnObject sendToSmartContract(String jsonString, Monitor monitor, String smartContractUrl) {
         monitor.debug(String.format("[%s] Sending data to Smart Contract, this may take some time ...", BlockchainHelper.class.getSimpleName()));
-        String returnJson = "";
+        String returnJson;
         ReturnObject returnObject = null;
         try{
             URL url = new URL(smartContractUrl);
@@ -53,7 +52,7 @@ public class BlockchainHelper {
             OutputStream stream = http.getOutputStream();
             stream.write(out);
 
-            BufferedReader br = null;
+            BufferedReader br;
             if (100 <= http.getResponseCode() && http.getResponseCode() <= 399) {
                 br = new BufferedReader(new InputStreamReader(http.getInputStream()));
             } else {
@@ -97,17 +96,15 @@ public class BlockchainHelper {
                     StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = br.readLine()) != null) {
-                        sb.append(line+"\n");
+                        sb.append(line).append("\n");
                     }
                     br.close();
 
                     return mapper.readValue(sb.toString(), TokenziedAsset.class).getTokenData();
             }
 
-        } catch (MalformedURLException ex) {
-           System.out.println(ex);
         } catch (IOException ex) {
-            System.out.println(ex);
+           System.out.println(ex);
         } finally {
             if (c != null) {
                 try {
@@ -125,7 +122,7 @@ public class BlockchainHelper {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        List<TokenizedContract> tokenziedContractList = new ArrayList<>();
+        List<TokenizedContract> tokenziedContractList;
         List<ContractOfferDto> contractOfferDtoList = new ArrayList<>();
 
         HttpURLConnection c = null;
@@ -146,13 +143,14 @@ public class BlockchainHelper {
                     StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = br.readLine()) != null) {
-                        sb.append(line+"\n");
+                        sb.append(line).append("\n");
                     }
                     br.close();
 
-                    System.out.println(sb.toString());
+                    System.out.println(sb);
 
-                    tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedContract>>(){});
+                    tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<>() {
+                    });
 
 
                     for (TokenizedContract tokenizedContract: tokenziedContractList) {
@@ -192,7 +190,7 @@ public class BlockchainHelper {
         ContractOfferDto contractDefinitionResponseDto = null;
         ObjectMapper mapper = new ObjectMapper();
 
-        List<TokenizedContract> tokenziedContractList = new ArrayList<>();
+        List<TokenizedContract> tokenziedContractList;
         List<ContractOfferDto> contractDefinitionResponseDtoList = new ArrayList<>();
 
         HttpURLConnection c = null;
@@ -213,11 +211,12 @@ public class BlockchainHelper {
                     StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = br.readLine()) != null) {
-                        sb.append(line+"\n");
+                        sb.append(line).append("\n");
                     }
                     br.close();
 
-                    tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedContract>>(){});
+                    tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<>() {
+                    });
 
                     for (TokenizedContract tokenizedContract: tokenziedContractList) {
                         if(tokenizedContract != null) {
@@ -272,7 +271,7 @@ public class BlockchainHelper {
                     StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = br.readLine()) != null) {
-                        sb.append(line+"\n");
+                        sb.append(line).append("\n");
                     }
                     br.close();
 
@@ -298,7 +297,7 @@ public class BlockchainHelper {
     public static List<AssetEntryDto> getAllAssetsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
 
-        List<TokenziedAsset> tokenziedAssetList = new ArrayList<>();
+        List<TokenziedAsset> tokenziedAssetList;
         List<AssetEntryDto> assetResponseDtoList = new ArrayList<>();
 
         HttpURLConnection c = null;
@@ -319,7 +318,7 @@ public class BlockchainHelper {
                     StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = br.readLine()) != null) {
-                        sb.append(line+"\n");
+                        sb.append(line).append("\n");
                     }
                     br.close();
 
