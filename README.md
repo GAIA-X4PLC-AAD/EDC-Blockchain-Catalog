@@ -11,7 +11,7 @@ This repository provides a samples implementation of a blockchain based catalog 
 Run the dockerized blockchain broker as a standalone container:
 
 ```docker
-docker run -it --network host edc_blockchain_catalog
+docker run -it --network host julianlegler/edc_blockchain_catalog
 ```
 
 Create your own docker container / change the config:
