@@ -1,59 +1,28 @@
-# EDC Samples
+# EDC - Blockchain Catalog
 
-This repository provides samples for the Eclipse Dataspace Components (EDC) project, that aim to support the
-onboarding process for new community members. The samples are incremental, so e.g. sample 3 uses code from sample 2,
-and serve as a step-by-step guide for getting familiar with the project. The code and a detailed documentation
-for each sample reside in the respective module.
+This repository provides a samples implementation of a blockchain based catalog for the Eclipse Dataspace Components (EDC). This extension is developed and maintained at the Chair for [Information System Engineering](https://www.tu.berlin/ise) at the Technische Universität Berlin in context of the [GAIA-X 4 Product Life Cycle - Arcoss Automated Driving](https://www.gaia-x4plcaad.info/) project.
 
-The samples assume a working knowledge of the EDC nomenclature. If you do not know about the EDC nomenclature we
-strongly advise reading the documentation and/or watching the introductory video.
+## Run the Blockchain Catalog
 
-Also, a working knowledge of Git, Gradle, Java and HTTP is presumed.
+> _The complete code can be found in `BlockchainCatalog`._
 
-## Getting started
+### Docker
 
-We'll assume that you've just checked out the samples code base and have Java 11+ installed on your development machine.
-If not, please download and install JDK 11+ for your OS.
+Run the dockerized blockchain broker as a standalone container:
 
-Command examples in this document will use the `bash` syntax and use Unix-style paths, but any other shell should be
-fine as well. If you're using Windows you either need to adapt the paths or use WSL2.
+```docker
+docker run -it --network host edc_blockchain_catalog
+```
 
-Please simply follow the following links to the respective samples.
+Create your own docker container / change the config:
+1. Rebuild the BlockchainCatalog if needed: `./gradlew BlockchainCatalog:blockchain-catalog-prosumer:build`
+2. Configure the Config file [config.properties](BlockchainCatalog/blockchain-catalog-prosumer/config.properties)
+3. Rebuild the Docker Image: `docker build -t edc_blockchain_catalog .`
 
-> _Please note that the entire Eclipse Dataspace Components project is under heavy development, so things are likely
-> to change significantly in the future. Be sure to check back regularly to stay updated!_
+Apply custom configuration by adding the edc config paramters from the config.properties as environment parameters to the run command. Example:
 
-## [Example 1: Run a simple connector](01-basic-connector/README.md)
+`docker run -it --network host -e WEB_HTTP_IDS_PORT=8183 -e WEB_HTTP_IDS_PATH=/api/v2/ids edc_blockchain_catalog`
 
-> _The complete sample code can be found in `01-basic-connector`._
-
-## [Example 2: Write your first extension](02-health-endpoint/README.md)
-
-> _The complete sample code can be found in `02-health-endpoint`._
-
-## [Example 3: Use the file-system based configuration](03-configuration/README.md)
-
-> _The complete sample code can be found in `03-configuration`._
-
-## [Example 4.0: Implement a simple file transfer](04.0-file-transfer/README.md)
-
-> _The complete sample code can be found in `04.0-file-transfer`._
-
-## [Example 4.1: Implement a simple file transfer listener](04.1-file-transfer-listener/README.md)
-
-> _The complete sample code can be found in `04.1-file-transfer-listener`._
-
-## [Example 4.2: Modify a TransferProcess](04.2-modify-transferprocess/README.md)
-
-> _The complete sample code can be found in `04.2-modify-transferprocess`._
-
-## [Example 4.3: Open Telemetry](04.3-open-telemetry/README.md)
-
-> _The complete sample code can be found in `04.3-open-telemetry`._
-
-## [Example 5: Improve the file transfer](05-file-transfer-cloud/README.md)
-
-> _The complete sample code can be found in `05-file-transfer-cloud`._
 
 ## Contributing
 
