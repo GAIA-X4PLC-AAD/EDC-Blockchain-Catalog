@@ -24,16 +24,16 @@ import java.util.List;
 
 public class BlockchainHelper {
 
-    public static ReturnObject sendToAssetSmartContract(String jsonString, Monitor monitor) {
-        return sendToSmartContract(jsonString, monitor, "http://localhost:3000/mint/asset");
+    public static ReturnObject sendToAssetSmartContract(String jsonString, Monitor monitor, String edcInterfaceUrl) {
+        return sendToSmartContract(jsonString, monitor, edcInterfaceUrl + "/mint/asset");
     }
 
-    public static ReturnObject sendToPolicySmartContract(String jsonString, Monitor monitor) {
-        return sendToSmartContract(jsonString, monitor, "http://localhost:3000/mint/policy");
+    public static ReturnObject sendToPolicySmartContract(String jsonString, Monitor monitor, String edcInterfaceUrl) {
+        return sendToSmartContract(jsonString, monitor, edcInterfaceUrl + "/mint/policy");
     }
 
-    public static ReturnObject sendToContractSmartContract(String jsonString, Monitor monitor) {
-        return sendToSmartContract(jsonString, monitor, "http://localhost:3000/mint/contract");
+    public static ReturnObject sendToContractSmartContract(String jsonString, Monitor monitor, String edcInterfaceUrl) {
+        return sendToSmartContract(jsonString, monitor, edcInterfaceUrl + "/mint/contract");
     }
 
     public static ReturnObject sendToSmartContract(String jsonString, Monitor monitor, String smartContractUrl) {
@@ -74,13 +74,13 @@ public class BlockchainHelper {
         return returnObject;
     }
 
-    public static AssetEntryDto getAssetWithIdFromSmartContract(String id) {
+    public static AssetEntryDto getAssetWithIdFromSmartContract(String id, String edcInterfaceUrl) {
         Asset asset = null;
         ObjectMapper mapper = new ObjectMapper();
 
         HttpURLConnection c = null;
         try {
-            URL u = new URL("http://localhost:3000/asset/"+id);
+            URL u = new URL(edcInterfaceUrl + "/asset/"+id);
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
             c.setRequestProperty("Content-length", "0");
@@ -117,7 +117,7 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static List<ContractOfferDto> getAllContractDefinitionsFromSmartContract() {
+    public static List<ContractOfferDto> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl) {
         ContractOfferDto contractOfferDto = null;
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -127,7 +127,7 @@ public class BlockchainHelper {
 
         HttpURLConnection c = null;
         try {
-            URL u = new URL("http://localhost:3000/all/contract");
+            URL u = new URL(edcInterfaceUrl + "/all/contract");
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
             c.setRequestProperty("Content-length", "0");
@@ -185,7 +185,7 @@ public class BlockchainHelper {
     /**
      * @return HashMap of Source URIs and Lists of ContractDefinitionResponseDto
      */
-    public static HashMap<String, List<ContractOfferDto>> getAllContractDefinitionsFromSmartContractGroupedBySource() {
+    public static HashMap<String, List<ContractOfferDto>> getAllContractDefinitionsFromSmartContractGroupedBySource(String edcInterfaceUrl) {
         HashMap<String, List<ContractOfferDto>> returnMap = new HashMap<>();
         ContractOfferDto contractDefinitionResponseDto = null;
         ObjectMapper mapper = new ObjectMapper();
@@ -195,7 +195,7 @@ public class BlockchainHelper {
 
         HttpURLConnection c = null;
         try {
-            URL u = new URL("http://localhost:3000/all/contract");
+            URL u = new URL(edcInterfaceUrl + "/all/contract");
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
             c.setRequestProperty("Content-length", "0");
@@ -249,13 +249,13 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static PolicyDefinitionResponseDto getPolicyWithIdFromSmartContract(String id) {
+    public static PolicyDefinitionResponseDto getPolicyWithIdFromSmartContract(String id, String edcInterfaceUrl) {
         PolicyDefinition policy = null;
         ObjectMapper mapper = new ObjectMapper();
 
         HttpURLConnection c = null;
         try {
-            URL u = new URL("http://localhost:3000/policy/"+id);
+            URL u = new URL(edcInterfaceUrl + "/policy/"+id);
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
             c.setRequestProperty("Content-length", "0");
@@ -294,7 +294,7 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static List<AssetEntryDto> getAllAssetsFromSmartContract() {
+    public static List<AssetEntryDto> getAllAssetsFromSmartContract(String edcInterfaceUrl) {
         ObjectMapper mapper = new ObjectMapper();
 
         List<TokenziedAsset> tokenziedAssetList;
@@ -302,7 +302,7 @@ public class BlockchainHelper {
 
         HttpURLConnection c = null;
         try {
-            URL u = new URL("http://localhost:3000/all/asset");
+            URL u = new URL(edcInterfaceUrl + "/all/asset");
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
             c.setRequestProperty("Content-length", "0");
@@ -352,7 +352,7 @@ public class BlockchainHelper {
 
     }
 
-    public static List<PolicyDefinitionResponseDto> getAllPolicyDefinitionsFromSmartContract() {
+    public static List<PolicyDefinitionResponseDto> getAllPolicyDefinitionsFromSmartContract(String edcInterfaceUrl) {
         ObjectMapper mapper = new ObjectMapper();
 
         List<TokenizedPolicyDefinition> tokenizedPolicyDefinitionList = new ArrayList<>();
@@ -360,7 +360,7 @@ public class BlockchainHelper {
 
         HttpURLConnection c = null;
         try {
-            URL u = new URL("http://localhost:3000/all/policy");
+            URL u = new URL(edcInterfaceUrl + "/all/policy");
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
             c.setRequestProperty("Content-length", "0");

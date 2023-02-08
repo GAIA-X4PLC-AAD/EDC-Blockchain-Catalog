@@ -6,16 +6,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.api.model.CriterionDto;
 import org.eclipse.edc.connector.api.management.contractdefinition.model.ContractDefinitionResponseDto;
-import org.eclipse.edc.connector.contract.spi.definition.observe.ContractDefinitionListener;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
 import org.eclipse.edc.spi.event.Event;
 import org.eclipse.edc.spi.event.EventSubscriber;
-import org.eclipse.edc.spi.event.asset.AssetCreated;
 import org.eclipse.edc.spi.event.contractdefinition.ContractDefinitionCreated;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.query.Criterion;
-import org.eclipse.edc.spi.types.domain.asset.Asset;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -27,10 +24,13 @@ public class BlockchainContractCreator implements EventSubscriber {
 
     private final ContractDefinitionService contractDefinitionService;
 
-    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress) {
+    private final String edcInterfaceUrl;
+
+    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl) {
         this.monitor = monitor;
         this.idsWebhookAddress = idsWebhookAddress;
         this.contractDefinitionService = contractDefinitionService;
+        this.edcInterfaceUrl = edcInterfaceUrl;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class BlockchainContractCreator implements EventSubscriber {
         ContractDefinition contractDefinition = contractDefinitionService.findById(contractId);
 
         String jsonString = transformToJSON(contractDefinition);
-        ReturnObject returnObject = BlockchainHelper.sendToContractSmartContract(jsonString, monitor);
+        ReturnObject returnObject = BlockchainHelper.sendToContractSmartContract(jsonString, monitor, edcInterfaceUrl);
         if(returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Contract Definition creation of the Contract with id " + contractDefinition.getId());
         } else {

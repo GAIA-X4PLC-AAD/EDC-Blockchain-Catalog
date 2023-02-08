@@ -4,13 +4,10 @@ import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.connector.api.management.policy.model.PolicyDefinitionResponseDto;
-import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
-import org.eclipse.edc.connector.policy.spi.observe.PolicyDefinitionListener;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
 import org.eclipse.edc.spi.event.Event;
 import org.eclipse.edc.spi.event.EventSubscriber;
-import org.eclipse.edc.spi.event.contractdefinition.ContractDefinitionCreated;
 import org.eclipse.edc.spi.event.policydefinition.PolicyDefinitionCreated;
 import org.eclipse.edc.spi.monitor.Monitor;
 
@@ -18,9 +15,13 @@ public class BlockchainPolicyCreator implements EventSubscriber {
 
     private final Monitor monitor;
     private final PolicyDefinitionService policyDefinitionService;
-    public BlockchainPolicyCreator(Monitor monitor, PolicyDefinitionService policyDefinitionService) {
+
+    private final String edcInterfaceUrl;
+
+    public BlockchainPolicyCreator(Monitor monitor, PolicyDefinitionService policyDefinitionService, String edcInterfaceUrl) {
         this.monitor = monitor;
         this.policyDefinitionService = policyDefinitionService;
+        this.edcInterfaceUrl = edcInterfaceUrl;
     }
 
 
@@ -36,7 +37,7 @@ public class BlockchainPolicyCreator implements EventSubscriber {
 
         String jsonString = transformToJSON(policyDefinition);
         System.out.println(jsonString);
-        ReturnObject returnObject = BlockchainHelper.sendToPolicySmartContract(jsonString, monitor);
+        ReturnObject returnObject = BlockchainHelper.sendToPolicySmartContract(jsonString, monitor, edcInterfaceUrl);
         if(returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Policy creation of the Policy with id " + policyDefinition.getId());
         } else {

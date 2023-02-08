@@ -13,7 +13,6 @@ import org.eclipse.edc.spi.event.Event;
 import org.eclipse.edc.spi.event.EventSubscriber;
 import org.eclipse.edc.spi.event.asset.AssetCreated;
 import org.eclipse.edc.spi.monitor.Monitor;
-import org.eclipse.edc.spi.observe.asset.AssetListener;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 
@@ -29,11 +28,13 @@ public class BlockchainAssetCreator implements EventSubscriber {
 
     private final AssetIndex assetIndex;
 
-    public BlockchainAssetCreator(Monitor monitor, AssetService assetService, AssetIndex assetIndex) {
+    private final String edcInterfaceUrl;
+
+    public BlockchainAssetCreator(Monitor monitor, AssetService assetService, AssetIndex assetIndex, String edcInterfaceUrl) {
         this.monitor = monitor;
         this.assetService = assetService;
         this.assetIndex = assetIndex;
-
+        this.edcInterfaceUrl = edcInterfaceUrl;
         this.stateCounter = 0;
     }
 
@@ -49,7 +50,7 @@ public class BlockchainAssetCreator implements EventSubscriber {
         Asset asset = assetIndex.findById(assetId);
 
         String jsonString = transformToJSON(asset);
-        ReturnObject returnObject = BlockchainHelper.sendToAssetSmartContract(jsonString, monitor);
+        ReturnObject returnObject = BlockchainHelper.sendToAssetSmartContract(jsonString, monitor, edcInterfaceUrl);
         if(returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Asset creation of the Asset with id " + asset.getId());
         } else {

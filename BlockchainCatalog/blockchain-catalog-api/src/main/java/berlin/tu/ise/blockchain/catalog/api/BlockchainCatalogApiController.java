@@ -35,8 +35,11 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
     private Monitor monitor;
 
-    public BlockchainCatalogApiController(Monitor monitor) {
+    private String edcBlockchainInterfaceUrl;
+
+    public BlockchainCatalogApiController(Monitor monitor, String edcBlockchainInterfaceUrl) {
         this.monitor = monitor;
+        this.edcBlockchainInterfaceUrl = edcBlockchainInterfaceUrl;
     }
 
 
@@ -57,14 +60,14 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         //List<ContractOffer> contractOfferListFromStorage = (List<ContractOffer>) BlockchainHelper.getAllContractDefinitionsFromSmartContract();
         //monitor.info(format("Fetched %d enties from local cataloge storage", contractOfferListFromStorage.size()));
 
-        List<AssetEntryDto> assetEntryDtoList = BlockchainHelper.getAllAssetsFromSmartContract();
+        List<AssetEntryDto> assetEntryDtoList = BlockchainHelper.getAllAssetsFromSmartContract(edcBlockchainInterfaceUrl);
         monitor.info(String.format("[%s] fetched %d Assets from Smart Contract", this.getClass().getSimpleName(), assetEntryDtoList.size()));
 
 
-        List<PolicyDefinitionResponseDto> policyDefinitionResponseDtoList = BlockchainHelper.getAllPolicyDefinitionsFromSmartContract();
+        List<PolicyDefinitionResponseDto> policyDefinitionResponseDtoList = BlockchainHelper.getAllPolicyDefinitionsFromSmartContract(edcBlockchainInterfaceUrl);
         monitor.info(String.format("[%s] fetched %d Policies from Smart Contract", this.getClass().getSimpleName(), policyDefinitionResponseDtoList.size()));
 
-        List<ContractOfferDto> contractOfferDtoList = BlockchainHelper.getAllContractDefinitionsFromSmartContract();
+        List<ContractOfferDto> contractOfferDtoList = BlockchainHelper.getAllContractDefinitionsFromSmartContract(edcBlockchainInterfaceUrl);
 
         // HashMap<String, List<ContractOfferDto>> contractDefinitionResponseDtoGroupedBySource = BlockchainHelper.getAllContractDefinitionsFromSmartContractGroupedBySource();
 
