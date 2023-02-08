@@ -30,12 +30,15 @@ public class BlockchainAssetCreator implements EventSubscriber {
 
     private final String edcInterfaceUrl;
 
-    public BlockchainAssetCreator(Monitor monitor, AssetService assetService, AssetIndex assetIndex, String edcInterfaceUrl) {
+    private final String providerUrl;
+
+    public BlockchainAssetCreator(Monitor monitor, AssetService assetService, AssetIndex assetIndex, String edcInterfaceUrl, String providerUrl) {
         this.monitor = monitor;
         this.assetService = assetService;
         this.assetIndex = assetIndex;
         this.edcInterfaceUrl = edcInterfaceUrl;
         this.stateCounter = 0;
+        this.providerUrl = providerUrl;
     }
 
     @Override
@@ -68,6 +71,9 @@ public class BlockchainAssetCreator implements EventSubscriber {
         ObjectMapper mapper = new ObjectMapper();
         // Get the dataAddress because its not stored in the Asset Object for some reasons ...
         DataAddress dataAddress = assetIndex.resolveForAsset(asset.getId());
+
+        // Adding provider ids (own) url to the asset properties, so that the consumer nows with whom to initiate a contract negotiation
+        asset.getProperties().put("asset:provider:url", providerUrl);
 
         // Using the already created Dto Classes from the Web API Datamangement Extension
         AssetRequestDto assetRequestDto = AssetRequestDto.Builder.newInstance().id(asset.getId()).properties(asset.getProperties()).build();
