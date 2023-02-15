@@ -72,8 +72,10 @@ public class BlockchainAssetCreator implements EventSubscriber {
         // Get the dataAddress because its not stored in the Asset Object for some reasons ...
         DataAddress dataAddress = assetIndex.resolveForAsset(asset.getId());
 
-        // Adding provider ids (own) url to the asset properties, so that the consumer nows with whom to initiate a contract negotiation
-        asset.getProperties().put("asset:provider:url", providerUrl);
+        // Adding provider (own) url as the asset propertie originator, so that the consumer nows with whom to initiate a contract negotiation
+        // we just make sure it always exist because the datadashboard is currenlty not able to reflect this via the integrated asset creation tool
+        if (!asset.getProperties().containsKey("asset:prop:originator"))
+            asset.getProperties().put("asset:prop:originator", providerUrl);
 
         // Using the already created Dto Classes from the Web API Datamangement Extension
         AssetRequestDto assetRequestDto = AssetRequestDto.Builder.newInstance().id(asset.getId()).properties(asset.getProperties()).build();

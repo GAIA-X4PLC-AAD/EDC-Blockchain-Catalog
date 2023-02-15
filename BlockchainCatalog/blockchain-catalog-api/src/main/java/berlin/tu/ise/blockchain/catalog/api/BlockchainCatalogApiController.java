@@ -140,9 +140,9 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
                 .extensibleProperties(policyDefinitionResponseDto.getPolicy().getExtensibleProperties())
                 .duties(policyDefinitionResponseDto.getPolicy().getObligations()).build();
 
-        String providerUrl = "http://localhost:8080";
-        if (asset.getProperties().get("asset:provider:url") != null) {
-            providerUrl = asset.getProperties().get("asset:provider:url").toString();
+        String providerUrl = "http://unavailable:8080";
+        if (asset.getProperties().get("asset:prop:originator") != null) {
+            providerUrl = asset.getProperties().get("asset:prop:originator").toString();
         }
         return  ContractOffer.Builder.newInstance().asset(asset).policy(policy).id(contract.getId()).provider(URI.create(providerUrl)).contractStart(nowZonedDateTime).contractEnd(threeYearsFronNowZonedDateTime).build();
     }
