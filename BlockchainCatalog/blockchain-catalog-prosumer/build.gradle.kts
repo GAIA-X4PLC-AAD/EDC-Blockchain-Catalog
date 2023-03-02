@@ -39,6 +39,12 @@ dependencies {
     implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
     implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
 
+    // data plane related dependencies to enable transfer via azurerite
+    implementation("$groupId:data-plane-azure-storage:$edcVersion")
+    implementation("$groupId:data-plane-util:$edcVersion")
+    implementation("$groupId:data-plane-core:$edcVersion")
+    implementation("$groupId:data-plane-framework:$edcVersion")
+
 }
 
 application {

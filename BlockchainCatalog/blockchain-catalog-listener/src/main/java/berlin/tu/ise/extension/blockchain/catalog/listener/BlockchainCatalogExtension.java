@@ -61,7 +61,7 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         String idsWebhookPath = context.getSetting("web.http.ids.path", "/api/v1/ids");
         idsWebhookAddress = idsWebhookAddress + idsWebhookPath;
 
-        var edcInterfaceUrl = getEdcBlockchainInterfaceUrl();
+        var edcInterfaceUrl = context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL); // getEdcBlockchainInterfaceUrl();
         monitor.info("BlockchainCatalogExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
         BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex, edcInterfaceUrl, idsWebhookAddress);

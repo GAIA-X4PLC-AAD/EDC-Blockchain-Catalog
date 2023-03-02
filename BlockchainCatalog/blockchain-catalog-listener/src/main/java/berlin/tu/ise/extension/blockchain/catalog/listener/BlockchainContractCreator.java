@@ -109,7 +109,7 @@ public class BlockchainContractCreator implements EventSubscriber {
         String sourceAddress = "unknown";
 
         if (asset != null) {
-            sourceAddress = asset.getProperties().get("asset:provider:url").toString();
+            sourceAddress = asset.getProperties().get("asset:prop:originator").toString();
         } else {
             monitor.info(String.format("[%s] Asset not found for contract definition: %s", this.getClass().getSimpleName(), contractDefinition.getId()));
         }
