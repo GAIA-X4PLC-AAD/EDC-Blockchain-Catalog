@@ -294,7 +294,7 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static List<AssetEntryDto> getAllAssetsFromSmartContract(String edcInterfaceUrl) {
+    public static List<AssetEntryDto> getAllAssetsFromSmartContract(String edcInterfaceUrl, Monitor monitor) {
         ObjectMapper mapper = new ObjectMapper();
 
         List<TokenziedAsset> tokenziedAssetList;
@@ -303,6 +303,7 @@ public class BlockchainHelper {
         HttpURLConnection c = null;
         try {
             URL u = new URL(edcInterfaceUrl + "/all/asset");
+            monitor.debug("Fetching getAllAssetsFromSmartContract from edc-interface " + u);
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
             c.setRequestProperty("Content-length", "0");
