@@ -60,7 +60,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         //List<ContractOffer> contractOfferListFromStorage = (List<ContractOffer>) BlockchainHelper.getAllContractDefinitionsFromSmartContract();
         //monitor.info(format("Fetched %d enties from local cataloge storage", contractOfferListFromStorage.size()));
 
-        List<AssetEntryDto> assetEntryDtoList = BlockchainHelper.getAllAssetsFromSmartContract(edcBlockchainInterfaceUrl);
+        List<AssetEntryDto> assetEntryDtoList = BlockchainHelper.getAllAssetsFromSmartContract(edcBlockchainInterfaceUrl, this.monitor);
         if (assetEntryDtoList == null) {
             monitor.info(String.format("[%s] No assets found in blockchain. Is something wrong with the edc-interface or is the contract empty?", this.getClass().getSimpleName()));
         } else {

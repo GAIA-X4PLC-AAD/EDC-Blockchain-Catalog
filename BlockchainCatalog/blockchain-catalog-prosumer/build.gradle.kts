@@ -47,10 +47,15 @@ dependencies {
     implementation("$groupId:control-plane-core:$edcVersion")
     implementation("$groupId:data-plane-core:$edcVersion")
     implementation("$groupId:data-plane-azure-storage:$edcVersion")
+    // implementation("$groupId:vault-azure:$edcVersion")
+    implementation("$groupId:transfer-data-plane:$edcVersion")
+    implementation("$groupId:transfer-core:$edcVersion")
     implementation("$groupId:data-plane-client:$edcVersion")
     implementation("$groupId:data-plane-selector-client:$edcVersion")
     implementation("$groupId:data-plane-selector-core:$edcVersion")
     implementation("$groupId:transfer-data-plane:$edcVersion")
+
+
 
 }
 
