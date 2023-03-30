@@ -50,3 +50,9 @@ include("BlockchainCatalog:blockchain-catalog-api")
 include("BlockchainCatalog:blockchain-catalog-listener")
 include("BlockchainCatalog:blockchain-catalog-prosumer")
 findProject(":BlockchainCatalog:blockchain-catalog-prosumer")?.name = "blockchain-catalog-prosumer"
+
+include("blockchain-logger")
+
+include("transfer:TransferFileLocal")
+include("transfer:StatusChecker")
+include("transfer:provider-push-http-backend-service")

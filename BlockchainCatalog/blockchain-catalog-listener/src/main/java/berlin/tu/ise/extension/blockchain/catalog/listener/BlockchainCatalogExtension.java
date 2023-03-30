@@ -65,13 +65,13 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         monitor.info("BlockchainCatalogExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
         BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex, edcInterfaceUrl, idsWebhookAddress);
-        eventRouter.register(blockchainAssetCreator); // asynchronous dispatch
+        eventRouter.registerSync(blockchainAssetCreator); // asynchronous dispatch
 
-        eventRouter.register(new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl));
+        eventRouter.registerSync(new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl));
 
 
 
-        eventRouter.register(new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex));
+        eventRouter.registerSync(new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex));
 
     }
 
