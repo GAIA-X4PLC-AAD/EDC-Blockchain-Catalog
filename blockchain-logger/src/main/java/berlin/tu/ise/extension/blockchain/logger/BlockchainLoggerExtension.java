@@ -79,7 +79,7 @@ public class BlockchainLoggerExtension implements ServiceExtension {
         TransferProcessEventSubscriber transferProcessEventSubscriber = new TransferProcessEventSubscriber(monitor, transferProcessStore, context.getConnectorId(), edcInterfaceUrl);
         eventRouter.register(transferProcessEventSubscriber);
 
-        ContractAgreementEventSubscriber contractAgreementEventSubscriber = new ContractAgreementEventSubscriber(monitor, contractNegotiationStore);
+        ContractAgreementEventSubscriber contractAgreementEventSubscriber = new ContractAgreementEventSubscriber(monitor, contractNegotiationStore, context.getConnectorId(), edcInterfaceUrl);
         eventRouter.register(contractAgreementEventSubscriber);
 
 
