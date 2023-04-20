@@ -3,6 +3,7 @@ package berlin.tu.ise.extension.blockchain.logger;
 import berlin.tu.ise.extension.blockchain.logger.listener.ContractAgreementEventSubscriber;
 import berlin.tu.ise.extension.blockchain.logger.listener.TransferProcessEventSubscriber;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
+import org.eclipse.edc.connector.contract.spi.offer.store.ContractDefinitionStore;
 import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.connector.spi.contractagreement.ContractAgreementService;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
@@ -54,6 +55,9 @@ public class BlockchainLoggerExtension implements ServiceExtension {
     @Inject
     private ContractNegotiationStore contractNegotiationStore;
 
+    @Inject
+    private ContractDefinitionStore contractDefinitionStore;
+
     @Setting
     private final static String EDC_BLOCKCHAIN_INTERFACE_URL = "edc.blockchain.interface.url";
 
@@ -76,7 +80,7 @@ public class BlockchainLoggerExtension implements ServiceExtension {
         var edcInterfaceUrl = context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL); // getEdcBlockchainInterfaceUrl();
         monitor.info("BlockchainLoggerExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
-        TransferProcessEventSubscriber transferProcessEventSubscriber = new TransferProcessEventSubscriber(monitor, transferProcessStore, context.getConnectorId(), edcInterfaceUrl);
+        TransferProcessEventSubscriber transferProcessEventSubscriber = new TransferProcessEventSubscriber(monitor, transferProcessStore, contractDefinitionStore, contractNegotiationStore, context.getConnectorId(), edcInterfaceUrl);
         eventRouter.register(transferProcessEventSubscriber);
 
         ContractAgreementEventSubscriber contractAgreementEventSubscriber = new ContractAgreementEventSubscriber(monitor, contractNegotiationStore, context.getConnectorId(), edcInterfaceUrl);

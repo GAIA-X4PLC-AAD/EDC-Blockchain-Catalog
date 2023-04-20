@@ -60,10 +60,13 @@ public class ContractAgreementEventSubscriber implements EventSubscriber {
                                 }
                         }
                         ContractAgreement contractAgreement = contractNegotiation.getContractAgreement();
+
                         monitor.debug("ContractAgreement: " + contractAgreement.getId());
 
+                        String contractOfferId = contractNegotiation.getContractOffers().get(0).getId();
 
-                        ContractAgreementEventLog contractAgreementEventLog = new ContractAgreementEventLog();
+
+                        ContractAgreementEventLog contractAgreementEventLog = new ContractAgreementEventLog(ownConnectorId, contractNegotiation.getCounterPartyId(), contractAgreement.getId(), contractOfferId);
                         String jsonString;
 
                         try {
@@ -87,7 +90,7 @@ public class ContractAgreementEventSubscriber implements EventSubscriber {
                 String returnJson;
                 ReturnOperationObject returnObject = null;
                 try{
-                        URL url = new URL(smartContractUrl + "/contract???/add");
+                        URL url = new URL(smartContractUrl + "/agreement/add");
                         HttpURLConnection http = (HttpURLConnection)url.openConnection();
                         http.setRequestMethod("POST");
                         http.setDoOutput(true);

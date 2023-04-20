@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
+import org.eclipse.edc.connector.contract.spi.offer.store.ContractDefinitionStore;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
@@ -31,12 +33,18 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
 
     private TransferProcessStore transferProcessStore;
 
+    private ContractDefinitionStore contractDefinitionStore;
+
+    private ContractNegotiationStore contractNegotiationStore;
+
     private String edcInterfaceUrl;
 
     private String ownConnectorId;
-    public TransferProcessEventSubscriber(Monitor monitor, TransferProcessStore transferProcessStore, String ownConnectorId, String edcInterfaceUrl) {
+    public TransferProcessEventSubscriber(Monitor monitor, TransferProcessStore transferProcessStore, ContractDefinitionStore contractDefinitionStore, ContractNegotiationStore contractNegotiationStore, String ownConnectorId, String edcInterfaceUrl) {
         this.monitor = monitor;
         this.transferProcessStore = transferProcessStore;
+        this.contractDefinitionStore = contractDefinitionStore;
+        this.contractNegotiationStore = contractNegotiationStore;
         this.ownConnectorId = ownConnectorId;
         this.edcInterfaceUrl = edcInterfaceUrl;
     }
@@ -65,11 +73,14 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
                 TransferProcess transferProcess = this.transferProcessStore.find(transferProcessProvisioned.getPayload().getTransferProcessId());
                 DataRequest dataRequest = transferProcess.getDataRequest();
                 String assetId = dataRequest.getAssetId();
-                String contractId = "KT1NUjiNytkqvp52eTkT5GKiCuKMymwfgQC9"; // dataRequest.getContractId();
+                String contractId = dataRequest.getContractId(); // better to get aggrement id?
+
                 String connectorId = dataRequest.getConnectorId();
 
+                String agreementId = contractNegotiationStore.findContractAgreement(contractId).getId();
 
-                TransferProcessEventLog transferProcessEventLog = new TransferProcessEventLog(assetId, ownConnectorId, connectorId, transferProcess.getId(), contractId);
+                // TODO: How to get agreement Id from transfer
+                TransferProcessEventLog transferProcessEventLog = new TransferProcessEventLog(assetId, ownConnectorId, connectorId, agreementId);
                 String jsonString;
 
                 try {
