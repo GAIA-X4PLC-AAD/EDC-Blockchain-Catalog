@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 
 COPY ./BlockchainCatalog/blockchain-catalog-prosumer/build/libs/consumer.jar app.jar
 COPY ./BlockchainCatalog/blockchain-catalog-prosumer/config.properties config.properties
