@@ -33,13 +33,6 @@ dependencyResolutionManagement {
         mavenCentral()
         mavenLocal()
     }
-    versionCatalogs {
-        create("libs") {
-            from("org.eclipse.edc:edc-versions:0.0.1-milestone-8")
-            // this is not part of the published EDC Version Catalog, so we'll just "amend" it
-            library("dnsOverHttps", "com.squareup.okhttp3", "okhttp-dnsoverhttps").versionRef("okhttp")
-        }
-    }
 }
 
 
@@ -53,6 +46,9 @@ findProject(":BlockchainCatalog:blockchain-catalog-prosumer")?.name = "blockchai
 
 include("blockchain-logger")
 
-include("transfer:TransferFileLocal")
-include("transfer:StatusChecker")
-include("transfer:provider-push-http-backend-service")
+// include("transfer:TransferFileLocal")
+// include("transfer:StatusChecker")
+include("transfer:transfer-07-provider-push-http:provider-push-http-backend-service")
+include("transfer:transfer-07-provider-push-http:http-push-connector")
+include("transfer:transfer-07-provider-push-http:http-push-consumer")
+include("transfer:transfer-07-provider-push-http:http-push-provider")
