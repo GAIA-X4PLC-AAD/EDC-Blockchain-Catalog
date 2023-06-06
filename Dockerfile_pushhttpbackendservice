@@ -1,0 +1,9 @@
+FROM eclipse-temurin:17-jre-alpine
+
+COPY ./transfer/transfer-07-provider-push-http/provider-push-http-backend-service/build/libs/provider-push-http-backend-service.jar app.jar
+
+# Use "exec" for Kubernetes graceful termination (SIGINT) to reach JVM.
+ENTRYPOINT [ "sh", "-c", "exec java $JVM_ARGS -jar app.jar"]
+#ENTRYPOINT java -jar app.jar
+
+#ENTRYPOINT [ "sh", "-c", "exec java $JVM_ARGS -jar app.jar"]

@@ -1,0 +1,13 @@
+FROM eclipse-temurin:17-jre-alpine
+
+COPY ./BlockchainCatalog/blockchain-catalog-prosumer/build/libs/consumer.jar app.jar
+COPY ./BlockchainCatalog/blockchain-catalog-prosumer/config2.properties config.properties
+COPY ./BlockchainCatalog/blockchain-catalog-prosumer/consumer-vault.properties vault.properties
+COPY ./transfer/transfer-07-provider-push-http/certs/cert.pfx cert.pfx
+
+# Use "exec" for Kubernetes graceful termination (SIGINT) to reach JVM.
+ENTRYPOINT [ "sh", "-c", "exec java -Dedc.fs.config=config.properties -Dedc.keystore=cert.pfx -Dedc.keystore.password=123456 -Dedc.vault=vault.properties $JVM_ARGS -jar app.jar"]
+
+#ENTRYPOINT java -jar app.jar
+
+#ENTRYPOINT [ "sh", "-c", "exec java $JVM_ARGS -jar app.jar"]
