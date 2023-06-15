@@ -19,16 +19,20 @@ import org.eclipse.edc.handler.ReceiverHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 public class BackendService {
 
     static final String HTTP_PORT = "server.port";
+    static final String SAVE_PATH = "save.path";
 
     public static void main(String[] args) {
         int port = Integer.parseInt(Optional.ofNullable(System.getenv(HTTP_PORT)).orElse("4000"));
+        Path savePath = Paths.get(Optional.ofNullable(System.getenv(SAVE_PATH)).orElse("."));
         var server = createHttpServer(port);
-        server.createContext("/api/consumer/store", new ReceiverHandler());
+        server.createContext("/api/consumer/store", new ReceiverHandler(savePath));
         server.setExecutor(null);
         server.start();
         System.out.println("server started at " + port);
