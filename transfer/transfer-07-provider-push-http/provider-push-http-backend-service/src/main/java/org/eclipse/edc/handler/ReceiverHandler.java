@@ -54,7 +54,7 @@ public class ReceiverHandler implements HttpHandler {
         }
 
         // Save file
-        Path filePath = savePath.resolve(UUID.randomUUID().toString() + extension);
+        Path filePath = savePath.resolve("./data/" + UUID.randomUUID().toString() + extension);
         Files.write(filePath, buffer);
 
         exchange.sendResponseHeaders(200, 0);
