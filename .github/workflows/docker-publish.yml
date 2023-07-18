@@ -5,15 +5,13 @@ name: Docker
 # separate terms of service, privacy policy, and support
 # documentation.
 
-on:
-  schedule:
-    - cron: '45 8 * * *'
+on: 
   push:
-    branches: [ "main" ]
+    branches: [ "github_action" ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "github_action" ]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -56,8 +54,8 @@ jobs:
         uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.dockerhub }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB }}
 
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
@@ -70,16 +68,37 @@ jobs:
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
-        id: build-and-push
+        id: build-and-push-backend
         uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: julianlegler/edc_transfer_backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           file: Dockerfile_pushhttpbackendservice
+          
+      - name: Build and push Docker image
+        id: build-and-push-provider
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: julianlegler/edc_blockchain_provider:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: Dockerfile_provider
+          
+      - name: Build and push Docker image
+        id: build-and-push-consumer
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: julianlegler/edc_blockchain_consumer:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: Dockerfile_consumer
 
 
       # Sign the resulting Docker image digest except on PRs.
@@ -87,10 +106,10 @@ jobs:
       # repository is public to avoid leaking data.  If you would like to publish
       # transparency data even for private images, pass --force to cosign below.
       # https://github.com/sigstore/cosign
-      - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
-        env:
-          COSIGN_EXPERIMENTAL: "true"
-        # This step uses the identity token to provision an ephemeral certificate
-        # against the sigstore community Fulcio instance.
-        run: echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
+      #- name: Sign the published Docker image
+      #  if: ${{ github.event_name != 'pull_request' }}
+      #  env:
+      #    COSIGN_EXPERIMENTAL: "true"
+      #  # This step uses the identity token to provision an ephemeral certificate
+      #  # against the sigstore community Fulcio instance.
+      #  run: echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
