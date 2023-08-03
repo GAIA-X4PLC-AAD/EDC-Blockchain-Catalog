@@ -1,5 +1,8 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener;
 
+import org.eclipse.edc.connector.asset.spi.event.AssetCreated;
+import org.eclipse.edc.connector.contract.spi.event.contractdefinition.ContractDefinitionCreated;
+import org.eclipse.edc.connector.policy.spi.event.PolicyDefinitionCreated;
 import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
@@ -65,13 +68,13 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         monitor.info("BlockchainCatalogExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
         BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex, edcInterfaceUrl, idsWebhookAddress);
-        eventRouter.registerSync(blockchainAssetCreator); // asynchronous dispatch
+        eventRouter.registerSync(AssetCreated.class, blockchainAssetCreator); // asynchronous dispatch
 
-        eventRouter.registerSync(new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl));
+        eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl));
 
 
 
-        eventRouter.registerSync(new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex));
+        eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex));
 
     }
 

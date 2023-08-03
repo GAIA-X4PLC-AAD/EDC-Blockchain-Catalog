@@ -6,12 +6,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.api.model.CriterionDto;
 import org.eclipse.edc.connector.api.management.contractdefinition.model.ContractDefinitionResponseDto;
+import org.eclipse.edc.connector.contract.spi.event.contractdefinition.ContractDefinitionCreated;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
 import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.event.Event;
+import org.eclipse.edc.spi.event.EventEnvelope;
 import org.eclipse.edc.spi.event.EventSubscriber;
-import org.eclipse.edc.spi.event.contractdefinition.ContractDefinitionCreated;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
@@ -39,14 +40,14 @@ public class BlockchainContractCreator implements EventSubscriber {
     }
 
     @Override
-    public void on(Event event) {
-        if (!(event instanceof ContractDefinitionCreated)) {
-            return;
-        }
+    public <E extends Event> void on(EventEnvelope<E> event){
+        var payload = event.getPayload();
+        if (!(payload instanceof ContractDefinitionCreated)) return;
         // the event only returns the contract id, so we need to get the contract object
 
-        ContractDefinitionCreated contractDefinitionCreated = (ContractDefinitionCreated) event;
-        String contractId = contractDefinitionCreated.getPayload().getContractDefinitionId();
+        ContractDefinitionCreated contractDefinitionCreated;
+        contractDefinitionCreated = (ContractDefinitionCreated) payload;
+        String contractId = contractDefinitionCreated.getContractDefinitionId();
         monitor.debug("ContractDefinitionCreated event triggered for contractId: " + contractId);
 
         ContractDefinition contractDefinition = contractDefinitionService.findById(contractId);
@@ -63,7 +64,7 @@ public class BlockchainContractCreator implements EventSubscriber {
 
 
     private String transformToJSON(ContractDefinition contractDefinition) {
-        monitor.info(String.format("[%s] ContractDefinition: for '%s' and '%s' targeting '%s' created in EDC, start now with Blockchain related steps ...", this.getClass().getSimpleName(), contractDefinition.getContractPolicyId(), contractDefinition.getAccessPolicyId(), contractDefinition.getSelectorExpression().getCriteria().get(0).getOperandRight()));
+        monitor.info(String.format("[%s] ContractDefinition: for '%s' and '%s' targeting '%s' created in EDC, start now with Blockchain related steps ...", this.getClass().getSimpleName(), contractDefinition.getContractPolicyId(), contractDefinition.getAccessPolicyId(), contractDefinition.getAssetsSelector().get(0).getOperandRight()));
 
         monitor.info(String.format("[%s] formating POJO to JSON ...", this.getClass().getSimpleName()));
 
@@ -74,7 +75,7 @@ public class BlockchainContractCreator implements EventSubscriber {
 
         // Cast List of Criterion to List of CriterionDto
         List<CriterionDto> criterionDtoList = new LinkedList<CriterionDto>();
-        for (Criterion criterion : contractDefinition.getSelectorExpression().getCriteria()) {
+        for (Criterion criterion : contractDefinition.getAssetsSelector()) {
             CriterionDto criterionDto = CriterionDto.Builder.newInstance()
                     .operandLeft(criterion.getOperandLeft())
                     .operandRight(criterion.getOperandRight())
@@ -104,7 +105,7 @@ public class BlockchainContractCreator implements EventSubscriber {
                 .accessPolicyId(contractDefinition.getAccessPolicyId())
                 .createdAt(contractDefinition.getCreatedAt())
                 .id(contractDefinition.getId())
-                .criteria(criterionDtoList).build();
+                .assetsSelector(criterionDtoList).build();
 
         String sourceAddress = "unknown";
 

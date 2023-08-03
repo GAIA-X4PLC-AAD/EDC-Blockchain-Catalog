@@ -23,8 +23,6 @@ val edcVersion: String by project
 
 dependencies {
     api("$groupId:boot:$edcVersion")
-    implementation("$groupId:ids:$edcVersion")
-
     implementation("$groupId:iam-mock:$edcVersion")
     implementation("$groupId:configuration-filesystem:$edcVersion")
 

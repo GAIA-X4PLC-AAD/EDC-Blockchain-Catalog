@@ -2,7 +2,6 @@ package berlin.tu.ise.blockchain.catalog.api;
 
 import berlin.tu.ise.extension.blockchain.catalog.listener.BlockchainHelper;
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.ContractOfferDto;
-import de.fraunhofer.iais.eis.ContractOfferBuilder;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -154,7 +153,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         if (asset.getProperties().get("asset:prop:originator") != null) {
             providerUrl = asset.getProperties().get("asset:prop:originator").toString();
         }
-        return  ContractOffer.Builder.newInstance().asset(asset).policy(policy).id(contract.getId()).provider(URI.create(providerUrl)).contractStart(nowZonedDateTime).contractEnd(threeYearsFronNowZonedDateTime).build();
+        return  ContractOffer.Builder.newInstance().assetId(assetEntryDto.getAsset().getId()).policy(policy).id(contract.getId()).providerId(URI.create(providerUrl).toString()).build();
     }
 
     private PolicyDefinitionResponseDto getPolicyById(String policyId, List<PolicyDefinitionResponseDto> policyDefinitionResponseDtoList) {

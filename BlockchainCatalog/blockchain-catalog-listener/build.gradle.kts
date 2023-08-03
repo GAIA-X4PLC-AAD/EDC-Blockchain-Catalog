@@ -26,8 +26,6 @@ dependencies {
     implementation("$groupId:federated-catalog-spi:$edcVersion")
     //implementation("$groupId:federated-catalog-core:$edcVersion")
 
-    implementation("$groupId:ids:$edcVersion")
-
 
     implementation("$groupId:control-plane-spi:$edcVersion")
 

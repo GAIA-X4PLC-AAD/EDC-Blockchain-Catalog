@@ -34,8 +34,6 @@ dependencies {
     implementation("$groupId:auth-tokenbased:$edcVersion")
     implementation("$groupId:management-api:$edcVersion")
 
-    implementation("$groupId:ids:$edcVersion")
-
     implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
     implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
     implementation(project(":blockchain-logger"))
@@ -63,7 +61,6 @@ dependencies {
     implementation("$groupId:transfer-data-plane:$edcVersion")
 
     implementation("${groupId}:control-plane-core:${edcVersion}")
-    implementation("${groupId}:ids:${edcVersion}")
     implementation("${groupId}:configuration-filesystem:${edcVersion}")
     implementation("${groupId}:vault-filesystem:${edcVersion}")
     implementation("${groupId}:iam-mock:${edcVersion}")

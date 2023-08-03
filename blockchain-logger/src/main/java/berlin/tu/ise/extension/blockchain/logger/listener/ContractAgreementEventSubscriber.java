@@ -2,18 +2,12 @@ package berlin.tu.ise.extension.blockchain.logger.listener;
 
 import berlin.tu.ise.extension.blockchain.logger.model.ContractAgreementEventLog;
 import berlin.tu.ise.extension.blockchain.logger.model.ReturnOperationObject;
-import berlin.tu.ise.extension.blockchain.logger.model.TransferProcessEventLog;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.edc.connector.contract.spi.negotiation.observe.ContractNegotiationListener;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
-import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreementRequest;
 import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractNegotiation;
-import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
-import org.eclipse.edc.spi.event.Event;
-import org.eclipse.edc.spi.event.EventSubscriber;
-import org.eclipse.edc.spi.event.contractnegotiation.ContractNegotiationConfirmed;
-import org.eclipse.edc.spi.event.transferprocess.TransferProcessEvent;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.BufferedReader;
@@ -24,7 +18,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-public class ContractAgreementEventSubscriber implements EventSubscriber {
+public class ContractAgreementEventSubscriber implements ContractNegotiationListener {
 
         private Monitor monitor;
 
@@ -44,45 +38,44 @@ public class ContractAgreementEventSubscriber implements EventSubscriber {
         }
 
         @Override
-        public void on(Event event) {
-                if (event instanceof ContractNegotiationConfirmed) {
-                        ContractNegotiationConfirmed contractNegotiationConfirmed = (ContractNegotiationConfirmed) event;
-                        String negotiationId = contractNegotiationConfirmed.getPayload().getContractNegotiationId();
-                        ContractNegotiation contractNegotiation = contractNegotiationStore.find(negotiationId);
+        public void accepted(ContractNegotiation negotiation) {
 
-                        monitor.debug("ContractNegotiationConfirmed: " + negotiationId);
-                        // wait until contract agreement is created
-                        while (contractNegotiation.getContractAgreement() == null) {
-                                try {
-                                        Thread.sleep(1000);
-                                } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                }
-                        }
-                        ContractAgreement contractAgreement = contractNegotiation.getContractAgreement();
-
-                        monitor.debug("ContractAgreement: " + contractAgreement.getId());
-
-                        String contractOfferId = contractNegotiation.getContractOffers().get(0).getId();
+                String negotiationId = negotiation.getLastContractOffer().getId();
 
 
-                        ContractAgreementEventLog contractAgreementEventLog = new ContractAgreementEventLog(ownConnectorId, contractNegotiation.getCounterPartyId(), contractAgreement.getId(), contractOfferId);
-                        String jsonString;
-
+                monitor.debug("ContractNegotiation accepted: " + negotiationId);
+                // wait until contract agreement is created
+                while (negotiation.getContractAgreement() == null) {
                         try {
-                                jsonString = contractAgreementEventLog.toJson();
-                                monitor.debug(jsonString);
-                        } catch (JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                        }
-
-                        ReturnOperationObject returnObject = sendToSmartContract(jsonString, monitor, edcInterfaceUrl);
-                        if (returnObject != null && Objects.equals(returnObject.getStatus(), "ok")) {
-                                monitor.debug("[ContractAgreementEventSubscriber] Data sent to Smart Contract");
-                        } else {
-                                monitor.debug("[ContractAgreementEventSubscriber] Data could not be sent to Smart Contract");
+                                Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                                e.printStackTrace();
                         }
                 }
+                ContractAgreement contractAgreement = negotiation.getContractAgreement();
+
+                monitor.debug("ContractAgreement: " + contractAgreement.getId());
+
+                String contractOfferId = negotiation.getLastContractOffer().getId();
+
+
+                ContractAgreementEventLog contractAgreementEventLog = new ContractAgreementEventLog(ownConnectorId, negotiation.getCounterPartyId(), contractAgreement.getId(), contractOfferId);
+                String jsonString;
+
+                try {
+                        jsonString = contractAgreementEventLog.toJson();
+                        monitor.debug(jsonString);
+                } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                }
+
+                ReturnOperationObject returnObject = sendToSmartContract(jsonString, monitor, edcInterfaceUrl);
+                if (returnObject != null && Objects.equals(returnObject.getStatus(), "ok")) {
+                        monitor.debug("[ContractAgreementEventSubscriber] Data sent to Smart Contract");
+                } else {
+                        monitor.debug("[ContractAgreementEventSubscriber] Data could not be sent to Smart Contract");
+                }
+
         }
 
         public static ReturnOperationObject sendToSmartContract(String jsonString, Monitor monitor, String smartContractUrl) {

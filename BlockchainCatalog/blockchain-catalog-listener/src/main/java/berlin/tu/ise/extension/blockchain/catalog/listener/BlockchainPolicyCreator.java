@@ -5,10 +5,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.connector.api.management.policy.model.PolicyDefinitionResponseDto;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
+import org.eclipse.edc.connector.policy.spi.event.PolicyDefinitionCreated;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
 import org.eclipse.edc.spi.event.Event;
+import org.eclipse.edc.spi.event.EventEnvelope;
 import org.eclipse.edc.spi.event.EventSubscriber;
-import org.eclipse.edc.spi.event.policydefinition.PolicyDefinitionCreated;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 public class BlockchainPolicyCreator implements EventSubscriber {
@@ -25,14 +26,13 @@ public class BlockchainPolicyCreator implements EventSubscriber {
     }
 
 
-    @Override
-    public void on(Event event) {
-        if (!(event instanceof PolicyDefinitionCreated)) {
-            return;
-        }
+    public <E extends Event> void on(EventEnvelope<E> event){
+        var payload = event.getPayload();
+        if (!(payload instanceof PolicyDefinitionCreated)) return;
+
         // the event only returns the policy id, so we need to get the policy object
-        PolicyDefinitionCreated policyDefinitionCreated = (PolicyDefinitionCreated) event;
-        String policyId = policyDefinitionCreated.getPayload().getPolicyDefinitionId();
+        PolicyDefinitionCreated policyDefinitionCreated = (PolicyDefinitionCreated) payload;
+        String policyId = policyDefinitionCreated.getPolicyDefinitionId();
         PolicyDefinition policyDefinition = policyDefinitionService.findById(policyId);
 
         String jsonString = transformToJSON(policyDefinition);

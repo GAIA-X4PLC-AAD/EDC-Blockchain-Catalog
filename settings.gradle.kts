@@ -12,14 +12,10 @@
  *
  */
 
-rootProject.name = "samples"
+rootProject.name = "Samples-Blockchain"
 
-// this is needed to have access to snapshot builds of plugins
 pluginManagement {
     repositories {
-        maven {
-            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
-        }
         mavenCentral()
         gradlePluginPortal()
     }
@@ -27,9 +23,6 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        maven {
-            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
-        }
         mavenCentral()
         mavenLocal()
     }
@@ -52,3 +45,8 @@ include("transfer:transfer-07-provider-push-http:provider-push-http-backend-serv
 include("transfer:transfer-07-provider-push-http:http-push-connector")
 include("transfer:transfer-07-provider-push-http:http-push-consumer")
 include("transfer:transfer-07-provider-push-http:http-push-provider")
+
+// modules for code samples ------------------------------------------------------------------------
+include(":other:custom-runtime")
+
+include(":system-tests")
