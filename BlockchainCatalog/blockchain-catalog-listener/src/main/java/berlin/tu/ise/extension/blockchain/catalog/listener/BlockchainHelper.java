@@ -4,11 +4,12 @@ import berlin.tu.ise.extension.blockchain.catalog.listener.model.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.edc.connector.api.management.asset.model.AssetEntryDto;
-import org.eclipse.edc.connector.api.management.policy.model.PolicyDefinitionResponseDto;
+import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
+import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
+import org.eclipse.edc.spi.types.domain.asset.AssetEntry;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -74,7 +75,7 @@ public class BlockchainHelper {
         return returnObject;
     }
 
-    public static AssetEntryDto getAssetWithIdFromSmartContract(String id, String edcInterfaceUrl) {
+    public static Asset getAssetWithIdFromSmartContract(String id, String edcInterfaceUrl) {
         Asset asset = null;
         ObjectMapper mapper = new ObjectMapper();
 
@@ -117,13 +118,13 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static List<ContractOfferDto> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl) {
-        ContractOfferDto contractOfferDto = null;
+    public static List<ContractOfferMessage> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl) {
+        ContractOfferMessage contractOfferDto = null;
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         List<TokenizedContract> tokenziedContractList;
-        List<ContractOfferDto> contractOfferDtoList = new ArrayList<>();
+        List<ContractOfferMessage> contractOfferDtoList = new ArrayList<>();
 
         HttpURLConnection c = null;
         try {
@@ -185,13 +186,13 @@ public class BlockchainHelper {
     /**
      * @return HashMap of Source URIs and Lists of ContractDefinitionResponseDto
      */
-    public static HashMap<String, List<ContractOfferDto>> getAllContractDefinitionsFromSmartContractGroupedBySource(String edcInterfaceUrl) {
-        HashMap<String, List<ContractOfferDto>> returnMap = new HashMap<>();
-        ContractOfferDto contractDefinitionResponseDto = null;
+    public static HashMap<String, List<ContractOfferMessage>> getAllContractDefinitionsFromSmartContractGroupedBySource(String edcInterfaceUrl) {
+        HashMap<String, List<ContractOfferMessage>> returnMap = new HashMap<>();
+        ContractOfferMessage contractDefinitionResponseDto = null;
         ObjectMapper mapper = new ObjectMapper();
 
         List<TokenizedContract> tokenziedContractList;
-        List<ContractOfferDto> contractDefinitionResponseDtoList = new ArrayList<>();
+        List<ContractOfferMessage> contractDefinitionResponseDtoList = new ArrayList<>();
 
         HttpURLConnection c = null;
         try {
@@ -249,7 +250,7 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static PolicyDefinitionResponseDto getPolicyWithIdFromSmartContract(String id, String edcInterfaceUrl) {
+    public static PolicyDefinition getPolicyWithIdFromSmartContract(String id, String edcInterfaceUrl) {
         PolicyDefinition policy = null;
         ObjectMapper mapper = new ObjectMapper();
 
@@ -294,11 +295,11 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static List<AssetEntryDto> getAllAssetsFromSmartContract(String edcInterfaceUrl, Monitor monitor) {
+    public static List<Asset> getAllAssetsFromSmartContract(String edcInterfaceUrl, Monitor monitor) {
         ObjectMapper mapper = new ObjectMapper();
 
         List<TokenziedAsset> tokenziedAssetList;
-        List<AssetEntryDto> assetResponseDtoList = new ArrayList<>();
+        List<Asset> assetResponseDtoList = new ArrayList<>();
 
         HttpURLConnection c = null;
         try {
@@ -353,11 +354,11 @@ public class BlockchainHelper {
 
     }
 
-    public static List<PolicyDefinitionResponseDto> getAllPolicyDefinitionsFromSmartContract(String edcInterfaceUrl) {
+    public static List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract(String edcInterfaceUrl) {
         ObjectMapper mapper = new ObjectMapper();
 
         List<TokenizedPolicyDefinition> tokenizedPolicyDefinitionList = new ArrayList<>();
-        List<PolicyDefinitionResponseDto> policyDefinitionResponseDtoList = new ArrayList<>();
+        List<PolicyDefinition> policyDefinitionResponseDtoList = new ArrayList<>();
 
         HttpURLConnection c = null;
         try {

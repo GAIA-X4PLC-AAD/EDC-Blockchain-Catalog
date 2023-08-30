@@ -28,6 +28,8 @@ dependencies {
 
 
     implementation("$groupId:control-plane-spi:$edcVersion")
+    implementation("$groupId:transform-spi:$edcVersion")
+    implementation("$groupId:asset-api:$edcVersion")
 
 
 }

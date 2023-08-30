@@ -1,13 +1,13 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener.model;
 
 
-import org.eclipse.edc.connector.api.management.policy.model.PolicyDefinitionResponseDto;
+import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 
 public class TokenizedPolicyDefinition {
     String token_id;
     String name;
     String decimals;
-    PolicyDefinitionResponseDto tokenData;
+    PolicyDefinition tokenData;
 
     public String getToken_id() {
         return token_id;
@@ -33,11 +33,11 @@ public class TokenizedPolicyDefinition {
         this.decimals = decimals;
     }
 
-    public PolicyDefinitionResponseDto getTokenData() {
+    public PolicyDefinition getTokenData() {
         return tokenData;
     }
 
-    public void setTokenData(PolicyDefinitionResponseDto tokenData) {
+    public void setTokenData(PolicyDefinition tokenData) {
         this.tokenData = tokenData;
     }
 }

@@ -1,13 +1,13 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener.model;
 
 
-import org.eclipse.edc.connector.api.management.asset.model.AssetEntryDto;
+import org.eclipse.edc.spi.types.domain.asset.Asset;
 
 public class TokenziedAsset {
     String token_id;
     String name;
     String decimals;
-    AssetEntryDto tokenData;
+    Asset tokenData;
 
     public String getToken_id() {
         return token_id;
@@ -33,11 +33,11 @@ public class TokenziedAsset {
         this.decimals = decimals;
     }
 
-    public AssetEntryDto getTokenData() {
+    public Asset getTokenData() {
         return tokenData;
     }
 
-    public void setTokenData(AssetEntryDto tokenData) {
+    public void setTokenData(Asset tokenData) {
         this.tokenData = tokenData;
     }
 }

@@ -1,5 +1,8 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener;
 
+import org.eclipse.edc.api.validation.DataAddressValidator;
+import org.eclipse.edc.connector.api.management.asset.validation.AssetEntryDtoValidator;
+import org.eclipse.edc.connector.api.management.asset.validation.AssetValidator;
 import org.eclipse.edc.connector.asset.spi.event.AssetCreated;
 import org.eclipse.edc.connector.contract.spi.event.contractdefinition.ContractDefinitionCreated;
 import org.eclipse.edc.connector.policy.spi.event.PolicyDefinitionCreated;
@@ -14,6 +17,8 @@ import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.event.EventRouter;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
+import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
+import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
 
 @Extension(value = BlockchainCatalogExtension.NAME)
 public class BlockchainCatalogExtension implements ServiceExtension {
@@ -22,6 +27,9 @@ public class BlockchainCatalogExtension implements ServiceExtension {
 
     @Inject
     private TransferProcessObservable transferProcessObservable;
+
+    @Inject
+    private TypeTransformerRegistry transformerRegistry;
 
     // Needs to be injected to get Access to AssetObservable
     @Inject
@@ -52,6 +60,9 @@ public class BlockchainCatalogExtension implements ServiceExtension {
 
     private  ServiceExtensionContext context;
 
+    @Inject
+    private JsonObjectValidatorRegistry validator;
+
 
     @Override
     public void initialize(ServiceExtensionContext context) {
@@ -59,6 +70,15 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         this.context = context;
 
         var monitor = context.getMonitor();
+
+        transformerRegistry.register(new AssetRequestDtoToAssetTransformer());
+        transformerRegistry.register(new AssetUpdateRequestWrapperDtoToAssetTransformer());
+        transformerRegistry.register(new AssetToAssetResponseDtoTransformer());
+        transformerRegistry.register(new JsonObjectToAssetEntryNewDtoTransformer());
+
+        validator.register(EDC_ASSET_ENTRY_DTO_TYPE, AssetValidator.instance());
+        validator.register(EDC_ASSET_TYPE, AssetValidator.instance());
+        validator.register(EDC_DATA_ADDRESS_TYPE, DataAddressValidator.instance());
 
         String idsWebhookAddress = context.getSetting("ids.webhook.address", "http://localhost:8282");
         String idsWebhookPath = context.getSetting("web.http.ids.path", "/api/v1/ids");

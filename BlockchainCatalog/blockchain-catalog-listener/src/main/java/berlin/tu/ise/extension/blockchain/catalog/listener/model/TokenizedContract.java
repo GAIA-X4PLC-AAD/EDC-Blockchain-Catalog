@@ -1,16 +1,18 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener.model;
 
-import org.eclipse.edc.connector.api.management.contractdefinition.model.ContractDefinitionResponseDto;
+import org.eclipse.edc.connector.api.management.contractnegotiation.model.ContractOfferDescription;
+import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
+import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
 
 public class TokenizedContract {
     String token_id;
     String name;
     String decimals;
-    ContractOfferDto tokenData;
+    ContractOfferMessage tokenData;
 
 
     public String getSource() {
-        return tokenData.getDataUrl();
+        return tokenData.getCounterPartyAddress();
     }
 
     public String getToken_id() {
@@ -37,11 +39,11 @@ public class TokenizedContract {
         this.decimals = decimals;
     }
 
-    public ContractOfferDto getTokenData() {
+    public ContractOfferMessage getTokenData() {
         return tokenData;
     }
 
-    public void setTokenData(ContractOfferDto tokenData) {
+    public void setTokenData(ContractOfferMessage tokenData) {
         this.tokenData = tokenData;
     }
 }

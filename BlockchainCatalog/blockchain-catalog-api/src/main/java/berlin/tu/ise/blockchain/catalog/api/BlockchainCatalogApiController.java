@@ -13,6 +13,7 @@ import org.eclipse.edc.catalog.spi.model.FederatedCatalogCacheQuery;
 import org.eclipse.edc.connector.api.management.asset.model.AssetEntryDto;
 import org.eclipse.edc.connector.api.management.contractdefinition.model.ContractDefinitionResponseDto;
 import org.eclipse.edc.connector.api.management.policy.model.PolicyDefinitionResponseDto;
+import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -73,7 +74,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
             monitor.info(String.format("[%s] fetched %d Policies from Smart Contract", this.getClass().getSimpleName(), policyDefinitionResponseDtoList.size()));
         }
 
-        List<ContractOfferDto> contractOfferDtoList = BlockchainHelper.getAllContractDefinitionsFromSmartContract(edcBlockchainInterfaceUrl);
+        List<ContractOfferMessage> contractOfferDtoList = BlockchainHelper.getAllContractDefinitionsFromSmartContract(edcBlockchainInterfaceUrl);
         if (contractOfferDtoList == null) {
             monitor.info(String.format("[%s] No contracts found in blockchain. Is something wrong with the edc-interface or is the contract empty?", this.getClass().getSimpleName()));
         } else {

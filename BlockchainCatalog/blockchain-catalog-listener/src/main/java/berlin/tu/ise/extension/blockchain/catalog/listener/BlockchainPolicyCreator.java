@@ -3,7 +3,6 @@ package berlin.tu.ise.extension.blockchain.catalog.listener;
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.edc.connector.api.management.policy.model.PolicyDefinitionResponseDto;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 import org.eclipse.edc.connector.policy.spi.event.PolicyDefinitionCreated;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
@@ -54,16 +53,12 @@ public class BlockchainPolicyCreator implements EventSubscriber {
 
         ObjectMapper mapper = new ObjectMapper();
 
-        PolicyDefinitionResponseDto policyDefinitionResponseDto = PolicyDefinitionResponseDto.Builder.newInstance()
-                .policy(policyDefinition.getPolicy())
-                .id(policyDefinition.getUid())
-                .createdAt(policyDefinition.getCreatedAt())
-                .build();
         // Format them to JSON and print them for debugging. Change later, for now the system out println looks prettier than using monitor
         String jsonString = "";
         try {
-            jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(policyDefinitionResponseDto);
-            //System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(policyDefinitionResponseDto));
+            jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(policyDefinition);
+            System.out.println("Formatting a PolicyDefinition to JSON:");
+            System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(policyDefinition));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
