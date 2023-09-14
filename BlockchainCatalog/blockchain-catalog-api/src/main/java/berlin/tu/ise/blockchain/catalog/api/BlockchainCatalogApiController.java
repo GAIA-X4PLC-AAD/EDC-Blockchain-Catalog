@@ -1,5 +1,6 @@
 package berlin.tu.ise.blockchain.catalog.api;
 
+/*
 import berlin.tu.ise.extension.blockchain.catalog.listener.BlockchainHelper;
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.ContractOfferDto;
 import jakarta.ws.rs.Consumes;
@@ -113,6 +114,8 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
      * @param policyDefinitionResponseDtoList the list of all existing policies in the blockchain
      * @return ContractOffer created from combining the Asset and Policy Objects identified by the ids in the ContractDefinitionResponseDto, null if not found
      */
+
+/*
     private ContractOffer getContractOfferFromContractDefinitionDto(ContractOfferDto contract, List<AssetEntryDto> assetEntryDtoList, List<PolicyDefinitionResponseDto> policyDefinitionResponseDtoList) {
         String assetId = String.valueOf(contract.getCriteria().get(0).getOperandRight());
         if (contract.getCriteria().get(0).getOperandRight() instanceof ArrayList) {
@@ -175,3 +178,4 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         return null;
     }
 }
+*/

@@ -34,9 +34,12 @@ dependencies {
     implementation("$groupId:auth-tokenbased:$edcVersion")
     implementation("$groupId:management-api:$edcVersion")
 
-    implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
-    implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
-    implementation(project(":blockchain-logger"))
+    //implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
+    //implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
+    //implementation(project(":blockchain-logger"))
+
+    implementation(project(":playground"))
+
 
     implementation(project(":transfer:transfer-07-provider-push-http:http-push-connector"))
     implementation(project(":transfer:transfer-07-provider-push-http:provider-push-http-backend-service"))

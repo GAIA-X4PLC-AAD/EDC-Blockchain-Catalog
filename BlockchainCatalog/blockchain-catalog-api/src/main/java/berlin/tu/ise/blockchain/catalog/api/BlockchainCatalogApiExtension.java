@@ -1,5 +1,5 @@
 package berlin.tu.ise.blockchain.catalog.api;
-
+/*
 import org.eclipse.edc.connector.api.management.configuration.ManagementApiConfiguration;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
@@ -52,3 +52,4 @@ public class BlockchainCatalogApiExtension implements ServiceExtension {
 
 
 }
+*/
