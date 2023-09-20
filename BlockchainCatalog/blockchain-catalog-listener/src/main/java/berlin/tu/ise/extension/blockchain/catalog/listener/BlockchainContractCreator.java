@@ -4,8 +4,6 @@ import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.TokenizedContractDefinitionResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.edc.api.model.CriterionDto;
-import org.eclipse.edc.connector.api.management.contractdefinition.model.ContractDefinitionResponseDto;
 import org.eclipse.edc.connector.contract.spi.event.contractdefinition.ContractDefinitionCreated;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
@@ -64,10 +62,16 @@ public class BlockchainContractCreator implements EventSubscriber {
 
 
     private String transformToJSON(ContractDefinition contractDefinition) {
+
         monitor.info(String.format("[%s] ContractDefinition: for '%s' and '%s' targeting '%s' created in EDC, start now with Blockchain related steps ...", this.getClass().getSimpleName(), contractDefinition.getContractPolicyId(), contractDefinition.getAccessPolicyId(), contractDefinition.getAssetsSelector().get(0).getOperandRight()));
 
         monitor.info(String.format("[%s] formating POJO to JSON ...", this.getClass().getSimpleName()));
 
+        monitor.warning(String.format("[%s] currently not implemented", this.getClass().getSimpleName()));
+
+        return null;
+
+        /*
         ObjectMapper mapper = new ObjectMapper();
 
 
@@ -126,5 +130,7 @@ public class BlockchainContractCreator implements EventSubscriber {
             throw new RuntimeException(e);
         }
         return jsonString;
+
+         */
     }
 }

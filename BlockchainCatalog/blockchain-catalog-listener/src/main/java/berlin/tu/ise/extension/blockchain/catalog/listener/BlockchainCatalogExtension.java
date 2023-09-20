@@ -24,6 +24,7 @@ import org.eclipse.edc.spi.entity.Entity;
 import org.eclipse.edc.spi.event.EventRouter;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
+import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
@@ -47,10 +48,6 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     // Needs to be injected to get Access to AssetObservable
     @Inject
     private AssetService assetService;
-
-    @Inject
-    private DspApiConfigurationExtension dspApiConfigurationExtension;
-
 
     // Needs to be injected to get Access to PolicyDefinitionObservable
     @Inject
@@ -100,49 +97,40 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
 
-        transformerRegistry.register(new JsonObjectToAssetEntryNewDtoTransformer());
-
-        validator.register(EDC_ASSET_ENTRY_DTO_TYPE, AssetEntryDtoValidator.assetEntryValidator());
-        validator.register(EDC_ASSET_TYPE, AssetValidator.instance());
-        validator.register(EDC_DATA_ADDRESS_TYPE, DataAddressValidator.instance());
-
-        webService.registerResource(config.getContextAlias(), new org.eclipse.edc.connector.api.management.asset.v2.AssetApiController(assetService, dataAddressResolver, transformerRegistry, monitor, validator));
+        AssetApiController assetApiController = new AssetApiController(assetService, transformerRegistry, monitor, validator);
 
         this.context = context;
 
 
-
-
-        // initialize the DSP API configuration extension to register the DSP API to use their TypeTransformerRegistry
-        dspApiConfigurationExtension.initialize(context);
-        AssetApiController assetApiController = new AssetApiController(assetService, transformerRegistry, monitor, validator);
-
-        var asset = Asset.Builder.newInstance()
-                .name("TestAsset")
-                .description("TestAssetDescription")
-                .build();
-        assetService.create(asset);
-
-
-
-
-       /*
-       String idsWebhookAddress = context.getSetting("ids.webhook.address", "http://localhost:8282");
+        String idsWebhookAddress = context.getSetting("ids.webhook.address", "http://localhost:8282");
         String idsWebhookPath = context.getSetting("web.http.ids.path", "/api/v1/ids");
         idsWebhookAddress = idsWebhookAddress + idsWebhookPath;
 
         var edcInterfaceUrl = context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL); // getEdcBlockchainInterfaceUrl();
         monitor.info("BlockchainCatalogExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
-        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex, edcInterfaceUrl, idsWebhookAddress);
+        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex, edcInterfaceUrl, idsWebhookAddress, assetApiController);
         eventRouter.registerSync(AssetCreated.class, blockchainAssetCreator); // asynchronous dispatch
 
-        eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl));
+        //eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl));
 
 
 
-        eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex));
-        */
+        //eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex));
+
+
+        var dataAddress = DataAddress.Builder.newInstance()
+                .property("path", "/tmp/test.txt")
+                .property("type", "File")
+                .build();
+        var asset = Asset.Builder.newInstance()
+                .name("TestAsset")
+                .description("TestAssetDescription")
+                .dataAddress(dataAddress)
+                .build();
+        var result = assetService.create(asset);
+
+
     }
 
 

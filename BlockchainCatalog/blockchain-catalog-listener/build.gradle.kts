@@ -9,6 +9,7 @@ val groupId: String by project
 val edcVersion: String by project
 
 dependencies {
+    /*
     implementation("$groupId:control-plane-core:$edcVersion")
 
     implementation("$groupId:http:$edcVersion")
@@ -30,7 +31,12 @@ dependencies {
     implementation("$groupId:control-plane-spi:$edcVersion")
     implementation("$groupId:transform-spi:$edcVersion")
     implementation("$groupId:asset-api:$edcVersion")
+    */
 
+    api(libs.edc.control.plane.spi)
+    implementation(libs.edc.http)
+    implementation(libs.edc.dsp)
+    implementation(libs.edc.management.api)
     // using the dsp api now instead of ids api
     // dsp-api-configuration should contain the TypeTransformerRegistry which can transform objects to json ld and vise versa
     implementation(libs.edc.dsp)

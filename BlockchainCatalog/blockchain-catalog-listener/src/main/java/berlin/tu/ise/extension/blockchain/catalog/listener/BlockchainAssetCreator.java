@@ -4,10 +4,7 @@ package berlin.tu.ise.extension.blockchain.catalog.listener;
 
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.eclipse.edc.api.model.DataAddressDto;
-import org.eclipse.edc.connector.api.management.asset.model.AssetCreationRequestDto;
-import org.eclipse.edc.connector.api.management.asset.model.AssetEntryDto;
-import org.eclipse.edc.connector.api.management.asset.model.AssetRequestDto;
+import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
 import org.eclipse.edc.connector.asset.spi.event.AssetCreated;
 import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.spi.asset.AssetIndex;
@@ -34,13 +31,16 @@ public class BlockchainAssetCreator implements EventSubscriber {
 
     private final String providerUrl;
 
-    public BlockchainAssetCreator(Monitor monitor, AssetService assetService, AssetIndex assetIndex, String edcInterfaceUrl, String providerUrl) {
+    private final AssetApiController assetApiController;
+
+    public BlockchainAssetCreator(Monitor monitor, AssetService assetService, AssetIndex assetIndex, String edcInterfaceUrl, String providerUrl, AssetApiController assetApiController) {
         this.monitor = monitor;
         this.assetService = assetService;
         this.assetIndex = assetIndex;
         this.edcInterfaceUrl = edcInterfaceUrl;
         this.stateCounter = 0;
         this.providerUrl = providerUrl;
+        this.assetApiController = assetApiController;
     }
 
 
@@ -67,10 +67,21 @@ public class BlockchainAssetCreator implements EventSubscriber {
 
     private String transformToJSON(Asset asset) {
 
+
         monitor.info(String.format("[%s] Asset: '%s' created in EDC, start now with Blockchain related steps ...", this.getClass().getSimpleName(), asset.getName()));
 
         monitor.info(String.format("[%s] formating POJO to JSON ...", this.getClass().getSimpleName()));
 
+        var jsonAsset = String.valueOf(assetApiController.getAsset(asset.getId()));
+        monitor.info(String.format("[%s] formatted POJO to JSON: %s", this.getClass().getSimpleName(), jsonAsset));
+
+        return jsonAsset;
+
+
+
+
+
+        /*
         ObjectMapper mapper = new ObjectMapper();
         // Get the dataAddress because its not stored in the Asset Object for some reasons ...
         DataAddress dataAddress = assetIndex.resolveForAsset(asset.getId());
@@ -96,8 +107,11 @@ public class BlockchainAssetCreator implements EventSubscriber {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-
         return jsonString;
+
+        */
+
+
     }
 
 

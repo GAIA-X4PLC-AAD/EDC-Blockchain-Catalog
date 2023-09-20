@@ -1,9 +1,10 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener.model;
 
-import org.eclipse.edc.connector.api.management.contractdefinition.model.ContractDefinitionResponseDto;
+
+import jakarta.json.JsonObject;
 
 public class TokenizedContractDefinitionResponse {
-    ContractDefinitionResponseDto tokenData;
+    JsonObject tokenData;
     String source;
 
     public String getSource() {
@@ -14,11 +15,11 @@ public class TokenizedContractDefinitionResponse {
         this.source = source;
     }
 
-    public ContractDefinitionResponseDto getTokenData() {
+    public JsonObject getTokenData() {
         return tokenData;
     }
 
-    public void setTokenData(ContractDefinitionResponseDto tokenData) {
+    public void setTokenData(JsonObject tokenData) {
         this.tokenData = tokenData;
     }
 
