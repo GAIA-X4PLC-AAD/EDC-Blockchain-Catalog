@@ -1,19 +1,30 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener;
 
+import jakarta.json.Json;
 import org.eclipse.edc.api.validation.DataAddressValidator;
 import org.eclipse.edc.connector.api.management.asset.transform.JsonObjectToAssetEntryNewDtoTransformer;
 import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
-import org.eclipse.edc.connector.api.management.asset.validation.AssetEntryDtoValidator;
 import org.eclipse.edc.connector.api.management.asset.validation.AssetValidator;
 import org.eclipse.edc.connector.api.management.configuration.ManagementApiConfiguration;
 import org.eclipse.edc.connector.api.management.configuration.transform.ManagementApiTypeTransformerRegistry;
+import org.eclipse.edc.connector.api.management.contractdefinition.ContractDefinitionApiController;
+import org.eclipse.edc.connector.api.management.contractdefinition.transform.JsonObjectFromContractDefinitionTransformer;
+import org.eclipse.edc.connector.api.management.contractdefinition.transform.JsonObjectToContractDefinitionTransformer;
+import org.eclipse.edc.connector.api.management.policy.PolicyDefinitionApiController;
+import org.eclipse.edc.connector.api.management.policy.PolicyDefinitionApiExtension;
+import org.eclipse.edc.connector.api.management.policy.transform.JsonObjectFromPolicyDefinitionTransformer;
+import org.eclipse.edc.connector.api.management.policy.transform.JsonObjectToPolicyDefinitionTransformer;
+import org.eclipse.edc.connector.api.management.policy.validation.PolicyDefinitionValidator;
 import org.eclipse.edc.connector.asset.spi.event.AssetCreated;
 import org.eclipse.edc.connector.contract.spi.event.contractdefinition.ContractDefinitionCreated;
+import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
+import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 import org.eclipse.edc.connector.policy.spi.event.PolicyDefinitionCreated;
 import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
 import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessObservable;
+import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.protocol.dsp.api.configuration.DspApiConfigurationExtension;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
@@ -22,6 +33,7 @@ import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.asset.DataAddressResolver;
 import org.eclipse.edc.spi.entity.Entity;
 import org.eclipse.edc.spi.event.EventRouter;
+import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.eclipse.edc.spi.types.domain.DataAddress;
@@ -30,9 +42,10 @@ import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
 import org.eclipse.edc.web.spi.WebService;
 
-import static org.eclipse.edc.connector.api.management.asset.model.AssetEntryNewDto.EDC_ASSET_ENTRY_DTO_TYPE;
-import static org.eclipse.edc.spi.types.domain.DataAddress.EDC_DATA_ADDRESS_TYPE;
-import static org.eclipse.edc.spi.types.domain.asset.Asset.EDC_ASSET_TYPE;
+import java.util.Map;
+
+import static org.eclipse.edc.connector.policy.spi.PolicyDefinition.EDC_POLICY_DEFINITION_TYPE;
+
 
 @Extension(value = BlockchainCatalogExtension.NAME)
 public class BlockchainCatalogExtension implements ServiceExtension {
@@ -48,6 +61,7 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     // Needs to be injected to get Access to AssetObservable
     @Inject
     private AssetService assetService;
+
 
     // Needs to be injected to get Access to PolicyDefinitionObservable
     @Inject
@@ -82,6 +96,7 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     @Inject
     private ManagementApiTypeTransformerRegistry transformerRegistry;
 
+
     @Inject
     private DataAddressResolver dataAddressResolver;
 
@@ -97,9 +112,21 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
 
+        var jsonBuilderFactory = Json.createBuilderFactory(Map.of());
+        transformerRegistry.register(new JsonObjectToPolicyDefinitionTransformer());
+        transformerRegistry.register(new JsonObjectFromPolicyDefinitionTransformer(jsonBuilderFactory));
+        transformerRegistry.register(new JsonObjectToContractDefinitionTransformer());
+        transformerRegistry.register(new JsonObjectFromContractDefinitionTransformer(jsonBuilderFactory));
+
+        validator.register(EDC_POLICY_DEFINITION_TYPE, PolicyDefinitionValidator.instance());
+
         AssetApiController assetApiController = new AssetApiController(assetService, transformerRegistry, monitor, validator);
+        PolicyDefinitionApiController policyDefinitionApiController = new PolicyDefinitionApiController(monitor, transformerRegistry, policyDefinitionService, validator);
+        ContractDefinitionApiController contractDefinitionApiController = new ContractDefinitionApiController(transformerRegistry, contractDefinitionService, monitor, validator);
 
         this.context = context;
+
+
 
 
         String idsWebhookAddress = context.getSetting("ids.webhook.address", "http://localhost:8282");
@@ -112,11 +139,11 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex, edcInterfaceUrl, idsWebhookAddress, assetApiController);
         eventRouter.registerSync(AssetCreated.class, blockchainAssetCreator); // asynchronous dispatch
 
-        //eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl));
+        eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl, policyDefinitionApiController));
 
 
 
-        //eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex));
+        eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController));
 
 
         var dataAddress = DataAddress.Builder.newInstance()
@@ -130,6 +157,30 @@ public class BlockchainCatalogExtension implements ServiceExtension {
                 .build();
         var result = assetService.create(asset);
 
+        var policy = Policy.Builder.newInstance()
+                .assignee("TestAssignee")
+                .assigner("TestAssigner")
+                .target("TestTarget")
+                .build();
+
+        var policyDefinition = PolicyDefinition.Builder.newInstance()
+                .policy(policy)
+                .build();
+        var resultPolicyDefinition = policyDefinitionService.create(policyDefinition);
+
+
+        var assetSelectorCriterion = Criterion.Builder.newInstance()
+                .operandLeft("name")
+                .operator("=")
+                .operandRight("TestAsset")
+                .build();
+
+        var contractDefinition = ContractDefinition.Builder.newInstance()
+                .accessPolicyId(resultPolicyDefinition.getContent().getUid())
+                .contractPolicyId(resultPolicyDefinition.getContent().getUid())
+                .assetsSelectorCriterion(assetSelectorCriterion)
+                .build();
+        var resultContractDefinition = contractDefinitionService.create(contractDefinition);
 
     }
 

@@ -3,6 +3,7 @@ package berlin.tu.ise.extension.blockchain.catalog.listener;
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.edc.connector.api.management.policy.PolicyDefinitionApiController;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 import org.eclipse.edc.connector.policy.spi.event.PolicyDefinitionCreated;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
@@ -18,10 +19,13 @@ public class BlockchainPolicyCreator implements EventSubscriber {
 
     private final String edcInterfaceUrl;
 
-    public BlockchainPolicyCreator(Monitor monitor, PolicyDefinitionService policyDefinitionService, String edcInterfaceUrl) {
+    private final PolicyDefinitionApiController policyDefinitionApiController;
+
+    public BlockchainPolicyCreator(Monitor monitor, PolicyDefinitionService policyDefinitionService, String edcInterfaceUrl, PolicyDefinitionApiController policyDefinitionApiController) {
         this.monitor = monitor;
         this.policyDefinitionService = policyDefinitionService;
         this.edcInterfaceUrl = edcInterfaceUrl;
+        this.policyDefinitionApiController = policyDefinitionApiController;
     }
 
 
@@ -51,6 +55,11 @@ public class BlockchainPolicyCreator implements EventSubscriber {
 
         monitor.info(String.format("[%s] formating POJO to JSON ...\n", this.getClass().getSimpleName()));
 
+        var policyJson = policyDefinitionApiController.getPolicyDefinition(policyDefinition.getUid());
+        monitor.info(String.format("[%s] Policy JSON: %s\n", this.getClass().getSimpleName(), policyJson));
+        return String.valueOf(policyJson);
+
+        /*
         ObjectMapper mapper = new ObjectMapper();
 
         // Format them to JSON and print them for debugging. Change later, for now the system out println looks prettier than using monitor
@@ -64,6 +73,7 @@ public class BlockchainPolicyCreator implements EventSubscriber {
         }
 
         return jsonString;
+         */
     }
 
 }

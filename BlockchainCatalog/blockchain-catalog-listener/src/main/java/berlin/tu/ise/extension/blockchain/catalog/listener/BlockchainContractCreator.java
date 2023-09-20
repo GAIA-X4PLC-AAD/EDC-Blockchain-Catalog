@@ -4,6 +4,7 @@ import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.TokenizedContractDefinitionResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.edc.connector.api.management.contractdefinition.ContractDefinitionApiController;
 import org.eclipse.edc.connector.contract.spi.event.contractdefinition.ContractDefinitionCreated;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
@@ -29,12 +30,15 @@ public class BlockchainContractCreator implements EventSubscriber {
 
     private final String edcInterfaceUrl;
 
-    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex) {
+    private final ContractDefinitionApiController contractDefinitionApiController;
+
+    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex, ContractDefinitionApiController contractDefinitionApiController) {
         this.monitor = monitor;
         this.idsWebhookAddress = idsWebhookAddress;
         this.contractDefinitionService = contractDefinitionService;
         this.edcInterfaceUrl = edcInterfaceUrl;
         this.assetIndex = assetIndex;
+        this.contractDefinitionApiController = contractDefinitionApiController;
     }
 
     @Override
@@ -63,13 +67,15 @@ public class BlockchainContractCreator implements EventSubscriber {
 
     private String transformToJSON(ContractDefinition contractDefinition) {
 
-        monitor.info(String.format("[%s] ContractDefinition: for '%s' and '%s' targeting '%s' created in EDC, start now with Blockchain related steps ...", this.getClass().getSimpleName(), contractDefinition.getContractPolicyId(), contractDefinition.getAccessPolicyId(), contractDefinition.getAssetsSelector().get(0).getOperandRight()));
+        monitor.info(String.format("[%s] ContractDefinition: for '%s' and '%s' targeting '%s' created in EDC, start now with Blockchain related steps ...", this.getClass().getSimpleName(), contractDefinition.getContractPolicyId(), contractDefinition.getAccessPolicyId(), "not implemented"));
 
         monitor.info(String.format("[%s] formating POJO to JSON ...", this.getClass().getSimpleName()));
 
-        monitor.warning(String.format("[%s] currently not implemented", this.getClass().getSimpleName()));
+        var contractDefinitionJson = contractDefinitionApiController.getContractDefinition(contractDefinition.getId());
 
-        return null;
+        monitor.warning(String.format("[%s] Contract Definition: %s", this.getClass().getSimpleName(), contractDefinitionJson));
+
+        return String.valueOf(contractDefinitionJson);
 
         /*
         ObjectMapper mapper = new ObjectMapper();
