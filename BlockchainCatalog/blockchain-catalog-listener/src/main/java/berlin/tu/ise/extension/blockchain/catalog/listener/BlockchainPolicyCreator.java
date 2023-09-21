@@ -58,22 +58,6 @@ public class BlockchainPolicyCreator implements EventSubscriber {
         var policyJson = policyDefinitionApiController.getPolicyDefinition(policyDefinition.getUid());
         monitor.info(String.format("[%s] Policy JSON: %s\n", this.getClass().getSimpleName(), policyJson));
         return String.valueOf(policyJson);
-
-        /*
-        ObjectMapper mapper = new ObjectMapper();
-
-        // Format them to JSON and print them for debugging. Change later, for now the system out println looks prettier than using monitor
-        String jsonString = "";
-        try {
-            jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(policyDefinition);
-            System.out.println("Formatting a PolicyDefinition to JSON:");
-            System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(policyDefinition));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        return jsonString;
-         */
     }
 
 }

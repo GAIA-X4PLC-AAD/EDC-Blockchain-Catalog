@@ -4,12 +4,19 @@ import berlin.tu.ise.extension.blockchain.catalog.listener.model.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.failsafe.Policy;
+import jakarta.json.JsonObject;
+import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
 import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
+import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
-import org.eclipse.edc.spi.types.domain.asset.AssetEntry;
+import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
+import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
+import org.eclipse.edc.web.spi.exception.InvalidRequestException;
+import org.eclipse.edc.web.spi.exception.ValidationFailureException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,6 +29,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static org.eclipse.edc.spi.types.domain.asset.Asset.EDC_ASSET_TYPE;
 
 public class BlockchainHelper {
 
@@ -118,13 +127,12 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static List<ContractOfferMessage> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl) {
-        ContractOfferMessage contractOfferDto = null;
+    public static List<ContractDefinition> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        List<TokenizedContract> tokenziedContractList;
-        List<ContractOfferMessage> contractOfferDtoList = new ArrayList<>();
+        List<TokenizedObject> tokenziedContractList;
+        List<ContractDefinition> contractOfferDtoList = new ArrayList<>();
 
         HttpURLConnection c = null;
         try {
@@ -154,9 +162,13 @@ public class BlockchainHelper {
                     });
 
 
-                    for (TokenizedContract tokenizedContract: tokenziedContractList) {
+                    for (TokenizedObject tokenizedContract: tokenziedContractList) {
                         if(tokenizedContract != null) {
-                            contractOfferDtoList.add(tokenizedContract.getTokenData());
+                            validatorRegistry.validate(ContractDefinition.CONTRACT_DEFINITION_TYPE, tokenizedContract.tokenData).orElseThrow(ValidationFailureException::new);
+
+                            var contract = transformerRegistry.transform(tokenizedContract.tokenData, ContractDefinition.class)
+                                    .orElseThrow(InvalidRequestException::new);
+                            contractOfferDtoList.add(contract);
                         }
 
                     }
@@ -295,11 +307,12 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static List<Asset> getAllAssetsFromSmartContract(String edcInterfaceUrl, Monitor monitor) {
+    public static List<Asset> getAllAssetsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
         ObjectMapper mapper = new ObjectMapper();
 
-        List<TokenziedAsset> tokenziedAssetList;
-        List<Asset> assetResponseDtoList = new ArrayList<>();
+        List<TokenizedObject> tokenziedAssetList;
+        List<Asset> assetResponseList = new ArrayList<>();
+
 
         HttpURLConnection c = null;
         try {
@@ -324,16 +337,21 @@ public class BlockchainHelper {
                     }
                     br.close();
 
-                    tokenziedAssetList = mapper.readValue(sb.toString(), new TypeReference<List<TokenziedAsset>>(){});
+                    tokenziedAssetList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedObject>>(){});
 
-                    for (TokenziedAsset tokenziedAsset: tokenziedAssetList) {
-                        if(tokenziedAsset != null) {
-                            assetResponseDtoList.add(tokenziedAsset.getTokenData());
+                    for (TokenizedObject tokenizedAsset: tokenziedAssetList) {
+                        if(tokenizedAsset != null) {
+
+                            validatorRegistry.validate(EDC_ASSET_TYPE, tokenizedAsset.tokenData).orElseThrow(ValidationFailureException::new);
+
+                            var asset = transformerRegistry.transform(tokenizedAsset.tokenData, Asset.class)
+                                    .orElseThrow(InvalidRequestException::new);
+                            assetResponseList.add(asset);
                         }
 
                     }
 
-                    return assetResponseDtoList;
+                    return assetResponseList;
             }
 
 
@@ -354,11 +372,11 @@ public class BlockchainHelper {
 
     }
 
-    public static List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract(String edcInterfaceUrl) {
+    public static List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
         ObjectMapper mapper = new ObjectMapper();
 
-        List<TokenizedPolicyDefinition> tokenizedPolicyDefinitionList = new ArrayList<>();
-        List<PolicyDefinition> policyDefinitionResponseDtoList = new ArrayList<>();
+        List<TokenizedObject> tokenizedPolicyDefinitionList = new ArrayList<>();
+        List<PolicyDefinition> policyDefinitionList = new ArrayList<>();
 
         HttpURLConnection c = null;
         try {
@@ -382,15 +400,19 @@ public class BlockchainHelper {
                     }
                     br.close();
 
-                    tokenizedPolicyDefinitionList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedPolicyDefinition>>(){});
+                    tokenizedPolicyDefinitionList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedObject>>(){});
 
-                    for (TokenizedPolicyDefinition tokenizedPolicyDefinition: tokenizedPolicyDefinitionList) {
+                    for (TokenizedObject tokenizedPolicyDefinition: tokenizedPolicyDefinitionList) {
                         if(tokenizedPolicyDefinition != null) {
-                            policyDefinitionResponseDtoList.add(tokenizedPolicyDefinition.getTokenData());
+                            validatorRegistry.validate(PolicyDefinition.EDC_POLICY_DEFINITION_TYPE, tokenizedPolicyDefinition.tokenData).orElseThrow(ValidationFailureException::new);
+
+                            var policyDefinition = transformerRegistry.transform(tokenizedPolicyDefinition.tokenData, PolicyDefinition.class)
+                                    .orElseThrow(InvalidRequestException::new);
+                            policyDefinitionList.add(policyDefinition);
                         }
                     }
 
-                    return policyDefinitionResponseDtoList;
+                    return policyDefinitionList;
             }
 
 

@@ -91,24 +91,6 @@ public class BlockchainAssetCreator implements EventSubscriber {
         if (!asset.getProperties().containsKey("asset:prop:originator"))
             asset.getProperties().put("asset:prop:originator", providerUrl);
 
-
-        // Using the already created Dto Classes from the Web API Datamangement Extension
-        AssetCreationRequestDto assetCreationRequestDto = AssetCreationRequestDto.Builder.newInstance().id(asset.getId()).properties(asset.getProperties()).build();
-        DataAddressDto dataAddressDto = DataAddressDto.Builder.newInstance().properties(dataAddress.getProperties()).build();
-        AssetEntryDto assetEntryDto = AssetEntryDto.Builder.newInstance().asset(assetCreationRequestDto).dataAddress(dataAddressDto).build();
-
-        String jsonString = "";
-        // Format them to JSON and print them for debugging. Change later, for now the system out println looks prettier than using monitor
-        try {
-            //System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(asset));
-            //System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataAddress));
-            jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(assetEntryDto);
-            System.out.println(jsonString);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        return jsonString;
-
         */
 
 
