@@ -42,9 +42,11 @@ dependencies {
 
     implementation(project(":transfer:transfer-07-provider-push-http:http-push-connector"))
     implementation(project(":transfer:transfer-07-provider-push-http:provider-push-http-backend-service"))
+    implementation(project(":transfer:TransferFileLocal"))
 
     // data plane related dependencies to enable transfer via azurerite
     implementation("$groupId:data-plane-azure-storage:$edcVersion")
+    // implementation("$groupId:vault-azure:$edcVersion")
     implementation("$groupId:data-plane-util:$edcVersion")
     implementation("$groupId:data-plane-core:$edcVersion")
     implementation("$groupId:data-plane-framework:$edcVersion")
@@ -52,8 +54,6 @@ dependencies {
     implementation("$groupId:control-plane-core:$edcVersion")
     implementation("$groupId:data-plane-core:$edcVersion")
     implementation("$groupId:data-plane-http:$edcVersion")
-    implementation("$groupId:data-plane-azure-storage:$edcVersion")
-    // implementation("$groupId:vault-azure:$edcVersion")
     implementation("$groupId:transfer-data-plane:$edcVersion")
     implementation("$groupId:transfer-core:$edcVersion")
     implementation("$groupId:data-plane-client:$edcVersion")
@@ -64,7 +64,6 @@ dependencies {
 
     implementation("${groupId}:control-plane-core:${edcVersion}")
     implementation("${groupId}:ids:${edcVersion}")
-    implementation("${groupId}:configuration-filesystem:${edcVersion}")
     implementation("${groupId}:vault-filesystem:${edcVersion}")
     implementation("${groupId}:iam-mock:${edcVersion}")
     implementation("${groupId}:management-api:${edcVersion}")
@@ -83,13 +82,7 @@ dependencies {
     api("$groupId:control-plane-spi:$edcVersion")
     api("$groupId:data-plane-spi:$edcVersion")
 
-
-
-
-
-
 //    implementation(project(":transfer:StatusChecker"))
-//    implementation(project(":transfer:TransferFileLocal"))
 
 }
 

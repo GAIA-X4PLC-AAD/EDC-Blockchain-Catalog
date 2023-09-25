@@ -46,7 +46,7 @@ findProject(":BlockchainCatalog:blockchain-catalog-prosumer")?.name = "blockchai
 
 include("blockchain-logger")
 
-// include("transfer:TransferFileLocal")
+include("transfer:TransferFileLocal")
 // include("transfer:StatusChecker")
 include("transfer:transfer-07-provider-push-http:provider-push-http-backend-service")
 include("transfer:transfer-07-provider-push-http:http-push-connector")
