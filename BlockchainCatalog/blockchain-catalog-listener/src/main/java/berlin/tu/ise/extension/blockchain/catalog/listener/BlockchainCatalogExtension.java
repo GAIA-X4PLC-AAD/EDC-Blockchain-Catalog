@@ -1,6 +1,7 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener;
 
 import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import org.eclipse.edc.api.validation.DataAddressValidator;
 import org.eclipse.edc.connector.api.management.asset.transform.JsonObjectToAssetEntryNewDtoTransformer;
 import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
@@ -24,6 +25,7 @@ import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
 import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessObservable;
+import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromAssetTransformer;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.protocol.dsp.api.configuration.DspApiConfigurationExtension;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
@@ -36,6 +38,7 @@ import org.eclipse.edc.spi.event.EventRouter;
 import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
+import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
@@ -102,6 +105,8 @@ public class BlockchainCatalogExtension implements ServiceExtension {
 
     @Inject
     private JsonObjectValidatorRegistry validator;
+    @Inject
+    private TypeManager typeManager;
 
     @Override
     public String name() {
@@ -112,11 +117,15 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
 
+
+
         var jsonBuilderFactory = Json.createBuilderFactory(Map.of());
         transformerRegistry.register(new JsonObjectToPolicyDefinitionTransformer());
         transformerRegistry.register(new JsonObjectFromPolicyDefinitionTransformer(jsonBuilderFactory));
         transformerRegistry.register(new JsonObjectToContractDefinitionTransformer());
         transformerRegistry.register(new JsonObjectFromContractDefinitionTransformer(jsonBuilderFactory));
+        //transformerRegistry.register(new JsonObjectFromAssetTransformer(jsonBuilderFactory, typeManager.getMapper()));
+        //transformerRegistry.register(new JsonObjectToAssetEntryNewDtoTransformer());
 
         validator.register(EDC_POLICY_DEFINITION_TYPE, PolicyDefinitionValidator.instance());
 
@@ -145,7 +154,27 @@ public class BlockchainCatalogExtension implements ServiceExtension {
 
         eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController));
 
+        /*
+        var dataAddress = DataAddress.Builder.newInstance()
+                .property("path", "/tmp/test.txt")
+                .property("type", "File")
+                .build();
+        var asset = Asset.Builder.newInstance()
+                .name("TestAsset")
+                .description("TestAssetDescription")
+                .dataAddress(dataAddress)
+                .build();
 
+        var result = assetService.create(asset);
+
+        var assetAsJsonObject = assetApiController.getAsset(result.getContent().getId());
+        //var jsonObject = transformerRegistry.transform(asset, JsonObject.class);
+        monitor.debug("Test JsonObject: " + assetAsJsonObject.toString());
+    */
+
+    }
+
+    public void initWithTestDate() {
         var dataAddress = DataAddress.Builder.newInstance()
                 .property("path", "/tmp/test.txt")
                 .property("type", "File")
@@ -181,7 +210,6 @@ public class BlockchainCatalogExtension implements ServiceExtension {
                 .assetsSelectorCriterion(assetSelectorCriterion)
                 .build();
         var resultContractDefinition = contractDefinitionService.create(contractDefinition);
-
     }
 
 

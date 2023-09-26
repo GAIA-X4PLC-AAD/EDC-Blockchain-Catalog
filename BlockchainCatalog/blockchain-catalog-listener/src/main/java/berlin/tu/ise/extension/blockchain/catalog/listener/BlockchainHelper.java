@@ -5,7 +5,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.failsafe.Policy;
+import jakarta.json.Json;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
 import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
 import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
@@ -15,13 +17,11 @@ import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
+import org.eclipse.edc.validator.spi.ValidationResult;
 import org.eclipse.edc.web.spi.exception.InvalidRequestException;
 import org.eclipse.edc.web.spi.exception.ValidationFailureException;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -161,7 +161,7 @@ public class BlockchainHelper {
                     tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<>() {
                     });
 
-
+                    /*
                     for (TokenizedObject tokenizedContract: tokenziedContractList) {
                         if(tokenizedContract != null) {
                             validatorRegistry.validate(ContractDefinition.CONTRACT_DEFINITION_TYPE, tokenizedContract.tokenData).orElseThrow(ValidationFailureException::new);
@@ -172,6 +172,7 @@ public class BlockchainHelper {
                         }
 
                     }
+                    */
 
                     return contractOfferDtoList;
             }
@@ -337,19 +338,19 @@ public class BlockchainHelper {
                     }
                     br.close();
 
+                    monitor.debug("Read from edc-interface: " + sb.toString() + " and going on to map it to a list of TokenizedObjects");
                     tokenziedAssetList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedObject>>(){});
-
+                    monitor.debug("Read " + tokenziedAssetList.size() + " assets from edc-interface and going on to validate them");
+                    int failedCounter = 0;
                     for (TokenizedObject tokenizedAsset: tokenziedAssetList) {
-                        if(tokenizedAsset != null) {
-
-                            validatorRegistry.validate(EDC_ASSET_TYPE, tokenizedAsset.tokenData).orElseThrow(ValidationFailureException::new);
-
-                            var asset = transformerRegistry.transform(tokenizedAsset.tokenData, Asset.class)
-                                    .orElseThrow(InvalidRequestException::new);
+                        Asset asset = castJsonObjectToAsset(validatorRegistry, transformerRegistry, tokenizedAsset, monitor);
+                        if(asset != null) {
                             assetResponseList.add(asset);
+                        } else {
+                            failedCounter++;
                         }
-
                     }
+                    monitor.debug("Validation failed for " + failedCounter + " assets and succeeded for " + assetResponseList.size() + " assets");
 
                     return assetResponseList;
             }
@@ -370,6 +371,40 @@ public class BlockchainHelper {
         }
         return null;
 
+    }
+
+    private static Asset castJsonObjectToAsset( JsonObjectValidatorRegistry validatorRegistry, TypeTransformerRegistry transformerRegistry, TokenizedObject tokenizedAsset, Monitor monitor) {
+
+        if(tokenizedAsset == null) {
+            return null;
+        }
+        // monitor.debug("Validating asset " + tokenizedAsset.getTokenData() + " with " + EDC_ASSET_TYPE);
+
+        JsonObject jsonObject = tokenizedAsset.getTokenData(); // Directly get the JsonObject
+        monitor.debug("Using JsonObject: " + jsonObject.toString());
+        ValidationResult result = validatorRegistry.validate(EDC_ASSET_TYPE, jsonObject);
+        monitor.debug(result.toString());
+    /*
+    try {
+            ;
+        } catch (ValidationFailureException ex) {
+            monitor.warning("Validation failed for asset " + ex.getMessage());
+            //ex.printStackTrace();
+            return null;
+        } catch (Exception ex) {
+            monitor.warning("Validation failed for asset with unexpected error " + ex.getMessage());
+            ex.printStackTrace();
+            return null;
+        }
+        */
+
+        monitor.debug("Validation succeeded for asset " + jsonObject.toString() + " and going on to transform it");
+
+        var asset = transformerRegistry.transform(jsonObject, Asset.class)
+                .orElseThrow(InvalidRequestException::new);
+
+        monitor.debug("Transformation succeeded for asset " + asset.getId() + " and going on to add it to the list of assets");
+        return asset;
     }
 
     public static List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
@@ -402,6 +437,7 @@ public class BlockchainHelper {
 
                     tokenizedPolicyDefinitionList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedObject>>(){});
 
+                    /*
                     for (TokenizedObject tokenizedPolicyDefinition: tokenizedPolicyDefinitionList) {
                         if(tokenizedPolicyDefinition != null) {
                             validatorRegistry.validate(PolicyDefinition.EDC_POLICY_DEFINITION_TYPE, tokenizedPolicyDefinition.tokenData).orElseThrow(ValidationFailureException::new);
@@ -411,6 +447,8 @@ public class BlockchainHelper {
                             policyDefinitionList.add(policyDefinition);
                         }
                     }
+
+                     */
 
                     return policyDefinitionList;
             }

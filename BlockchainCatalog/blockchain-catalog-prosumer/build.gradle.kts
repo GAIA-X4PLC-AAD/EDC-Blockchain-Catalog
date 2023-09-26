@@ -94,7 +94,7 @@ dependencies {
     //implementation(project(":playground:apiTest"))
     //implementation(project(":transfer:transfer-07-provider-push-http:http-push-connector"))
     //implementation(project(":transfer:transfer-07-provider-push-http:provider-push-http-backend-service"))
-    //implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
+    implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
     implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
     implementation(project(":blockchain-logger"))
 
