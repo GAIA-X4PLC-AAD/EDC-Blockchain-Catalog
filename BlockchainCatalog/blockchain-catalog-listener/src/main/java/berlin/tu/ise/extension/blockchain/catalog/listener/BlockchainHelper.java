@@ -3,11 +3,10 @@ package berlin.tu.ise.extension.blockchain.catalog.listener;
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.failsafe.Policy;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonReader;
+import jakarta.json.*;
 import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
 import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
@@ -339,17 +338,32 @@ public class BlockchainHelper {
                     br.close();
 
                     monitor.debug("Read from edc-interface: " + sb.toString() + " and going on to map it to a list of TokenizedObjects");
-                    tokenziedAssetList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedObject>>(){});
-                    monitor.debug("Read " + tokenziedAssetList.size() + " assets from edc-interface and going on to validate them");
+                    //tokenziedAssetList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedObject>>(){});
+                    List<JsonNode> nodeList = mapper.readValue(sb.toString(), new TypeReference<List<JsonNode>>() {});
+
+                    monitor.debug("Read " + nodeList.size() + " assets from edc-interface and going on to validate them");
                     int failedCounter = 0;
-                    for (TokenizedObject tokenizedAsset: tokenziedAssetList) {
-                        Asset asset = castJsonObjectToAsset(validatorRegistry, transformerRegistry, tokenizedAsset, monitor);
-                        if(asset != null) {
-                            assetResponseList.add(asset);
-                        } else {
-                            failedCounter++;
+                    for (JsonNode node : nodeList) {
+                        if (node.has("tokenData")) {
+                            String tokenDataString = node.get("tokenData").toString();
+
+                            // Convert tokenDataString to JsonObject using Jakarta JSON-P
+                            try (JsonReader jsonReader = Json.createReader(new StringReader(tokenDataString))) {
+                                JsonObject tokenDataJsonObject = jsonReader.readObject();
+
+                                // Now you have your tokenData as a Jakarta JsonObject
+                                System.out.println(tokenDataJsonObject);
+
+                                Asset asset = castJsonObjectToAsset(validatorRegistry, transformerRegistry, tokenDataJsonObject, monitor);
+                                if(asset != null) {
+                                    assetResponseList.add(asset);
+                                } else {
+                                    failedCounter++;
+                                }
+                            }
                         }
                     }
+
                     monitor.debug("Validation failed for " + failedCounter + " assets and succeeded for " + assetResponseList.size() + " assets");
 
                     return assetResponseList;
@@ -373,17 +387,29 @@ public class BlockchainHelper {
 
     }
 
-    private static Asset castJsonObjectToAsset( JsonObjectValidatorRegistry validatorRegistry, TypeTransformerRegistry transformerRegistry, TokenizedObject tokenizedAsset, Monitor monitor) {
+    private static Asset castJsonObjectToAsset( JsonObjectValidatorRegistry validatorRegistry, TypeTransformerRegistry transformerRegistry, JsonObject jsonObject, Monitor monitor) {
 
-        if(tokenizedAsset == null) {
+        if(jsonObject == null) {
             return null;
         }
         // monitor.debug("Validating asset " + tokenizedAsset.getTokenData() + " with " + EDC_ASSET_TYPE);
 
-        JsonObject jsonObject = tokenizedAsset.getTokenData(); // Directly get the JsonObject
         monitor.debug("Using JsonObject: " + jsonObject.toString());
-        ValidationResult result = validatorRegistry.validate(EDC_ASSET_TYPE, jsonObject);
-        monitor.debug(result.toString());
+        try {
+            ValidationResult result = validatorRegistry.validate(EDC_ASSET_TYPE, jsonObject);
+            monitor.debug(result.toString());
+            if (result.failed()) {
+                for ( String message : result.getFailureMessages()) {
+                    monitor.debug(message);
+                }
+                return null;
+            }
+
+        } catch (ClassCastException e) {
+            monitor.warning("Validation failed for asset " + jsonObject.toString() + " with " + e.getMessage());
+            return null;
+        }
+
     /*
     try {
             ;
