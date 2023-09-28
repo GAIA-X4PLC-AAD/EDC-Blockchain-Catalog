@@ -96,6 +96,26 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
         // iterate over all sources of contractDefinitionResponseDtoGroupedBySource and fetch all contracts for each source
 
+
+
+        monitor.debug("-------------------------------------------------");
+        for (Asset asset : assetList) {
+            monitor.debug("Asset: " + asset.getId());
+            monitor.debug("AssetName: " + asset.getName());
+            monitor.debug("AssetProperties: " + asset.getProperties().toString());
+            monitor.debug("AssetDataAddress: " + asset.getDataAddress().toString());
+        }
+        for (PolicyDefinition policyDefinition : policyDefinitionList) {
+            monitor.debug("Policy: " + policyDefinition.getId());
+            monitor.debug("PolicyTarget: " + policyDefinition.getPolicy().getTarget());
+        }
+        for (ContractDefinition contractDefinition : contractDefinitionList) {
+            monitor.debug("Contract: " + contractDefinition.getId());
+            monitor.debug("ContractPolicyId: " + contractDefinition.getContractPolicyId());
+            monitor.debug("ContractCriteria: " + contractDefinition.getAccessPolicyId());
+        }
+
+
         // iterate over all contracts for a source
         assert contractDefinitionList != null;
         for (ContractDefinition contract : contractDefinitionList) {
@@ -113,21 +133,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
         monitor.info(format("Fetched %d offers from blockchain", contractOfferList.size()));
 
-        monitor.debug("-------------------------------------------------");
-        for (Asset asset : assetList) {
-            monitor.debug("Asset: " + asset.getId());
-            monitor.debug("AssetProperties: " + asset.getProperties().toString());
-            monitor.debug("AssetDataAddress: " + asset.getDataAddress().toString());
-        }
-        for (PolicyDefinition policyDefinition : policyDefinitionList) {
-            monitor.debug("Policy: " + policyDefinition.getId());
-            monitor.debug("PolicyTarget: " + policyDefinition.getPolicy().getTarget());
-        }
-        for (ContractDefinition contractDefinition : contractDefinitionList) {
-            monitor.debug("Contract: " + contractDefinition.getId());
-            monitor.debug("ContractPolicyId: " + contractDefinition.getContractPolicyId());
-            monitor.debug("ContractCriteria: " + contractDefinition.getAccessPolicyId());
-        }
+
 
         return contractOfferList;
     }
@@ -141,21 +147,24 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
      */
 
     private ContractOffer getContractOfferFromContractDefinitionDto(ContractDefinition contract, List<Asset> assetList, List<PolicyDefinition> policyDefinitionList) {
-        String assetId = String.valueOf(contract.getCriteria().get(0).getOperandRight());
+
+
+        String assetId = getAssetIdFromCriterions(contract, assetList, "name");
+
+
+        /* Fix for EDC Dashboard?
         if (contract.getCriteria().get(0).getOperandRight() instanceof ArrayList) {
-            assetId = String.valueOf(((ArrayList<?>) contract.getCriteria().get(0).getOperandRight()).get(0)); // WHAT THE FUCK WARUM MUSS ICH DAS HIER TUN WENN DIE ÜBER DAS EDC DASHBOARD ERSTELLT WERDEN?!?=?!
+            assetId = String.valueOf(((ArrayList<?>) contract.getCriteria().get(0).getOperandRight()).get(0));
         }
+         */
+
         String policyId = contract.getContractPolicyId();
+        Asset contractAsset = getAssetByName(assetId, assetList);
 
-        AssetEntryDto assetEntryDto = null;
-        PolicyDefinitionResponseDto policyDefinitionResponseDto = null;
-
-        assetEntryDto = getAssetById(assetId, assetEntryDtoList);
-
-        policyDefinitionResponseDto = getPolicyById(policyId, policyDefinitionResponseDtoList);
+        PolicyDefinition policyDefinition = getPolicyById(policyId, policyDefinitionList);
 
 
-        if (assetEntryDto == null || policyDefinitionResponseDto == null) {
+        if (contractAsset == null || policyDefinition == null) {
             monitor.severe(String.format("[%s] Not able to find the Asset with id %s or policy with id %s for the contract %s", this.getClass().getSimpleName(), assetId, policyId, contract.getId()));
             return null;
         }
@@ -167,21 +176,33 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         ZonedDateTime threeYearsFronNowZonedDateTime = threeYearsFronNow.atZone(ZoneId.systemDefault());
 
 
-        Asset asset = Asset.Builder.newInstance().id(assetEntryDto.getAsset().getId()).properties(assetEntryDto.getAsset().getProperties()).build();
-        Policy policy = Policy.Builder.newInstance()
-                .target(policyDefinitionResponseDto.getPolicy().getTarget())
-                .assignee(policyDefinitionResponseDto.getPolicy().getAssignee())
-                .assigner(policyDefinitionResponseDto.getPolicy().getAssigner())
-                .prohibitions(policyDefinitionResponseDto.getPolicy().getProhibitions())
-                .permissions(policyDefinitionResponseDto.getPolicy().getPermissions())
-                .extensibleProperties(policyDefinitionResponseDto.getPolicy().getExtensibleProperties())
-                .duties(policyDefinitionResponseDto.getPolicy().getObligations()).build();
+        //Asset asset = Asset.Builder.newInstance().id(contractAsset.getId()).properties(contractAsset.getProperties()).build();
+        Policy policy = policyDefinition.getPolicy();
 
         String providerUrl = "http://unavailable:8080";
-        if (asset.getProperties().get("asset:prop:originator") != null) {
-            providerUrl = asset.getProperties().get("asset:prop:originator").toString();
+        if (contractAsset.getProperties().get("asset:prop:originator") != null) {
+            providerUrl = contractAsset.getProperties().get("asset:prop:originator").toString();
         }
-        return  ContractOffer.Builder.newInstance().assetId(assetEntryDto.getAsset().getId()).policy(policy).id(contract.getId()).providerId(URI.create(providerUrl).toString()).build();
+        return  ContractOffer.Builder.newInstance()
+                .assetId(contractAsset.getId())
+                .policy(policy)
+                .id(contract.getId())
+                //.providerId(URI.create(providerUrl).toString())
+                .build();
+    }
+
+    // check the contract criteria for the asset id to find the asset this contract is about
+    // better to check all available criterias and left and right operands if the content is "name" and then we know that the other side is the asset id
+    private String getAssetIdFromCriterions(ContractDefinition contract, List<Asset> assetList, String assetIdPropertyName) {
+
+        for (Criterion criterion: contract.getAssetsSelector()) {
+            if (criterion.getOperandLeft().equals(assetIdPropertyName)) {
+                return String.valueOf(criterion.getOperandRight());
+            } else if (criterion.getOperandRight().equals(assetIdPropertyName)) {
+                return String.valueOf(criterion.getOperandLeft());
+            }
+        }
+        return null;
     }
 
     private PolicyDefinition getPolicyById(String policyId, List<PolicyDefinition> policyDefinitionResponseDtoList) {
@@ -196,6 +217,15 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
     private Asset getAssetById(String assetId, List<Asset> assetEntryDtoList) {
         for (Asset a: assetEntryDtoList) {
             if(a.getId().equals(assetId)) {
+                return a;
+            }
+        }
+        return null;
+    }
+
+    private Asset getAssetByName(String assetId, List<Asset> assetEntryDtoList) {
+        for (Asset a: assetEntryDtoList) {
+            if(a.getName().equals(assetId)) {
                 return a;
             }
         }

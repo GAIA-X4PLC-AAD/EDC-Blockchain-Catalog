@@ -157,6 +157,8 @@ public class BlockchainCatalogExtension implements ServiceExtension {
 
         eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController));
 
+    //initWithTestDate();
+
         /*
         var dataAddress = HttpDataAddress.Builder.newInstance()
                 .baseUrl("http://tu.berlin")
@@ -218,9 +220,9 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     }
 
     public void initWithTestDate() {
-        var dataAddress = DataAddress.Builder.newInstance()
-                .property("path", "/tmp/test.txt")
-                .property("type", "File")
+        var dataAddress = HttpDataAddress.Builder.newInstance()
+                .baseUrl("http://tu.berlin")
+                .path("/tmp/test.txt")
                 .build();
         var asset = Asset.Builder.newInstance()
                 .name("TestAsset")
