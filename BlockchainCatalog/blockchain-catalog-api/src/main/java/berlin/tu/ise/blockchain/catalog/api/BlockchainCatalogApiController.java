@@ -104,16 +104,30 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
 
             // TODO: Refactor - connect everything together
-            //ContractDefinition contractDefinition = getContractOfferFromContractDefinitionDto(contract, assetList, policyDefinitionResponseDtoList);
-            //if (contractOffer != null) {
-            //    contractOfferList.add(contractOffer);
-            //}
+            ContractOffer contractOffer = getContractOfferFromContractDefinitionDto(contract, assetList, policyDefinitionList);
+            if (contractOffer != null) {
+                contractOfferList.add(contractOffer);
+            }
 
         }
 
-
-
         monitor.info(format("Fetched %d offers from blockchain", contractOfferList.size()));
+
+        monitor.debug("-------------------------------------------------");
+        for (Asset asset : assetList) {
+            monitor.debug("Asset: " + asset.getId());
+            monitor.debug("AssetProperties: " + asset.getProperties().toString());
+            monitor.debug("AssetDataAddress: " + asset.getDataAddress().toString());
+        }
+        for (PolicyDefinition policyDefinition : policyDefinitionList) {
+            monitor.debug("Policy: " + policyDefinition.getId());
+            monitor.debug("PolicyTarget: " + policyDefinition.getPolicy().getTarget());
+        }
+        for (ContractDefinition contractDefinition : contractDefinitionList) {
+            monitor.debug("Contract: " + contractDefinition.getId());
+            monitor.debug("ContractPolicyId: " + contractDefinition.getContractPolicyId());
+            monitor.debug("ContractCriteria: " + contractDefinition.getAccessPolicyId());
+        }
 
         return contractOfferList;
     }
@@ -121,12 +135,12 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
     /**
      * Connecting the actual Asset Objects with Policy Objects to the ContractOffer Object
      * @param contract the contract to be created
-     * @param assetEntryDtoList the list of all existing assets in the blockchain
-     * @param policyDefinitionResponseDtoList the list of all existing policies in the blockchain
+     * @param assetList the list of all existing assets in the blockchain
+     * @param policyDefinitionList the list of all existing policies in the blockchain
      * @return ContractOffer created from combining the Asset and Policy Objects identified by the ids in the ContractDefinitionResponseDto, null if not found
      */
-/*
-    private ContractOffer getContractOfferFromContractDefinitionDto(ContractOfferDto contract, List<AssetEntryDto> assetEntryDtoList, List<PolicyDefinitionResponseDto> policyDefinitionResponseDtoList) {
+
+    private ContractOffer getContractOfferFromContractDefinitionDto(ContractDefinition contract, List<Asset> assetList, List<PolicyDefinition> policyDefinitionList) {
         String assetId = String.valueOf(contract.getCriteria().get(0).getOperandRight());
         if (contract.getCriteria().get(0).getOperandRight() instanceof ArrayList) {
             assetId = String.valueOf(((ArrayList<?>) contract.getCriteria().get(0).getOperandRight()).get(0)); // WHAT THE FUCK WARUM MUSS ICH DAS HIER TUN WENN DIE ÜBER DAS EDC DASHBOARD ERSTELLT WERDEN?!?=?!
@@ -170,8 +184,8 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         return  ContractOffer.Builder.newInstance().assetId(assetEntryDto.getAsset().getId()).policy(policy).id(contract.getId()).providerId(URI.create(providerUrl).toString()).build();
     }
 
-    private PolicyDefinitionResponseDto getPolicyById(String policyId, List<PolicyDefinitionResponseDto> policyDefinitionResponseDtoList) {
-        for (PolicyDefinitionResponseDto p: policyDefinitionResponseDtoList) {
+    private PolicyDefinition getPolicyById(String policyId, List<PolicyDefinition> policyDefinitionResponseDtoList) {
+        for (PolicyDefinition p: policyDefinitionResponseDtoList) {
             if(p.getId().equals(policyId)) {
                 return p;
             }
@@ -179,14 +193,13 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         return null;
     }
 
-    private AssetEntryDto getAssetById(String assetId, List<AssetEntryDto> assetEntryDtoList) {
-        for (AssetEntryDto a: assetEntryDtoList) {
-            if(a.getAsset().getId().equals(assetId)) {
+    private Asset getAssetById(String assetId, List<Asset> assetEntryDtoList) {
+        for (Asset a: assetEntryDtoList) {
+            if(a.getId().equals(assetId)) {
                 return a;
             }
         }
         return null;
     }
 
- */
 }

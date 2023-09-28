@@ -25,7 +25,11 @@ import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
 import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessObservable;
-import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromAssetTransformer;
+import org.eclipse.edc.core.transform.transformer.OdrlTransformersFactory;
+import org.eclipse.edc.core.transform.transformer.from.*;
+import org.eclipse.edc.core.transform.transformer.to.*;
+import org.eclipse.edc.policy.model.AtomicConstraint;
+import org.eclipse.edc.policy.model.LiteralExpression;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.protocol.dsp.api.configuration.DspApiConfigurationExtension;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
@@ -40,6 +44,7 @@ import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.DataAddress;
+import org.eclipse.edc.spi.types.domain.HttpDataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
@@ -48,6 +53,7 @@ import org.eclipse.edc.web.spi.WebService;
 import java.util.Map;
 
 import static org.eclipse.edc.connector.policy.spi.PolicyDefinition.EDC_POLICY_DEFINITION_TYPE;
+import static org.eclipse.edc.spi.CoreConstants.JSON_LD;
 
 
 @Extension(value = BlockchainCatalogExtension.NAME)
@@ -118,16 +124,13 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         var monitor = context.getMonitor();
 
 
+        registerTransformers();
 
-        var jsonBuilderFactory = Json.createBuilderFactory(Map.of());
-        transformerRegistry.register(new JsonObjectToPolicyDefinitionTransformer());
-        transformerRegistry.register(new JsonObjectFromPolicyDefinitionTransformer(jsonBuilderFactory));
-        transformerRegistry.register(new JsonObjectToContractDefinitionTransformer());
-        transformerRegistry.register(new JsonObjectFromContractDefinitionTransformer(jsonBuilderFactory));
         //transformerRegistry.register(new JsonObjectFromAssetTransformer(jsonBuilderFactory, typeManager.getMapper()));
         //transformerRegistry.register(new JsonObjectToAssetEntryNewDtoTransformer());
 
         validator.register(EDC_POLICY_DEFINITION_TYPE, PolicyDefinitionValidator.instance());
+        validator.register(Asset.EDC_ASSET_TYPE, AssetValidator.instance());
 
         AssetApiController assetApiController = new AssetApiController(assetService, transformerRegistry, monitor, validator);
         PolicyDefinitionApiController policyDefinitionApiController = new PolicyDefinitionApiController(monitor, transformerRegistry, policyDefinitionService, validator);
@@ -155,13 +158,13 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController));
 
         /*
-        var dataAddress = DataAddress.Builder.newInstance()
-                .property("path", "/tmp/test.txt")
-                .property("type", "File")
+        var dataAddress = HttpDataAddress.Builder.newInstance()
+                .baseUrl("http://tu.berlin")
+                .path("/tmp/test.txt")
                 .build();
         var asset = Asset.Builder.newInstance()
-                .name("TestAsset")
-                .description("TestAssetDescription")
+                .name("TestAsset2")
+                .description("TestAssetDescription2")
                 .dataAddress(dataAddress)
                 .build();
 
@@ -170,8 +173,48 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         var assetAsJsonObject = assetApiController.getAsset(result.getContent().getId());
         //var jsonObject = transformerRegistry.transform(asset, JsonObject.class);
         monitor.debug("Test JsonObject: " + assetAsJsonObject.toString());
-    */
 
+
+         */
+
+    }
+
+
+    private void registerTransformers() {
+        var mapper = typeManager.getMapper(JSON_LD);
+        mapper.registerSubtypes(AtomicConstraint.class, LiteralExpression.class);
+
+        var jsonBuilderFactory = Json.createBuilderFactory(Map.of());
+        transformerRegistry.register(new JsonObjectToPolicyDefinitionTransformer());
+        transformerRegistry.register(new JsonObjectFromPolicyDefinitionTransformer(jsonBuilderFactory));
+        transformerRegistry.register(new JsonObjectToContractDefinitionTransformer());
+        transformerRegistry.register(new JsonObjectFromContractDefinitionTransformer(jsonBuilderFactory));
+
+        // EDC model to JSON-LD transformers
+        transformerRegistry.register(new JsonObjectFromCatalogTransformer(jsonBuilderFactory, mapper));
+        transformerRegistry.register(new JsonObjectFromDatasetTransformer(jsonBuilderFactory, mapper));
+        transformerRegistry.register(new JsonObjectFromPolicyTransformer(jsonBuilderFactory));
+        transformerRegistry.register(new JsonObjectFromDistributionTransformer(jsonBuilderFactory));
+        transformerRegistry.register(new JsonObjectFromDataServiceTransformer(jsonBuilderFactory));
+        transformerRegistry.register(new JsonObjectFromAssetTransformer(jsonBuilderFactory, mapper));
+        transformerRegistry.register(new JsonObjectFromDataAddressTransformer(jsonBuilderFactory));
+        transformerRegistry.register(new JsonObjectFromQuerySpecTransformer(jsonBuilderFactory));
+        transformerRegistry.register(new JsonObjectFromCriterionTransformer(jsonBuilderFactory, mapper));
+
+        // JSON-LD to EDC model transformers
+        // DCAT transformers
+        transformerRegistry.register(new JsonObjectToCatalogTransformer());
+        transformerRegistry.register(new JsonObjectToDataServiceTransformer());
+        transformerRegistry.register(new JsonObjectToDatasetTransformer());
+        transformerRegistry.register(new JsonObjectToDistributionTransformer());
+
+        // ODRL Transformers
+        OdrlTransformersFactory.jsonObjectToOdrlTransformers().forEach(transformerRegistry::register);
+        transformerRegistry.register(new JsonValueToGenericTypeTransformer(mapper));
+        transformerRegistry.register(new JsonObjectToAssetTransformer());
+        transformerRegistry.register(new JsonObjectToQuerySpecTransformer());
+        transformerRegistry.register(new JsonObjectToCriterionTransformer());
+        transformerRegistry.register(new JsonObjectToDataAddressTransformer());
     }
 
     public void initWithTestDate() {

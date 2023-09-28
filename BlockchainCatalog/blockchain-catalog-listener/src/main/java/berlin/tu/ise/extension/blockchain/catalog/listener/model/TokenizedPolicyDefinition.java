@@ -1,13 +1,17 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener.model;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import jakarta.json.JsonObject;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 
 public class TokenizedPolicyDefinition {
     String token_id;
     String name;
     String decimals;
-    PolicyDefinition tokenData;
+    @JsonDeserialize(using = JsonObjectDeserializer.class)
+    JsonObject tokenData;
 
     public String getToken_id() {
         return token_id;
@@ -33,11 +37,15 @@ public class TokenizedPolicyDefinition {
         this.decimals = decimals;
     }
 
-    public PolicyDefinition getTokenData() {
+    public JsonObject getTokenData() {
         return tokenData;
     }
 
-    public void setTokenData(PolicyDefinition tokenData) {
+    public void setTokenData(JsonObject tokenData) {
         this.tokenData = tokenData;
+    }
+
+    public PolicyDefinition getTokenDataAsPolicyDefinition() {
+        return null;
     }
 }
