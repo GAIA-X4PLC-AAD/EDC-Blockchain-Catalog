@@ -2,17 +2,19 @@ package berlin.tu.ise.blockchain.catalog.api;
 
 
 import berlin.tu.ise.extension.blockchain.catalog.listener.BlockchainHelper;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.eclipse.edc.catalog.spi.Catalog;
-import org.eclipse.edc.catalog.spi.QueryResponse;
+import org.eclipse.edc.catalog.spi.*;
 import org.eclipse.edc.catalog.spi.model.FederatedCatalogCacheQuery;
 import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
 import org.eclipse.edc.connector.api.management.contractdefinition.ContractDefinitionApiController;
 import org.eclipse.edc.connector.api.management.policy.PolicyDefinitionApiController;
+import org.eclipse.edc.connector.contract.spi.ContractId;
 import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
@@ -23,12 +25,14 @@ import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
+import org.eclipse.edc.web.spi.exception.InvalidRequestException;
 
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.function.Predicate;
 
 import static java.lang.String.format;
 
@@ -43,19 +47,34 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
     private TypeTransformerRegistry transformerRegistry;
     private JsonObjectValidatorRegistry validatorRegistry;
+    private DatasetResolver datasetResolver;
 
-    public BlockchainCatalogApiController(Monitor monitor, String edcBlockchainInterfaceUrl, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
+    private DistributionResolver distributionResolver;
+
+    public BlockchainCatalogApiController(Monitor monitor, String edcBlockchainInterfaceUrl, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, DatasetResolver datasetResolver, DistributionResolver distributionResolver) {
         this.monitor = monitor;
         this.edcBlockchainInterfaceUrl = edcBlockchainInterfaceUrl;
         this.transformerRegistry = transformerRegistry;
         this.validatorRegistry = validatorRegistry;
+        this.datasetResolver = datasetResolver;
+        this.distributionResolver = distributionResolver;
     }
 
 
 
     @Override
     @POST
-    public Collection<ContractOffer> getCatalog(FederatedCatalogCacheQuery federatedCatalogCacheQuery) {
+    public JsonObject getCatalog(FederatedCatalogCacheQuery federatedCatalogCacheQuery) {
+
+        /*
+        // test expected format
+
+        String json = getTestString();
+        return json;
+
+        */
+
+
 
         monitor.info("BlockchainCatalogApiController.getCatalog() called");
         // TODO: send direct request to blockchain?
@@ -133,9 +152,40 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
         monitor.info(format("Fetched %d offers from blockchain", contractOfferList.size()));
 
+        monitor.info(format("Going to create DCAT Datasets from Offers"));
+
+        var catalogBuilder = Catalog.Builder.newInstance()
+                .id("blockchain-catalog")
+                .contractOffers(contractOfferList);
+
+        List<Dataset> datasetList = new ArrayList<>();
+        for (ContractOffer contractOffer : contractOfferList) {
+            var asset = getAssetById(contractOffer.getAssetId(), assetList);
+            var distributions = distributionResolver.getDistributions(asset, asset.getDataAddress());
+            Dataset dataset = Dataset.Builder.newInstance()
+                    .id(asset.getId())
+                    .offer(contractOffer.getId(), contractOffer.getPolicy())
+                    .distributions(distributions)
+                    .properties(asset.getProperties())
+                    .build();
+            datasetList.add(dataset);
+        }
+        catalogBuilder.datasets(datasetList);
+
+        DataService dataService = DataService.Builder.newInstance()
+                .id("blockchain-data-service")
+                .terms("blockchain-data-service-terms")
+                .endpointUrl(edcBlockchainInterfaceUrl)
+                .build();
+        catalogBuilder.dataService(dataService);
+        Catalog catalog = catalogBuilder.build();
 
 
-        return contractOfferList;
+        var catalogJsonObject = transformerRegistry.transform(catalog, JsonObject.class)
+                .orElseThrow(InvalidRequestException::new);
+        monitor.debug("Catalog as JSON: " + catalogJsonObject.toString());
+
+        return catalogJsonObject;
     }
 
     /**
@@ -232,4 +282,1381 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         return null;
     }
 
+    private static String getTestString() {
+        return "{\n" +
+                "  \"contractOffers\": [\n" +
+                "    {\n" +
+                "      \"assetId\": \"<string>\",\n" +
+                "      \"id\": \"<string>\",\n" +
+                "      \"policy\": {\n" +
+                "        \"@type\": \"CONTRACT\",\n" +
+                "        \"assignee\": \"<string>\",\n" +
+                "        \"assigner\": \"<string>\",\n" +
+                "        \"extensibleProperties\": {\n" +
+                "          \"utd\": {}\n" +
+                "        },\n" +
+                "        \"inheritsFrom\": \"<string>\",\n" +
+                "        \"obligations\": [\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"consequence\": {\n" +
+                "              \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "            },\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"parentPermission\": {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"consequence\": {\n" +
+                "              \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "            },\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"parentPermission\": {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"permissions\": [\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"duties\": [\n" +
+                "              {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"duties\": [\n" +
+                "              {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"prohibitions\": [\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"target\": \"<string>\"\n" +
+                "      },\n" +
+                "      \"providerId\": \"<string>\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"assetId\": \"<string>\",\n" +
+                "      \"id\": \"<string>\",\n" +
+                "      \"policy\": {\n" +
+                "        \"@type\": \"SET\",\n" +
+                "        \"assignee\": \"<string>\",\n" +
+                "        \"assigner\": \"<string>\",\n" +
+                "        \"extensibleProperties\": {\n" +
+                "          \"exercitation_476\": {},\n" +
+                "          \"in4\": {}\n" +
+                "        },\n" +
+                "        \"inheritsFrom\": \"<string>\",\n" +
+                "        \"obligations\": [\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"consequence\": {\n" +
+                "              \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "            },\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"parentPermission\": {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"consequence\": {\n" +
+                "              \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "            },\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"parentPermission\": {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"permissions\": [\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"duties\": [\n" +
+                "              {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"duties\": [\n" +
+                "              {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"prohibitions\": [\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"action\": {\n" +
+                "              \"constraint\": {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"includedIn\": \"<string>\",\n" +
+                "              \"type\": \"<string>\"\n" +
+                "            },\n" +
+                "            \"assignee\": \"<string>\",\n" +
+                "            \"assigner\": \"<string>\",\n" +
+                "            \"constraints\": [\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              },\n" +
+                "              {\n" +
+                "                \"edctype\": \"<string>\"\n" +
+                "              }\n" +
+                "            ],\n" +
+                "            \"target\": \"<string>\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"target\": \"<string>\"\n" +
+                "      },\n" +
+                "      \"providerId\": \"<string>\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"dataServices\": [\n" +
+                "    {\n" +
+                "      \"endpointUrl\": \"<string>\",\n" +
+                "      \"id\": \"<string>\",\n" +
+                "      \"terms\": \"<string>\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"endpointUrl\": \"<string>\",\n" +
+                "      \"id\": \"<string>\",\n" +
+                "      \"terms\": \"<string>\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"datasets\": [\n" +
+                "    {\n" +
+                "      \"distributions\": [\n" +
+                "        {\n" +
+                "          \"dataService\": {\n" +
+                "            \"endpointUrl\": \"<string>\",\n" +
+                "            \"id\": \"<string>\",\n" +
+                "            \"terms\": \"<string>\"\n" +
+                "          },\n" +
+                "          \"format\": \"<string>\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"dataService\": {\n" +
+                "            \"endpointUrl\": \"<string>\",\n" +
+                "            \"id\": \"<string>\",\n" +
+                "            \"terms\": \"<string>\"\n" +
+                "          },\n" +
+                "          \"format\": \"<string>\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"id\": \"<string>\",\n" +
+                "      \"offers\": {\n" +
+                "        \"commodo_7b9\": {\n" +
+                "          \"@type\": \"SET\",\n" +
+                "          \"assignee\": \"<string>\",\n" +
+                "          \"assigner\": \"<string>\",\n" +
+                "          \"extensibleProperties\": {\n" +
+                "            \"elit_053\": {},\n" +
+                "            \"ad_af6\": {}\n" +
+                "          },\n" +
+                "          \"inheritsFrom\": \"<string>\",\n" +
+                "          \"obligations\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"consequence\": {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"parentPermission\": {\n" +
+                "                \"action\": {\n" +
+                "                  \"constraint\": {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  \"includedIn\": \"<string>\",\n" +
+                "                  \"type\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"assignee\": \"<string>\",\n" +
+                "                \"assigner\": \"<string>\",\n" +
+                "                \"constraints\": [\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"duties\": [\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"target\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"consequence\": {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"parentPermission\": {\n" +
+                "                \"action\": {\n" +
+                "                  \"constraint\": {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  \"includedIn\": \"<string>\",\n" +
+                "                  \"type\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"assignee\": \"<string>\",\n" +
+                "                \"assigner\": \"<string>\",\n" +
+                "                \"constraints\": [\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"duties\": [\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"target\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"permissions\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"prohibitions\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"target\": \"<string>\"\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"properties\": {\n" +
+                "        \"magna_7\": {},\n" +
+                "        \"irureb\": {}\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"distributions\": [\n" +
+                "        {\n" +
+                "          \"dataService\": {\n" +
+                "            \"endpointUrl\": \"<string>\",\n" +
+                "            \"id\": \"<string>\",\n" +
+                "            \"terms\": \"<string>\"\n" +
+                "          },\n" +
+                "          \"format\": \"<string>\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"dataService\": {\n" +
+                "            \"endpointUrl\": \"<string>\",\n" +
+                "            \"id\": \"<string>\",\n" +
+                "            \"terms\": \"<string>\"\n" +
+                "          },\n" +
+                "          \"format\": \"<string>\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"id\": \"<string>\",\n" +
+                "      \"offers\": {\n" +
+                "        \"culpa34\": {\n" +
+                "          \"@type\": \"SET\",\n" +
+                "          \"assignee\": \"<string>\",\n" +
+                "          \"assigner\": \"<string>\",\n" +
+                "          \"extensibleProperties\": {\n" +
+                "            \"nulla5\": {},\n" +
+                "            \"laborec13\": {},\n" +
+                "            \"ex_a\": {}\n" +
+                "          },\n" +
+                "          \"inheritsFrom\": \"<string>\",\n" +
+                "          \"obligations\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"consequence\": {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"parentPermission\": {\n" +
+                "                \"action\": {\n" +
+                "                  \"constraint\": {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  \"includedIn\": \"<string>\",\n" +
+                "                  \"type\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"assignee\": \"<string>\",\n" +
+                "                \"assigner\": \"<string>\",\n" +
+                "                \"constraints\": [\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"duties\": [\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"target\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"consequence\": {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"parentPermission\": {\n" +
+                "                \"action\": {\n" +
+                "                  \"constraint\": {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  \"includedIn\": \"<string>\",\n" +
+                "                  \"type\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"assignee\": \"<string>\",\n" +
+                "                \"assigner\": \"<string>\",\n" +
+                "                \"constraints\": [\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"duties\": [\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"target\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"permissions\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"prohibitions\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"target\": \"<string>\"\n" +
+                "        },\n" +
+                "        \"occaecat_5f1\": {\n" +
+                "          \"@type\": \"SET\",\n" +
+                "          \"assignee\": \"<string>\",\n" +
+                "          \"assigner\": \"<string>\",\n" +
+                "          \"extensibleProperties\": {\n" +
+                "            \"labore6\": {}\n" +
+                "          },\n" +
+                "          \"inheritsFrom\": \"<string>\",\n" +
+                "          \"obligations\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"consequence\": {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"parentPermission\": {\n" +
+                "                \"action\": {\n" +
+                "                  \"constraint\": {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  \"includedIn\": \"<string>\",\n" +
+                "                  \"type\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"assignee\": \"<string>\",\n" +
+                "                \"assigner\": \"<string>\",\n" +
+                "                \"constraints\": [\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"duties\": [\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"target\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"consequence\": {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"parentPermission\": {\n" +
+                "                \"action\": {\n" +
+                "                  \"constraint\": {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  \"includedIn\": \"<string>\",\n" +
+                "                  \"type\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"assignee\": \"<string>\",\n" +
+                "                \"assigner\": \"<string>\",\n" +
+                "                \"constraints\": [\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"duties\": [\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"target\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"permissions\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"prohibitions\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"target\": \"<string>\"\n" +
+                "        },\n" +
+                "        \"anim6_a\": {\n" +
+                "          \"@type\": \"SET\",\n" +
+                "          \"assignee\": \"<string>\",\n" +
+                "          \"assigner\": \"<string>\",\n" +
+                "          \"extensibleProperties\": {\n" +
+                "            \"exercitation_e\": {},\n" +
+                "            \"id__e_\": {}\n" +
+                "          },\n" +
+                "          \"inheritsFrom\": \"<string>\",\n" +
+                "          \"obligations\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"consequence\": {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"parentPermission\": {\n" +
+                "                \"action\": {\n" +
+                "                  \"constraint\": {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  \"includedIn\": \"<string>\",\n" +
+                "                  \"type\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"assignee\": \"<string>\",\n" +
+                "                \"assigner\": \"<string>\",\n" +
+                "                \"constraints\": [\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"duties\": [\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"target\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"consequence\": {\n" +
+                "                \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "              },\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"parentPermission\": {\n" +
+                "                \"action\": {\n" +
+                "                  \"constraint\": {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  \"includedIn\": \"<string>\",\n" +
+                "                  \"type\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"assignee\": \"<string>\",\n" +
+                "                \"assigner\": \"<string>\",\n" +
+                "                \"constraints\": [\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"edctype\": \"<string>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"duties\": [\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  },\n" +
+                "                  {\n" +
+                "                    \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                  }\n" +
+                "                ],\n" +
+                "                \"target\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"permissions\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"duties\": [\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"value\": \"<Circular reference to #/components/schemas/Duty detected>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"prohibitions\": [\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"action\": {\n" +
+                "                \"constraint\": {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                \"includedIn\": \"<string>\",\n" +
+                "                \"type\": \"<string>\"\n" +
+                "              },\n" +
+                "              \"assignee\": \"<string>\",\n" +
+                "              \"assigner\": \"<string>\",\n" +
+                "              \"constraints\": [\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                  \"edctype\": \"<string>\"\n" +
+                "                }\n" +
+                "              ],\n" +
+                "              \"target\": \"<string>\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"target\": \"<string>\"\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"properties\": {\n" +
+                "        \"in_625\": {}\n" +
+                "      }\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"id\": \"<string>\",\n" +
+                "  \"properties\": {\n" +
+                "    \"velit_b32\": {},\n" +
+                "    \"consectetur_a2\": {}\n" +
+                "  }\n" +
+                "}";
+    }
 }

@@ -33,6 +33,8 @@ dependencies {
 
 
     implementation("$groupId:control-plane-spi:$edcVersion")
+    implementation(libs.edc.dsp)
+
 
 
 }

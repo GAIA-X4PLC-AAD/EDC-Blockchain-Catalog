@@ -14,6 +14,7 @@ import org.eclipse.edc.spi.event.EventSubscriber;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
+import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -72,26 +73,22 @@ public class BlockchainAssetCreator implements EventSubscriber {
 
         monitor.info(String.format("[%s] formating POJO to JSON ...", this.getClass().getSimpleName()));
 
-        var jsonAsset = String.valueOf(assetApiController.getAsset(asset.getId()));
-        monitor.info(String.format("[%s] formatted POJO to JSON: %s", this.getClass().getSimpleName(), jsonAsset));
-
-        return jsonAsset;
-
-
-
-
-
         /*
         ObjectMapper mapper = new ObjectMapper();
         // Get the dataAddress because its not stored in the Asset Object for some reasons ...
         DataAddress dataAddress = assetIndex.resolveForAsset(asset.getId());
-
-        // Adding provider (own) url as the asset propertie originator, so that the consumer nows with whom to initiate a contract negotiation
+         */
+        // Adding provider (own) url as the asset propertie originator, so that the consumer knows with whom to initiate a contract negotiation
         // we just make sure it always exist because the datadashboard is currenlty not able to reflect this via the integrated asset creation tool
-        if (!asset.getProperties().containsKey("asset:prop:originator"))
-            asset.getProperties().put("asset:prop:originator", providerUrl);
+        if (!asset.getProperties().containsKey(EDC_NAMESPACE + "originator"))
+            asset.getProperties().put(EDC_NAMESPACE + "originator", providerUrl);
 
-        */
+
+
+        var jsonAsset = String.valueOf(assetApiController.getAsset(asset.getId()));
+        monitor.info(String.format("[%s] formatted POJO to JSON: %s", this.getClass().getSimpleName(), jsonAsset));
+
+        return jsonAsset;
 
 
     }
