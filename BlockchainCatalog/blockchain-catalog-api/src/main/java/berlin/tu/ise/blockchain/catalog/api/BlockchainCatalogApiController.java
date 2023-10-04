@@ -64,7 +64,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
     @Override
     @POST
-    public JsonObject getCatalog(FederatedCatalogCacheQuery federatedCatalogCacheQuery) {
+    public String getCatalog(FederatedCatalogCacheQuery federatedCatalogCacheQuery) {
 
         /*
         // test expected format
@@ -185,7 +185,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
                 .orElseThrow(InvalidRequestException::new);
         monitor.debug("Catalog as JSON: " + catalogJsonObject.toString());
 
-        return catalogJsonObject;
+        return catalogJsonObject.toString();
     }
 
     /**

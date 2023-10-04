@@ -28,6 +28,6 @@ public interface BlockchainCatalogApi {
             }
 
     )
-    JsonObject getCatalog(FederatedCatalogCacheQuery federatedCatalogCacheQuery);
+    String getCatalog(FederatedCatalogCacheQuery federatedCatalogCacheQuery);
 
 }
