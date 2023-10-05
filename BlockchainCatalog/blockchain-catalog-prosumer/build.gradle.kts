@@ -93,7 +93,7 @@ dependencies {
 
     //implementation(project(":playground:apiTest"))
     //implementation(project(":transfer:transfer-07-provider-push-http:http-push-connector"))
-    //implementation(project(":transfer:transfer-07-provider-push-http:provider-push-http-backend-service"))
+    //implementation(project(":newtransfer:transfer-07-provider-push-http:provider-push-http-backend-service"))
     implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
     implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
     implementation(project(":blockchain-logger"))
@@ -101,6 +101,23 @@ dependencies {
 
 //    implementation(project(":transfer:StatusChecker"))
 //    implementation(project(":transfer:TransferFileLocal"))
+
+    // provider push http example
+    implementation(libs.edc.control.plane.core)
+    implementation(libs.edc.dsp)
+    implementation(libs.edc.configuration.filesystem)
+    implementation(libs.edc.vault.filesystem)
+    implementation(libs.edc.iam.mock)
+    implementation(libs.edc.management.api)
+    implementation(libs.edc.transfer.data.plane)
+
+    implementation(libs.edc.data.plane.selector.api)
+    implementation(libs.edc.data.plane.selector.core)
+    implementation(libs.edc.data.plane.selector.client)
+
+    implementation(libs.edc.data.plane.api)
+    implementation(libs.edc.data.plane.core)
+    implementation(libs.edc.data.plane.http)
 
 }
 

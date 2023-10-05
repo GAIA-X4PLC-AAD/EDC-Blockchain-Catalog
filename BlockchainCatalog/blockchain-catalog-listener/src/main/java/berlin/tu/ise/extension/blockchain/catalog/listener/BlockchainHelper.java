@@ -185,7 +185,16 @@ public class BlockchainHelper {
                                      */
 
                                     //validatorRegistry.validate(ContractDefinition.CONTRACT_DEFINITION_TYPE, tokenizedContract.getTokenData()).orElseThrow(ValidationFailureException::new);
+                                    //monitor.debug("Faulty Policy detection: " + tokenizedContract.getTokenData().getJsonArray("https://w3id.org/edc/v0.0.1/ns/assetsSelector").getJsonObject(0).getJsonObject("https://w3id.org/edc/v0.0.1/ns/operator").toString());
 
+                                    if (tokenizedContract.getTokenData().containsKey("https://w3id.org/edc/v0.0.1/ns/assetsSelector")
+                                            && tokenizedContract.getTokenData().get("https://w3id.org/edc/v0.0.1/ns/assetsSelector").getValueType() == JsonValue.ValueType.ARRAY
+                                            && tokenizedContract.getTokenData().getJsonArray("https://w3id.org/edc/v0.0.1/ns/assetsSelector").size() > 0
+                                            && tokenizedContract.getTokenData().getJsonArray("https://w3id.org/edc/v0.0.1/ns/assetsSelector").getJsonObject(0).containsKey("https://w3id.org/edc/v0.0.1/ns/operator")
+                                            && tokenizedContract.getTokenData().getJsonArray("https://w3id.org/edc/v0.0.1/ns/assetsSelector").getJsonObject(0).getString("https://w3id.org/edc/v0.0.1/ns/operator").toString().equals("in")) {
+                                        monitor.debug("Contract definition contains 'in' operator instead of '='. Skipping as not supported");
+                                        continue;
+                                    }
                                     var contract = transformerRegistry.transform(tokenizedContract.getTokenData(), ContractDefinition.class)
                                             .orElseThrow(InvalidRequestException::new);
 
@@ -411,7 +420,7 @@ public class BlockchainHelper {
                     }
                     br.close();
 
-                    monitor.debug("Read from edc-interface: " + sb.toString() + " and going on to map it to a list of TokenizedObjects");
+                    //monitor.debug("Read from edc-interface: " + sb.toString() + " and going on to map it to a list of TokenizedObjects");
                     List<TokenziedAsset> assetList = mapper.readValue(sb.toString(), new TypeReference<List<TokenziedAsset>>() {});
 
                     /*
@@ -513,12 +522,16 @@ public class BlockchainHelper {
                     br.close();
 
                     tokenizedPolicyDefinitionList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedPolicyDefinition>>(){});
-                    monitor.debug("Read from edc-interface: " + tokenizedPolicyDefinitionList.size() + " policies and going validate them");
+                    monitor.debug("Read policies from edc-interface: " + tokenizedPolicyDefinitionList.size() + " policies and going validate them");
+                    monitor.debug("Read policies from edc-interface: " + sb.toString());
                     for (TokenizedPolicyDefinition tokenizedPolicyDefinition: tokenizedPolicyDefinitionList) {
-                        monitor.debug("Validating policy definition: " + tokenizedPolicyDefinition.getTokenData());
+                        if (tokenizedPolicyDefinition != null) {
+                            monitor.debug("Validating policy definition: " + tokenizedPolicyDefinition.getTokenData());
+                        }
                         if(tokenizedPolicyDefinition != null && tokenizedPolicyDefinition.getTokenData() != null
                             && tokenizedPolicyDefinition.getTokenData().containsKey("@id")) {
                             try {
+                                monitor.debug("Going to validate and transform policy definition: " + tokenizedPolicyDefinition.getTokenData().getString("@id"));
                                 var preTransformedPolicyDefinition = tokenizedPolicyDefinition.getTokenData();
 
                                 JsonValue policyNode = preTransformedPolicyDefinition.get("https://w3id.org/edc/v0.0.1/ns/policy");

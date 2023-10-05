@@ -51,13 +51,16 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
     private DistributionResolver distributionResolver;
 
-    public BlockchainCatalogApiController(Monitor monitor, String edcBlockchainInterfaceUrl, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, DatasetResolver datasetResolver, DistributionResolver distributionResolver) {
+    private DataServiceRegistry dataServiceRegistry;
+
+    public BlockchainCatalogApiController(Monitor monitor, String edcBlockchainInterfaceUrl, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, DatasetResolver datasetResolver, DistributionResolver distributionResolver, DataServiceRegistry dataServiceRegistry) {
         this.monitor = monitor;
         this.edcBlockchainInterfaceUrl = edcBlockchainInterfaceUrl;
         this.transformerRegistry = transformerRegistry;
         this.validatorRegistry = validatorRegistry;
         this.datasetResolver = datasetResolver;
         this.distributionResolver = distributionResolver;
+        this.dataServiceRegistry = dataServiceRegistry;
     }
 
 
@@ -172,12 +175,19 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         }
         catalogBuilder.datasets(datasetList);
 
+
+        /*
         DataService dataService = DataService.Builder.newInstance()
                 .id("blockchain-data-service")
                 .terms("blockchain-data-service-terms")
                 .endpointUrl(edcBlockchainInterfaceUrl)
                 .build();
+
+
         catalogBuilder.dataService(dataService);
+
+         */
+        catalogBuilder.dataServices(dataServiceRegistry.getDataServices());
         Catalog catalog = catalogBuilder.build();
 
 
@@ -200,6 +210,11 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
 
         String assetId = getAssetIdFromCriterions(contract, assetList, "name");
+
+        // try other valid format
+        if (assetId == null) {
+            assetId = getAssetIdFromCriterions(contract, assetList, "https://w3id.org/edc/v0.0.1/ns/id");
+        }
 
 
         /* Fix for EDC Dashboard?

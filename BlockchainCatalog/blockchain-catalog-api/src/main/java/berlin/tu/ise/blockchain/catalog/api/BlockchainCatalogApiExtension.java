@@ -1,6 +1,7 @@
 package berlin.tu.ise.blockchain.catalog.api;
 
 import jakarta.json.Json;
+import org.eclipse.edc.catalog.spi.DataServiceRegistry;
 import org.eclipse.edc.catalog.spi.DatasetResolver;
 import org.eclipse.edc.catalog.spi.Distribution;
 import org.eclipse.edc.catalog.spi.DistributionResolver;
@@ -25,6 +26,7 @@ import org.eclipse.edc.spi.system.health.HealthCheckResult;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
 import org.eclipse.edc.web.spi.WebService;
+import org.intellij.lang.annotations.JdkConstants;
 
 import java.util.Map;
 
@@ -62,6 +64,9 @@ public class BlockchainCatalogApiExtension implements ServiceExtension {
     @Inject
     TypeManager typeManager;
 
+    @Inject
+    DataServiceRegistry dataServiceRegistry;
+
     private ServiceExtensionContext context;
 
     @Setting
@@ -80,7 +85,7 @@ public class BlockchainCatalogApiExtension implements ServiceExtension {
         this.context = context;
         monitor.info("Initializing Blockchain Catalog API Extension");
         monitor.info("EDC Blockchain Interface URL: " + getEdcBlockchainInterfaceUrl());
-        var catalogController = new BlockchainCatalogApiController(monitor, getEdcBlockchainInterfaceUrl(), transformerRegistry, validator, datasetResolver, distributionResolver);
+        var catalogController = new BlockchainCatalogApiController(monitor, getEdcBlockchainInterfaceUrl(), transformerRegistry, validator, datasetResolver, distributionResolver, dataServiceRegistry);
         webService.registerResource("default", catalogController);
 
     }

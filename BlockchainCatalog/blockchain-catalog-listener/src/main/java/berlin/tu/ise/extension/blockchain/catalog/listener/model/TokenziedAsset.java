@@ -95,18 +95,41 @@ public class TokenziedAsset  {
         if (!jsonDataAddressTypeObject.containsKey(DataAddress.EDC_DATA_ADDRESS_TYPE_PROPERTY)) {
             throw new IllegalArgumentException("The token data does not contain a data address type property");
         }
-        if (!jsonDataAddressTypeObject.containsKey("baseUrl")) {
-            throw new IllegalArgumentException("The token data does not contain a data address type baseUrl");
+        DataAddress transformedDataAddress;
+        if (jsonDataAddressTypeObject.containsKey("baseUrl")) {
+            HttpDataAddress.Builder builder = HttpDataAddress.Builder.newInstance()
+                    .baseUrl(jsonDataAddressTypeObject.getString("baseUrl"));
+            if (jsonDataAddressTypeObject.containsKey("name")) {
+                builder.name(jsonDataAddressTypeObject.getString("name"));
+            } else {
+                builder.name("default");
+            }
+
+            transformedDataAddress = builder
+                    .type(jsonDataAddressTypeObject.getString(DataAddress.EDC_DATA_ADDRESS_TYPE_PROPERTY))
+                    .build();
+        } else {
+            transformedDataAddress = DataAddress.Builder.newInstance()
+                    .type(jsonDataAddressTypeObject.getString(DataAddress.EDC_DATA_ADDRESS_TYPE_PROPERTY))
+                    .build();
         }
+        /*
         if (!jsonDataAddressTypeObject.containsKey("path")) {
             throw new IllegalArgumentException("The token data does not contain a data address type path");
-        }
+        }*/
+
+        /*
         var transformedDataAddress = HttpDataAddress.Builder.newInstance()
                 //.type(tokenData.getJsonObject(DataAddress.EDC_DATA_ADDRESS_TYPE).getString("@type"))
                 .baseUrl(jsonDataAddressTypeObject.getString("baseUrl"))
                 .path(jsonDataAddressTypeObject.getString("path"))
                 .type(jsonDataAddressTypeObject.getString(DataAddress.EDC_DATA_ADDRESS_TYPE_PROPERTY))
                 .build();
+        */
+        var assetBuilder = Asset.Builder.newInstance()
+                .id(tokenData.getString("@id"))
+                .contentType(tokenData.getString("@type"))
+                .dataAddress(transformedDataAddress);
 
         var jsonAssetPropertiesObject = tokenData.getJsonObject(Asset.EDC_ASSET_PROPERTIES);
         if (jsonAssetPropertiesObject == null) {
@@ -118,17 +141,13 @@ public class TokenziedAsset  {
         if (!jsonAssetPropertiesObject.containsKey(Asset.PROPERTY_NAME)) {
             throw new IllegalArgumentException("The token data does not contain an asset properties name");
         }
-        if (!jsonAssetPropertiesObject.containsKey(Asset.PROPERTY_DESCRIPTION)) {
-            throw new IllegalArgumentException("The token data does not contain an asset properties description");
+        if (jsonAssetPropertiesObject.containsKey(Asset.PROPERTY_DESCRIPTION)) {
+            assetBuilder.property(Asset.PROPERTY_DESCRIPTION, jsonAssetPropertiesObject.getString(Asset.PROPERTY_DESCRIPTION));
         }
 
-        var transformedAsset = Asset.Builder.newInstance()
-                .id(tokenData.getString("@id"))
-                .contentType(tokenData.getString("@type"))
+        var transformedAsset = assetBuilder
                 .property(Asset.PROPERTY_ID, jsonAssetPropertiesObject.getString(Asset.PROPERTY_ID))
                 .property(Asset.PROPERTY_NAME, jsonAssetPropertiesObject.getString(Asset.PROPERTY_NAME))
-                .property(Asset.PROPERTY_DESCRIPTION, jsonAssetPropertiesObject.getString(Asset.PROPERTY_DESCRIPTION))
-                .dataAddress(transformedDataAddress)
                 .build();
         return transformedAsset;
     }
