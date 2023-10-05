@@ -13,6 +13,7 @@ import org.eclipse.edc.core.transform.transformer.to.JsonObjectToCatalogTransfor
 import org.eclipse.edc.core.transform.transformer.to.JsonObjectToDataServiceTransformer;
 import org.eclipse.edc.core.transform.transformer.to.JsonObjectToDatasetTransformer;
 import org.eclipse.edc.core.transform.transformer.to.JsonObjectToDistributionTransformer;
+import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.policy.model.AtomicConstraint;
 import org.eclipse.edc.policy.model.LiteralExpression;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
@@ -67,6 +68,9 @@ public class BlockchainCatalogApiExtension implements ServiceExtension {
     @Inject
     DataServiceRegistry dataServiceRegistry;
 
+    @Inject
+    JsonLd jsonLd;
+
     private ServiceExtensionContext context;
 
     @Setting
@@ -85,7 +89,7 @@ public class BlockchainCatalogApiExtension implements ServiceExtension {
         this.context = context;
         monitor.info("Initializing Blockchain Catalog API Extension");
         monitor.info("EDC Blockchain Interface URL: " + getEdcBlockchainInterfaceUrl());
-        var catalogController = new BlockchainCatalogApiController(monitor, getEdcBlockchainInterfaceUrl(), transformerRegistry, validator, datasetResolver, distributionResolver, dataServiceRegistry);
+        var catalogController = new BlockchainCatalogApiController(monitor, getEdcBlockchainInterfaceUrl(), transformerRegistry, validator, datasetResolver, distributionResolver, dataServiceRegistry, jsonLd);
         webService.registerResource("default", catalogController);
 
     }

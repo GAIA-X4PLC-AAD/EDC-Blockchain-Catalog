@@ -18,7 +18,7 @@ public class TokenziedAsset  {
     String name;
     String decimals;
     @JsonDeserialize(using = JsonObjectDeserializer.class)
-    JsonObject tokenData;
+    public JsonObject tokenData;
 
     public String getToken_id() {
         return token_id;
@@ -61,34 +61,34 @@ public class TokenziedAsset  {
                     .build();
         }
         */
-        JsonValue dataAddressTypeNode = returnTokenData.getJsonObject("https://w3id.org/edc/v0.0.1/ns/dataAddress").get("@type");
+        JsonValue dataAddressTypeNode = returnTokenData.getJsonObject("edc:dataAddress").get("@type");
         if (dataAddressTypeNode != null && dataAddressTypeNode.getValueType() == JsonValue.ValueType.STRING) {
             JsonArray dataAddressTypeArray = Json.createArrayBuilder().add(dataAddressTypeNode).build();
-            var changes = Json.createObjectBuilder(returnTokenData.getJsonObject("https://w3id.org/edc/v0.0.1/ns/dataAddress"))
+            var changes = Json.createObjectBuilder(returnTokenData.getJsonObject("edc:dataAddress"))
                        .remove("@type")
                         .add("@type", dataAddressTypeArray)
                         .build();
             returnTokenData = Json.createObjectBuilder(returnTokenData)
-                    .remove("https://w3id.org/edc/v0.0.1/ns/dataAddress")
-                    .add("https://w3id.org/edc/v0.0.1/ns/dataAddress", changes)
+                    .remove("edc:dataAddress")
+                    .add("edc:dataAddress", changes)
                     .build();
         }
 
 
 
-        JsonValue propertiesNode = returnTokenData.get("https://w3id.org/edc/v0.0.1/ns/properties");
+        JsonValue propertiesNode = returnTokenData.get("edc:properties");
         if (propertiesNode != null && propertiesNode.getValueType() == JsonValue.ValueType.OBJECT) {
             JsonArray propertiesArray = Json.createArrayBuilder().add(propertiesNode).build();
             returnTokenData = Json.createObjectBuilder(returnTokenData)
-                    .remove("https://w3id.org/edc/v0.0.1/ns/properties")
-                    .add("https://w3id.org/edc/v0.0.1/ns/properties", propertiesArray)
+                    .remove("edc:properties")
+                    .add("edc:properties", propertiesArray)
                     .build();
         }
         return returnTokenData;
     }
 
     public Asset getTokenDataAsAsset() throws IllegalArgumentException {
-        var jsonDataAddressTypeObject = tokenData.getJsonObject("https://w3id.org/edc/v0.0.1/ns/dataAddress"); // typo DataAddress vs dataAdress - DataAddress.EDC_DATA_ADDRESS_TYPE);
+        var jsonDataAddressTypeObject = tokenData.getJsonObject("edc:dataAddress"); // typo DataAddress vs dataAdress - DataAddress.EDC_DATA_ADDRESS_TYPE);
         if (jsonDataAddressTypeObject == null) {
             throw new IllegalArgumentException("The token data does not contain a data address type");
         }

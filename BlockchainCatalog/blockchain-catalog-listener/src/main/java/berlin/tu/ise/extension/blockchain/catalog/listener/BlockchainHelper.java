@@ -15,6 +15,7 @@ import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 import org.eclipse.edc.core.transform.TransformerContextImpl;
 import org.eclipse.edc.core.transform.transformer.to.JsonObjectToAssetTransformer;
+import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.transform.spi.TransformerContext;
@@ -130,7 +131,7 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static List<ContractDefinition> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
+    public static List<ContractDefinition> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, JsonLd jsonLd) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -168,34 +169,40 @@ public class BlockchainHelper {
 
                             if(tokenizedContract != null && tokenizedContract.getTokenData() != null
                                     && tokenizedContract.getTokenData().containsKey("@id")) {
+                                if (!tokenizedContract.getTokenData().containsKey("@context")) {
+                                    monitor.warning("TokenizedContractDefinition " + tokenizedContract.getTokenData().getString("@id") + " does not contain @context - Skipping");
+                                    continue;
+                                }
                                 monitor.debug("Validating contract definition: " + tokenizedContract.getTokenData());
                                 try {
                                     /*
                                     var preTransformedPolicyDefinition = tokenizedContract.getTokenData();
 
-                                    JsonValue policyNode = preTransformedPolicyDefinition.get("https://w3id.org/edc/v0.0.1/ns/policy");
+                                    JsonValue policyNode = preTransformedPolicyDefinition.get("edc:policy");
                                     if (policyNode.getValueType() == JsonValue.ValueType.OBJECT) {
                                         JsonArray policyArray = Json.createArrayBuilder().add(policyNode).build();
                                         preTransformedPolicyDefinition = Json.createObjectBuilder(preTransformedPolicyDefinition)
-                                                .remove("https://w3id.org/edc/v0.0.1/ns/policy")
-                                                .add("https://w3id.org/edc/v0.0.1/ns/policy", policyArray)
+                                                .remove("edc:policy")
+                                                .add("edc:policy", policyArray)
                                                 .build();
                                     }
 
                                      */
 
                                     //validatorRegistry.validate(ContractDefinition.CONTRACT_DEFINITION_TYPE, tokenizedContract.getTokenData()).orElseThrow(ValidationFailureException::new);
-                                    //monitor.debug("Faulty Policy detection: " + tokenizedContract.getTokenData().getJsonArray("https://w3id.org/edc/v0.0.1/ns/assetsSelector").getJsonObject(0).getJsonObject("https://w3id.org/edc/v0.0.1/ns/operator").toString());
+                                    //monitor.debug("Faulty Policy detection: " + tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).getJsonObject("edc:operator").toString());
 
-                                    if (tokenizedContract.getTokenData().containsKey("https://w3id.org/edc/v0.0.1/ns/assetsSelector")
-                                            && tokenizedContract.getTokenData().get("https://w3id.org/edc/v0.0.1/ns/assetsSelector").getValueType() == JsonValue.ValueType.ARRAY
-                                            && tokenizedContract.getTokenData().getJsonArray("https://w3id.org/edc/v0.0.1/ns/assetsSelector").size() > 0
-                                            && tokenizedContract.getTokenData().getJsonArray("https://w3id.org/edc/v0.0.1/ns/assetsSelector").getJsonObject(0).containsKey("https://w3id.org/edc/v0.0.1/ns/operator")
-                                            && tokenizedContract.getTokenData().getJsonArray("https://w3id.org/edc/v0.0.1/ns/assetsSelector").getJsonObject(0).getString("https://w3id.org/edc/v0.0.1/ns/operator").toString().equals("in")) {
+                                    if (tokenizedContract.getTokenData().containsKey("edc:assetsSelector")
+                                            && tokenizedContract.getTokenData().get("edc:assetsSelector").getValueType() == JsonValue.ValueType.ARRAY
+                                            && tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").size() > 0
+                                            && tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).containsKey("edc:operator")
+                                            && tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).getString("edc:operator").toString().equals("in")) {
                                         monitor.debug("Contract definition contains 'in' operator instead of '='. Skipping as not supported");
                                         continue;
                                     }
-                                    var contract = transformerRegistry.transform(tokenizedContract.getTokenData(), ContractDefinition.class)
+                                    var jsonContract = jsonLd.expand(tokenizedContract.getTokenData()).getContent();
+                                    monitor.debug("Expanded contract definition: " + jsonContract.toString());
+                                    var contract = transformerRegistry.transform(jsonContract, ContractDefinition.class)
                                             .orElseThrow(InvalidRequestException::new);
 
                                     contractOfferDtoList.add(contract);
@@ -279,16 +286,20 @@ public class BlockchainHelper {
 
                             if(tokenizedContract != null && tokenizedContract.getTokenData() != null
                                     && tokenizedContract.getTokenData().containsKey("@id")) {
+                                if (!tokenizedContract.getTokenData().containsKey("@context")) {
+                                    monitor.warning("TokenizedContractDefinition " + tokenizedContract.getTokenData().getString("@id") + " does not contain @context - Skipping");
+                                    continue;
+                                }
                                 try {
                                     /*
                                     var preTransformedPolicyDefinition = tokenizedContract.getTokenData();
 
-                                    JsonValue policyNode = preTransformedPolicyDefinition.get("https://w3id.org/edc/v0.0.1/ns/policy");
+                                    JsonValue policyNode = preTransformedPolicyDefinition.get("edc:policy");
                                     if (policyNode.getValueType() == JsonValue.ValueType.OBJECT) {
                                         JsonArray policyArray = Json.createArrayBuilder().add(policyNode).build();
                                         preTransformedPolicyDefinition = Json.createObjectBuilder(preTransformedPolicyDefinition)
-                                                .remove("https://w3id.org/edc/v0.0.1/ns/policy")
-                                                .add("https://w3id.org/edc/v0.0.1/ns/policy", policyArray)
+                                                .remove("edc:policy")
+                                                .add("edc:policy", policyArray)
                                                 .build();
                                     }
 
@@ -390,7 +401,7 @@ public class BlockchainHelper {
 
      */
 
-    public static List<Asset> getAllAssetsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
+    public static List<Asset> getAllAssetsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, JsonLd jsonLd) {
         ObjectMapper mapper = new ObjectMapper();
 
         List<TokenizedObject> tokenziedAssetList;
@@ -430,8 +441,17 @@ public class BlockchainHelper {
                     monitor.debug("Read " + assetList.size() + " assets from edc-interface and going on to validate them");
                     int failedCounter = 0;
                     for (TokenziedAsset tokenziedAsset : assetList) {
-                        if (tokenziedAsset == null) {
+
+                        if (tokenziedAsset == null || tokenziedAsset.tokenData == null) {
                             monitor.warning("TokenizedAsset is null? IPFS file to new?");
+                            continue;
+                        }
+                        if (!tokenziedAsset.tokenData.containsKey("@id")) {
+                            monitor.warning("TokenizedAsset does not contain @id");
+                            continue;
+                        }
+                        if (!tokenziedAsset.tokenData.containsKey("@context")) {
+                            monitor.warning("TokenziedAsset " + tokenziedAsset.tokenData.getString("@id") + " does not contain @context - Skipping");
                             continue;
                         }
                         /*
@@ -449,8 +469,10 @@ public class BlockchainHelper {
                         } catch (ClassCastException cce) {
                             monitor.warning("We ignore this exception as the validator seems to be buggy: " + cce.getMessage());
                         }
+
+                         */
                         try {
-                            var asset = transformerRegistry.transform(tokenziedAsset.getTokenData(), Asset.class)
+                            var asset = transformerRegistry.transform(jsonLd.expand(tokenziedAsset.tokenData).getContent(), Asset.class)
                                     .orElseThrow(InvalidRequestException::new);
                             assetResponseList.add(asset);
                         } catch (InvalidRequestException irex) {
@@ -458,7 +480,7 @@ public class BlockchainHelper {
                             failedCounter++;
                             continue;
                         }
-                         */
+                        /*
                         try {
                             var asset = tokenziedAsset.getTokenDataAsAsset();
                             assetResponseList.add(asset);
@@ -466,7 +488,7 @@ public class BlockchainHelper {
                             monitor.warning("Transformation failed for asset with message: " + iae.getMessage());
                             failedCounter++;
                             continue;
-                        }
+                        }*/
                     }
 
                     monitor.debug("Validation failed for " + failedCounter + " assets and succeeded for " + assetResponseList.size() + " assets");
@@ -493,7 +515,7 @@ public class BlockchainHelper {
     }
 
 
-    public static List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
+    public static List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, JsonLd jsonLd) {
         ObjectMapper mapper = new ObjectMapper();
 
         List<TokenizedPolicyDefinition> tokenizedPolicyDefinitionList = new ArrayList<>();
@@ -530,22 +552,28 @@ public class BlockchainHelper {
                         }
                         if(tokenizedPolicyDefinition != null && tokenizedPolicyDefinition.getTokenData() != null
                             && tokenizedPolicyDefinition.getTokenData().containsKey("@id")) {
+                            if (!tokenizedPolicyDefinition.getTokenData().containsKey("@context")) {
+                                monitor.warning("TokenizedPolicyDefinition " + tokenizedPolicyDefinition.getTokenData().getString("@id") + " does not contain @context - Skipping");
+                                continue;
+                            }
                             try {
                                 monitor.debug("Going to validate and transform policy definition: " + tokenizedPolicyDefinition.getTokenData().getString("@id"));
                                 var preTransformedPolicyDefinition = tokenizedPolicyDefinition.getTokenData();
 
-                                JsonValue policyNode = preTransformedPolicyDefinition.get("https://w3id.org/edc/v0.0.1/ns/policy");
+
+                                JsonValue policyNode = preTransformedPolicyDefinition.get("edc:policy");
                                 if (policyNode.getValueType() == JsonValue.ValueType.OBJECT) {
                                     JsonArray policyArray = Json.createArrayBuilder().add(policyNode).build();
                                     preTransformedPolicyDefinition = Json.createObjectBuilder(preTransformedPolicyDefinition)
-                                            .remove("https://w3id.org/edc/v0.0.1/ns/policy")
-                                            .add("https://w3id.org/edc/v0.0.1/ns/policy", policyArray)
+                                            .remove("edc:policy")
+                                            .add("edc:policy", policyArray)
                                             .build();
                                 }
 
-                                validatorRegistry.validate(PolicyDefinition.EDC_POLICY_DEFINITION_TYPE, preTransformedPolicyDefinition).orElseThrow(ValidationFailureException::new);
+                                var expandedTokenizedPolicyDefinition = jsonLd.expand(preTransformedPolicyDefinition).getContent();
+                                validatorRegistry.validate(PolicyDefinition.EDC_POLICY_DEFINITION_TYPE, expandedTokenizedPolicyDefinition).orElseThrow(ValidationFailureException::new);
 
-                                var policyDefinition = transformerRegistry.transform(preTransformedPolicyDefinition, PolicyDefinition.class)
+                                var policyDefinition = transformerRegistry.transform(expandedTokenizedPolicyDefinition, PolicyDefinition.class)
                                         .orElseThrow(InvalidRequestException::new);
                                 policyDefinitionList.add(policyDefinition);
                             } catch (ValidationFailureException vex) {

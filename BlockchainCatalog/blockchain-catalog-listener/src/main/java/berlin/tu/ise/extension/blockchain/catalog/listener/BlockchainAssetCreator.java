@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
 import org.eclipse.edc.connector.asset.spi.event.AssetCreated;
 import org.eclipse.edc.connector.spi.asset.AssetService;
+import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.event.Event;
 import org.eclipse.edc.spi.event.EventEnvelope;
@@ -33,8 +34,9 @@ public class BlockchainAssetCreator implements EventSubscriber {
     private final String providerUrl;
 
     private final AssetApiController assetApiController;
+    private final JsonLd jsonLd;
 
-    public BlockchainAssetCreator(Monitor monitor, AssetService assetService, AssetIndex assetIndex, String edcInterfaceUrl, String providerUrl, AssetApiController assetApiController) {
+    public BlockchainAssetCreator(Monitor monitor, AssetService assetService, AssetIndex assetIndex, String edcInterfaceUrl, String providerUrl, AssetApiController assetApiController, JsonLd jsonLd) {
         this.monitor = monitor;
         this.assetService = assetService;
         this.assetIndex = assetIndex;
@@ -42,6 +44,7 @@ public class BlockchainAssetCreator implements EventSubscriber {
         this.stateCounter = 0;
         this.providerUrl = providerUrl;
         this.assetApiController = assetApiController;
+        this.jsonLd = jsonLd;
     }
 
 
@@ -85,7 +88,7 @@ public class BlockchainAssetCreator implements EventSubscriber {
 
 
 
-        var jsonAsset = String.valueOf(assetApiController.getAsset(asset.getId()));
+        var jsonAsset = jsonLd.compact(assetApiController.getAsset(asset.getId())).getContent().toString();
         monitor.info(String.format("[%s] formatted POJO to JSON: %s", this.getClass().getSimpleName(), jsonAsset));
 
         return jsonAsset;

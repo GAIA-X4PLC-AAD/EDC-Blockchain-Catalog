@@ -8,6 +8,7 @@ import org.eclipse.edc.connector.api.management.contractdefinition.ContractDefin
 import org.eclipse.edc.connector.contract.spi.event.contractdefinition.ContractDefinitionCreated;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
+import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.event.Event;
 import org.eclipse.edc.spi.event.EventEnvelope;
@@ -32,13 +33,16 @@ public class BlockchainContractCreator implements EventSubscriber {
 
     private final ContractDefinitionApiController contractDefinitionApiController;
 
-    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex, ContractDefinitionApiController contractDefinitionApiController) {
+    private final JsonLd jsonLd;
+
+    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex, ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd) {
         this.monitor = monitor;
         this.idsWebhookAddress = idsWebhookAddress;
         this.contractDefinitionService = contractDefinitionService;
         this.edcInterfaceUrl = edcInterfaceUrl;
         this.assetIndex = assetIndex;
         this.contractDefinitionApiController = contractDefinitionApiController;
+        this.jsonLd = jsonLd;
     }
 
     @Override
@@ -73,9 +77,9 @@ public class BlockchainContractCreator implements EventSubscriber {
 
         var contractDefinitionJson = contractDefinitionApiController.getContractDefinition(contractDefinition.getId());
 
-        monitor.warning(String.format("[%s] Contract Definition: %s", this.getClass().getSimpleName(), contractDefinitionJson));
+        monitor.warning(String.format("[%s] Contract Definition: %s", this.getClass().getSimpleName(), jsonLd.compact(contractDefinitionJson).getContent().toString()));
 
-        return String.valueOf(contractDefinitionJson);
+        return jsonLd.compact(contractDefinitionJson).getContent().toString();
 
     }
 }

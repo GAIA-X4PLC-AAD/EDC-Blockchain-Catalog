@@ -19,6 +19,7 @@ import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMes
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
+import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.query.Criterion;
@@ -53,7 +54,9 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
     private DataServiceRegistry dataServiceRegistry;
 
-    public BlockchainCatalogApiController(Monitor monitor, String edcBlockchainInterfaceUrl, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, DatasetResolver datasetResolver, DistributionResolver distributionResolver, DataServiceRegistry dataServiceRegistry) {
+    private JsonLd jsonLd;
+
+    public BlockchainCatalogApiController(Monitor monitor, String edcBlockchainInterfaceUrl, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, DatasetResolver datasetResolver, DistributionResolver distributionResolver, DataServiceRegistry dataServiceRegistry, JsonLd jsonLd) {
         this.monitor = monitor;
         this.edcBlockchainInterfaceUrl = edcBlockchainInterfaceUrl;
         this.transformerRegistry = transformerRegistry;
@@ -61,6 +64,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         this.datasetResolver = datasetResolver;
         this.distributionResolver = distributionResolver;
         this.dataServiceRegistry = dataServiceRegistry;
+        this.jsonLd = jsonLd;
     }
 
 
@@ -91,21 +95,21 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         //List<ContractOffer> contractOfferListFromStorage = (List<ContractOffer>) BlockchainHelper.getAllContractDefinitionsFromSmartContract();
         //monitor.info(format("Fetched %d enties from local cataloge storage", contractOfferListFromStorage.size()));
 
-        List<Asset> assetList = BlockchainHelper.getAllAssetsFromSmartContract(edcBlockchainInterfaceUrl, this.monitor, this.transformerRegistry, this.validatorRegistry);
+        List<Asset> assetList = BlockchainHelper.getAllAssetsFromSmartContract(edcBlockchainInterfaceUrl, this.monitor, this.transformerRegistry, this.validatorRegistry, this.jsonLd);
         if (assetList == null) {
             monitor.info(String.format("[%s] No assets found in blockchain. Is something wrong with the edc-interface or is the contract empty?", this.getClass().getSimpleName()));
         } else {
             monitor.info(String.format("[%s] fetched %d Assets from Smart Contract", this.getClass().getSimpleName(), assetList.size()));
         }
 
-        List<PolicyDefinition> policyDefinitionList = BlockchainHelper.getAllPolicyDefinitionsFromSmartContract(edcBlockchainInterfaceUrl, this.monitor, this.transformerRegistry, this.validatorRegistry);
+        List<PolicyDefinition> policyDefinitionList = BlockchainHelper.getAllPolicyDefinitionsFromSmartContract(edcBlockchainInterfaceUrl, this.monitor, this.transformerRegistry, this.validatorRegistry, this.jsonLd);
         if (policyDefinitionList == null) {
             monitor.info(String.format("[%s] No policies found in blockchain. Is something wrong with the edc-interface or is the contract empty?", this.getClass().getSimpleName()));
         } else {
             monitor.info(String.format("[%s] fetched %d Policies from Smart Contract", this.getClass().getSimpleName(), policyDefinitionList.size()));
         }
 
-        List<ContractDefinition> contractDefinitionList = BlockchainHelper.getAllContractDefinitionsFromSmartContract(edcBlockchainInterfaceUrl, this.monitor, this.transformerRegistry, this.validatorRegistry);
+        List<ContractDefinition> contractDefinitionList = BlockchainHelper.getAllContractDefinitionsFromSmartContract(edcBlockchainInterfaceUrl, this.monitor, this.transformerRegistry, this.validatorRegistry, this.jsonLd);
         if (contractDefinitionList == null) {
             monitor.info(String.format("[%s] No contracts found in blockchain. Is something wrong with the edc-interface or is the contract empty?", this.getClass().getSimpleName()));
         } else {
@@ -195,7 +199,8 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
                 .orElseThrow(InvalidRequestException::new);
         monitor.debug("Catalog as JSON: " + catalogJsonObject.toString());
 
-        return catalogJsonObject.toString();
+        return jsonLd.compact(catalogJsonObject).getContent().toString();
+        //return catalogJsonObject.toString();
     }
 
     /**

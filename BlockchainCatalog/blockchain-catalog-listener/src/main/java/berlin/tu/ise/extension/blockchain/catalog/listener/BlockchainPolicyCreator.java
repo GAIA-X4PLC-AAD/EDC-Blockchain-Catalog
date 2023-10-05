@@ -7,6 +7,7 @@ import org.eclipse.edc.connector.api.management.policy.PolicyDefinitionApiContro
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 import org.eclipse.edc.connector.policy.spi.event.PolicyDefinitionCreated;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
+import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.spi.event.Event;
 import org.eclipse.edc.spi.event.EventEnvelope;
 import org.eclipse.edc.spi.event.EventSubscriber;
@@ -20,12 +21,14 @@ public class BlockchainPolicyCreator implements EventSubscriber {
     private final String edcInterfaceUrl;
 
     private final PolicyDefinitionApiController policyDefinitionApiController;
+    private final JsonLd jsonLd;
 
-    public BlockchainPolicyCreator(Monitor monitor, PolicyDefinitionService policyDefinitionService, String edcInterfaceUrl, PolicyDefinitionApiController policyDefinitionApiController) {
+    public BlockchainPolicyCreator(Monitor monitor, PolicyDefinitionService policyDefinitionService, String edcInterfaceUrl, PolicyDefinitionApiController policyDefinitionApiController, JsonLd jsonLd) {
         this.monitor = monitor;
         this.policyDefinitionService = policyDefinitionService;
         this.edcInterfaceUrl = edcInterfaceUrl;
         this.policyDefinitionApiController = policyDefinitionApiController;
+        this.jsonLd = jsonLd;
     }
 
 
@@ -56,8 +59,9 @@ public class BlockchainPolicyCreator implements EventSubscriber {
         monitor.info(String.format("[%s] formating POJO to JSON ...\n", this.getClass().getSimpleName()));
 
         var policyJson = policyDefinitionApiController.getPolicyDefinition(policyDefinition.getUid());
-        monitor.info(String.format("[%s] Policy JSON: %s\n", this.getClass().getSimpleName(), policyJson));
-        return String.valueOf(policyJson);
+        monitor.info(String.format("[%s] Policy JSON: %s\n", this.getClass().getSimpleName(), jsonLd.compact(policyJson).getContent().toString()));
+
+        return jsonLd.compact(policyJson).getContent().toString();
     }
 
 }
