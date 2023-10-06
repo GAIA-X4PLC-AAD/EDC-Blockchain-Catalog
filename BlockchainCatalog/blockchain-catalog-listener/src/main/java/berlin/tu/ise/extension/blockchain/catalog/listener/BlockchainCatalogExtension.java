@@ -143,22 +143,19 @@ public class BlockchainCatalogExtension implements ServiceExtension {
 
 
 
-
-        String idsWebhookAddress = context.getSetting("ids.webhook.address", "http://localhost:8282");
-        String idsWebhookPath = context.getSetting("web.http.ids.path", "/api/v1/ids");
-        idsWebhookAddress = idsWebhookAddress + idsWebhookPath;
+        String originatorAddress = context.getSetting("edc.dsp.callback.address", "http://localhost:9194/protocol");
 
         var edcInterfaceUrl = context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL); // getEdcBlockchainInterfaceUrl();
         monitor.info("BlockchainCatalogExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
-        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex, edcInterfaceUrl, idsWebhookAddress, assetApiController, jsonLd);
+        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex, edcInterfaceUrl, originatorAddress, assetApiController, jsonLd);
         eventRouter.registerSync(AssetCreated.class, blockchainAssetCreator); // asynchronous dispatch
 
         eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl, policyDefinitionApiController, jsonLd));
 
 
 
-        eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd));
+        eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, originatorAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd));
 
     //initWithTestDate();
 

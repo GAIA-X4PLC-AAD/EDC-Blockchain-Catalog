@@ -545,7 +545,7 @@ public class BlockchainHelper {
 
                     tokenizedPolicyDefinitionList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedPolicyDefinition>>(){});
                     monitor.debug("Read policies from edc-interface: " + tokenizedPolicyDefinitionList.size() + " policies and going validate them");
-                    monitor.debug("Read policies from edc-interface: " + sb.toString());
+                    //monitor.debug("Read policies from edc-interface: " + sb.toString());
                     for (TokenizedPolicyDefinition tokenizedPolicyDefinition: tokenizedPolicyDefinitionList) {
                         if (tokenizedPolicyDefinition != null) {
                             monitor.debug("Validating policy definition: " + tokenizedPolicyDefinition.getTokenData());

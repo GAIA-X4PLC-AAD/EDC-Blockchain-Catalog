@@ -174,6 +174,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
                     .offer(contractOffer.getId(), contractOffer.getPolicy())
                     .distributions(distributions)
                     .properties(asset.getProperties())
+
                     .build();
             datasetList.add(dataset);
         }
@@ -192,12 +193,13 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
          */
         catalogBuilder.dataServices(dataServiceRegistry.getDataServices());
+
         Catalog catalog = catalogBuilder.build();
 
 
         var catalogJsonObject = transformerRegistry.transform(catalog, JsonObject.class)
                 .orElseThrow(InvalidRequestException::new);
-        monitor.debug("Catalog as JSON: " + catalogJsonObject.toString());
+        //monitor.debug("Catalog as JSON: " + catalogJsonObject.toString());
 
         return jsonLd.compact(catalogJsonObject).getContent().toString();
         //return catalogJsonObject.toString();
@@ -295,7 +297,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
     private Asset getAssetByName(String assetId, List<Asset> assetEntryDtoList) {
         for (Asset a: assetEntryDtoList) {
-            if(a.getName().equals(assetId)) {
+            if(a.getId().equals(assetId)) {
                 return a;
             }
         }
