@@ -4,10 +4,16 @@ import berlin.tu.ise.extension.blockchain.logger.model.ContractAgreementEventLog
 import berlin.tu.ise.extension.blockchain.logger.model.ReturnOperationObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.edc.connector.asset.spi.event.AssetCreated;
+import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAccepted;
+import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAgreed;
 import org.eclipse.edc.connector.contract.spi.negotiation.observe.ContractNegotiationListener;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
 import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractNegotiation;
+import org.eclipse.edc.spi.event.Event;
+import org.eclipse.edc.spi.event.EventEnvelope;
+import org.eclipse.edc.spi.event.EventSubscriber;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.BufferedReader;
@@ -18,7 +24,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-public class ContractAgreementEventSubscriber implements ContractNegotiationListener {
+public class ContractAgreementEventSubscriber implements EventSubscriber {
 
         private Monitor monitor;
 
@@ -37,21 +43,30 @@ public class ContractAgreementEventSubscriber implements ContractNegotiationList
                 this.edcInterfaceUrl = edcInterfaceUrl;
         }
 
-        @Override
-        public void accepted(ContractNegotiation negotiation) {
 
+        public void accepted(ContractNegotiationAgreed negotiationAgreed) {
+                ContractNegotiation negotiation = contractNegotiationStore.findById(negotiationAgreed.getContractNegotiationId());
                 String negotiationId = negotiation.getLastContractOffer().getId();
 
 
                 monitor.debug("ContractNegotiation accepted: " + negotiationId);
-                // wait until contract agreement is created
-                while (negotiation.getContractAgreement() == null) {
+                // wait until contract agreement is created for x seconds then fail
+                for (int i = 0; i < 10; i++) {
+                        if (negotiation.getContractAgreement() != null) {
+                                break;
+                        }
                         try {
                                 Thread.sleep(1000);
+                                monitor.debug("Waiting for ContractAgreement to be created for ContractNegotiation: " + negotiationId);
                         } catch (InterruptedException e) {
                                 e.printStackTrace();
                         }
+                        if (i == 9) {
+                                monitor.debug("ContractAgreement could not be created for ContractNegotiation: " + negotiationId);
+                                return;
+                        }
                 }
+
                 ContractAgreement contractAgreement = negotiation.getContractAgreement();
 
                 monitor.debug("ContractAgreement: " + contractAgreement.getId());
@@ -114,5 +129,12 @@ public class ContractAgreementEventSubscriber implements ContractNegotiationList
                 }
 
                 return returnObject;
+        }
+
+        @Override
+        public <E extends Event> void on(EventEnvelope<E> event) {
+                var payload = event.getPayload();
+                if (!(payload instanceof ContractNegotiationAgreed)) return;
+                accepted(((ContractNegotiationAgreed) payload));
         }
 }

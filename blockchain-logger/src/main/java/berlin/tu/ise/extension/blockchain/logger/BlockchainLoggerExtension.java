@@ -2,6 +2,8 @@ package berlin.tu.ise.extension.blockchain.logger;
 
 import berlin.tu.ise.extension.blockchain.logger.listener.ContractAgreementEventSubscriber;
 import berlin.tu.ise.extension.blockchain.logger.listener.TransferProcessEventSubscriber;
+import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAccepted;
+import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAgreed;
 import org.eclipse.edc.connector.contract.spi.negotiation.observe.ContractNegotiationListener;
 import org.eclipse.edc.connector.contract.spi.negotiation.observe.ContractNegotiationObservable;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
@@ -77,6 +79,7 @@ public class BlockchainLoggerExtension implements ServiceExtension {
         var transferProcessObservable = context.getService(TransferProcessObservable.class);
         var contractAgreementObservable = context.getService(ContractNegotiationObservable.class);
 
+
         this.context = context;
 
         var monitor = context.getMonitor();
@@ -88,7 +91,10 @@ public class BlockchainLoggerExtension implements ServiceExtension {
         transferProcessObservable.registerListener(transferProcessEventSubscriber);
 
         ContractAgreementEventSubscriber contractAgreementEventSubscriber = new ContractAgreementEventSubscriber(monitor, contractNegotiationStore, context.getConnectorId(), edcInterfaceUrl);
-        contractAgreementObservable.registerListener(contractAgreementEventSubscriber);
+        //contractAgreementObservable.registerListener(contractAgreementEventSubscriber);
+
+
+        eventRouter.registerSync(ContractNegotiationAgreed.class, contractAgreementEventSubscriber);
 
 
     }

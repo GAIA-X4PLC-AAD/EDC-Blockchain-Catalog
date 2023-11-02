@@ -125,39 +125,33 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
-
+        this.context = context;
 
         registerTransformers();
 
-        //transformerRegistry.register(new JsonObjectFromAssetTransformer(jsonBuilderFactory, typeManager.getMapper()));
-        //transformerRegistry.register(new JsonObjectToAssetEntryNewDtoTransformer());
-
         validator.register(EDC_POLICY_DEFINITION_TYPE, PolicyDefinitionValidator.instance());
         validator.register(Asset.EDC_ASSET_TYPE, AssetValidator.instance());
+
+        BlockchainSmartContractService blockchainSmartContractService = new BlockchainSmartContractService(monitor, transformerRegistry, validator, jsonLd, getEdcBlockchainInterfaceUrl());
 
         AssetApiController assetApiController = new AssetApiController(assetService, transformerRegistry, monitor, validator);
         PolicyDefinitionApiController policyDefinitionApiController = new PolicyDefinitionApiController(monitor, transformerRegistry, policyDefinitionService, validator);
         ContractDefinitionApiController contractDefinitionApiController = new ContractDefinitionApiController(transformerRegistry, contractDefinitionService, monitor, validator);
 
-        this.context = context;
-
-
-
+        // address used after (during?) negotiation to initiate the asset transfer
         String originatorAddress = context.getSetting("edc.dsp.callback.address", "http://localhost:9194/protocol");
 
         var edcInterfaceUrl = context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL); // getEdcBlockchainInterfaceUrl();
         monitor.info("BlockchainCatalogExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
-        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetService, assetIndex, edcInterfaceUrl, originatorAddress, assetApiController, jsonLd);
+        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetIndex, edcInterfaceUrl, originatorAddress, assetApiController, jsonLd, blockchainSmartContractService);
         eventRouter.registerSync(AssetCreated.class, blockchainAssetCreator); // asynchronous dispatch
 
-        eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl, policyDefinitionApiController, jsonLd));
+        eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl, policyDefinitionApiController, jsonLd, blockchainSmartContractService));
 
+        eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, originatorAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, blockchainSmartContractService));
 
-
-        eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, originatorAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd));
-
-    //initWithTestDate();
+        initWithTestDate();
 
         /*
         var dataAddress = HttpDataAddress.Builder.newInstance()
@@ -182,6 +176,7 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     }
 
 
+    // TODO: find out which of them are actually needed
     private void registerTransformers() {
         var mapper = typeManager.getMapper(JSON_LD);
         mapper.registerSubtypes(AtomicConstraint.class, LiteralExpression.class);

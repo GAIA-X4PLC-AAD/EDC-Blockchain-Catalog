@@ -3,25 +3,16 @@ package berlin.tu.ise.extension.blockchain.catalog.listener;
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import dev.failsafe.Policy;
 import jakarta.json.*;
-import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
 import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
-import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
-import org.eclipse.edc.core.transform.TransformerContextImpl;
-import org.eclipse.edc.core.transform.transformer.to.JsonObjectToAssetTransformer;
 import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
-import org.eclipse.edc.transform.spi.TransformerContext;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
-import org.eclipse.edc.validator.spi.ValidationResult;
 import org.eclipse.edc.web.spi.exception.InvalidRequestException;
 import org.eclipse.edc.web.spi.exception.ValidationFailureException;
 
@@ -34,24 +25,37 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.eclipse.edc.spi.types.domain.asset.Asset.EDC_ASSET_TYPE;
+public class BlockchainSmartContractService {
 
-public class BlockchainHelper {
+    private final Monitor monitor;
+    private final TypeTransformerRegistry transformerRegistry;
+    private final JsonObjectValidatorRegistry validatorRegistry;
+    private final JsonLd jsonLd;
 
-    public static ReturnObject sendToAssetSmartContract(String jsonString, Monitor monitor, String edcInterfaceUrl) {
-        return sendToSmartContract(jsonString, monitor, edcInterfaceUrl + "/mint/asset");
+    private final String edcInterfaceUrl;
+
+    public BlockchainSmartContractService(Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, JsonLd jsonLd, String edcInterfaceUrl) {
+        this.monitor = monitor;
+        this.transformerRegistry = transformerRegistry;
+        this.validatorRegistry = validatorRegistry;
+        this.jsonLd = jsonLd;
+        this.edcInterfaceUrl = edcInterfaceUrl;
     }
 
-    public static ReturnObject sendToPolicySmartContract(String jsonString, Monitor monitor, String edcInterfaceUrl) {
-        return sendToSmartContract(jsonString, monitor, edcInterfaceUrl + "/mint/policy");
+    public ReturnObject sendToAssetSmartContract(String jsonString ) {
+        return sendToSmartContract(jsonString, edcInterfaceUrl + "/mint/asset");
     }
 
-    public static ReturnObject sendToContractSmartContract(String jsonString, Monitor monitor, String edcInterfaceUrl) {
-        return sendToSmartContract(jsonString, monitor, edcInterfaceUrl + "/mint/contract");
+    public ReturnObject sendToPolicySmartContract(String jsonString) {
+        return sendToSmartContract(jsonString, edcInterfaceUrl + "/mint/policy");
     }
 
-    public static ReturnObject sendToSmartContract(String jsonString, Monitor monitor, String smartContractUrl) {
-        monitor.debug(String.format("[%s] Sending data to Smart Contract, this may take some time ...", BlockchainHelper.class.getSimpleName()));
+    public ReturnObject sendToContractSmartContract(String jsonString) {
+        return sendToSmartContract(jsonString, edcInterfaceUrl + "/mint/contract");
+    }
+
+    public ReturnObject sendToSmartContract(String jsonString, String smartContractUrl) {
+        monitor.debug(String.format("[%s] Sending data to Smart Contract, this may take some time ...", BlockchainSmartContractService.class.getSimpleName()));
         String returnJson;
         ReturnObject returnObject = null;
         try{
@@ -88,7 +92,7 @@ public class BlockchainHelper {
         return returnObject;
     }
 
-    public static Asset getAssetWithIdFromSmartContract(String id, String edcInterfaceUrl) {
+    public Asset getAssetWithIdFromSmartContract(String id, String edcInterfaceUrl) {
         Asset asset = null;
         ObjectMapper mapper = new ObjectMapper();
 
@@ -131,7 +135,7 @@ public class BlockchainHelper {
         return null;
     }
 
-    public static List<ContractDefinition> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, JsonLd jsonLd) {
+    public List<ContractDefinition> getAllContractDefinitionsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -248,7 +252,7 @@ public class BlockchainHelper {
     /**
      * @return HashMap of Source URIs and Lists of ContractDefinitionResponseDto
      */
-    public static HashMap<String, List<ContractOfferMessage>> getAllContractDefinitionsFromSmartContractGroupedBySource(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
+    public HashMap<String, List<ContractOfferMessage>> getAllContractDefinitionsFromSmartContractGroupedBySource(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
         HashMap<String, List<ContractOfferMessage>> returnMap = new HashMap<>();
         ContractOfferMessage contractDefinitionResponseDto = null;
         ObjectMapper mapper = new ObjectMapper();
@@ -401,7 +405,7 @@ public class BlockchainHelper {
 
      */
 
-    public static List<Asset> getAllAssetsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, JsonLd jsonLd) {
+    public List<Asset> getAllAssetsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
 
         List<TokenizedObject> tokenziedAssetList;
@@ -515,7 +519,7 @@ public class BlockchainHelper {
     }
 
 
-    public static List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry, JsonLd jsonLd) {
+    public List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
 
         List<TokenizedPolicyDefinition> tokenizedPolicyDefinitionList = new ArrayList<>();

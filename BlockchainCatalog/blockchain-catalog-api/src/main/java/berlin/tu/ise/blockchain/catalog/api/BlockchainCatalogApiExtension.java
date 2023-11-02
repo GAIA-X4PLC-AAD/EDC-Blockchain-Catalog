@@ -1,5 +1,6 @@
 package berlin.tu.ise.blockchain.catalog.api;
 
+import berlin.tu.ise.extension.blockchain.catalog.listener.BlockchainSmartContractService;
 import jakarta.json.Json;
 import org.eclipse.edc.catalog.spi.DataServiceRegistry;
 import org.eclipse.edc.catalog.spi.DatasetResolver;
@@ -7,12 +8,13 @@ import org.eclipse.edc.catalog.spi.Distribution;
 import org.eclipse.edc.catalog.spi.DistributionResolver;
 import org.eclipse.edc.connector.api.management.configuration.ManagementApiConfiguration;
 import org.eclipse.edc.connector.api.management.configuration.transform.ManagementApiTypeTransformerRegistry;
+import org.eclipse.edc.connector.api.management.contractdefinition.transform.JsonObjectFromContractDefinitionTransformer;
+import org.eclipse.edc.connector.api.management.contractdefinition.transform.JsonObjectToContractDefinitionTransformer;
+import org.eclipse.edc.connector.api.management.policy.transform.JsonObjectFromPolicyDefinitionTransformer;
 import org.eclipse.edc.connector.api.management.policy.transform.JsonObjectToPolicyDefinitionTransformer;
+import org.eclipse.edc.core.transform.transformer.OdrlTransformersFactory;
 import org.eclipse.edc.core.transform.transformer.from.*;
-import org.eclipse.edc.core.transform.transformer.to.JsonObjectToCatalogTransformer;
-import org.eclipse.edc.core.transform.transformer.to.JsonObjectToDataServiceTransformer;
-import org.eclipse.edc.core.transform.transformer.to.JsonObjectToDatasetTransformer;
-import org.eclipse.edc.core.transform.transformer.to.JsonObjectToDistributionTransformer;
+import org.eclipse.edc.core.transform.transformer.to.*;
 import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.policy.model.AtomicConstraint;
 import org.eclipse.edc.policy.model.LiteralExpression;
@@ -87,18 +89,27 @@ public class BlockchainCatalogApiExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         this.context = context;
+        registerTransformers();
         monitor.info("Initializing Blockchain Catalog API Extension");
         monitor.info("EDC Blockchain Interface URL: " + getEdcBlockchainInterfaceUrl());
-        var catalogController = new BlockchainCatalogApiController(monitor, getEdcBlockchainInterfaceUrl(), transformerRegistry, validator, datasetResolver, distributionResolver, dataServiceRegistry, jsonLd);
+        BlockchainSmartContractService blockchainSmartContractService = new BlockchainSmartContractService(monitor, transformerRegistry, validator, jsonLd, getEdcBlockchainInterfaceUrl());
+        var catalogController = new BlockchainCatalogApiController(monitor, transformerRegistry, distributionResolver, dataServiceRegistry, jsonLd, blockchainSmartContractService);
         webService.registerResource("default", catalogController);
 
     }
 
+    // TODO: find out which of them are actually needed
     private void registerTransformers() {
         var mapper = typeManager.getMapper(JSON_LD);
         mapper.registerSubtypes(AtomicConstraint.class, LiteralExpression.class);
 
         var jsonBuilderFactory = Json.createBuilderFactory(Map.of());
+        transformerRegistry.register(new JsonObjectToPolicyDefinitionTransformer());
+        transformerRegistry.register(new JsonObjectFromPolicyDefinitionTransformer(jsonBuilderFactory));
+        transformerRegistry.register(new JsonObjectToContractDefinitionTransformer());
+        transformerRegistry.register(new JsonObjectFromContractDefinitionTransformer(jsonBuilderFactory));
+
+        // EDC model to JSON-LD transformers
         transformerRegistry.register(new JsonObjectFromCatalogTransformer(jsonBuilderFactory, mapper));
         transformerRegistry.register(new JsonObjectFromDatasetTransformer(jsonBuilderFactory, mapper));
         transformerRegistry.register(new JsonObjectFromPolicyTransformer(jsonBuilderFactory));
@@ -115,6 +126,14 @@ public class BlockchainCatalogApiExtension implements ServiceExtension {
         transformerRegistry.register(new JsonObjectToDataServiceTransformer());
         transformerRegistry.register(new JsonObjectToDatasetTransformer());
         transformerRegistry.register(new JsonObjectToDistributionTransformer());
+
+        // ODRL Transformers
+        OdrlTransformersFactory.jsonObjectToOdrlTransformers().forEach(transformerRegistry::register);
+        transformerRegistry.register(new JsonValueToGenericTypeTransformer(mapper));
+        transformerRegistry.register(new JsonObjectToAssetTransformer());
+        transformerRegistry.register(new JsonObjectToQuerySpecTransformer());
+        transformerRegistry.register(new JsonObjectToCriterionTransformer());
+        transformerRegistry.register(new JsonObjectToDataAddressTransformer());
     }
 
 
