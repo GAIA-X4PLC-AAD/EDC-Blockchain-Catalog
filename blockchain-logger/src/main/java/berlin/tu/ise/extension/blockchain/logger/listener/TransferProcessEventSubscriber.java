@@ -7,12 +7,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.offer.store.ContractDefinitionStore;
+import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessListener;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
-import org.eclipse.edc.spi.event.Event;
-import org.eclipse.edc.spi.event.EventSubscriber;
-import org.eclipse.edc.spi.event.transferprocess.*;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.BufferedReader;
@@ -27,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class TransferProcessEventSubscriber implements EventSubscriber {
+public class TransferProcessEventSubscriber implements TransferProcessListener {
 
     private Monitor monitor;
 
@@ -64,42 +62,38 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
         */
 
     @Override
-    public void on(Event event) {
-        if (event instanceof TransferProcessEvent) {
-            monitor.debug("Transfer Process Event: " + event.getClass().getSimpleName());
-            if (event instanceof TransferProcessProvisioned) {
-                // monitor.debug("Transfer Process Completed");
-                TransferProcessProvisioned transferProcessProvisioned = (TransferProcessProvisioned) event;
-                TransferProcess transferProcess = this.transferProcessStore.find(transferProcessProvisioned.getPayload().getTransferProcessId());
-                DataRequest dataRequest = transferProcess.getDataRequest();
-                String assetId = dataRequest.getAssetId();
-                String contractId = dataRequest.getContractId(); // better to get aggrement id?
+    public void completed(TransferProcess process) {
 
-                String connectorId = dataRequest.getConnectorId();
+        monitor.debug("Transfer Process Event: " + process.getDataRequest().getProcessId());
 
-                String agreementId = contractNegotiationStore.findContractAgreement(contractId).getId();
+        // monitor.debug("Transfer Process Completed");
+        DataRequest dataRequest = process.getDataRequest();
+        String assetId = dataRequest.getAssetId();
+        String contractId = dataRequest.getContractId(); // better to get aggrement id?
 
-                // TODO: How to get agreement Id from transfer
-                TransferProcessEventLog transferProcessEventLog = new TransferProcessEventLog(assetId, ownConnectorId, connectorId, agreementId);
-                String jsonString;
+        String connectorId = dataRequest.getConnectorId();
 
-                try {
-                    jsonString = transferProcessEventLog.toJson();
-                    monitor.debug(jsonString);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
+        String agreementId = contractNegotiationStore.findContractAgreement(contractId).getId();
 
-                ReturnOperationObject returnObject = sendToSmartContract(jsonString, monitor, edcInterfaceUrl);
-                if (returnObject != null && Objects.equals(returnObject.getStatus(), "ok")) {
-                    monitor.debug("[TransferProcessEventSubscriber] Data sent to Smart Contract");
-                } else {
-                    monitor.debug("[TransferProcessEventSubscriber] Data could not be sent to Smart Contract");
-                }
+        // TODO: How to get agreement Id from transfer
+        TransferProcessEventLog transferProcessEventLog = new TransferProcessEventLog(assetId, ownConnectorId, connectorId, agreementId);
+        String jsonString;
 
-
-            }
+        try {
+            jsonString = transferProcessEventLog.toJson();
+            monitor.debug(jsonString);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
+
+        ReturnOperationObject returnObject = sendToSmartContract(jsonString, monitor, edcInterfaceUrl);
+        if (returnObject != null && Objects.equals(returnObject.getStatus(), "ok")) {
+            monitor.debug("[TransferProcessEventSubscriber] Data sent to Smart Contract");
+        } else {
+            monitor.debug("[TransferProcessEventSubscriber] Data could not be sent to Smart Contract");
+        }
+
+
     }
 
     public static ReturnOperationObject sendToSmartContract(String jsonString, Monitor monitor, String smartContractUrl) {
@@ -139,7 +133,7 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
 
         return returnObject;
     }
-
+/*
     public static List<ContractOfferDto> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl) {
         ContractOfferDto contractOfferDto = null;
         ObjectMapper mapper = new ObjectMapper();
@@ -202,5 +196,6 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
         }
         return null;
     }
+    */
 }
 // TransferProcessCancelled

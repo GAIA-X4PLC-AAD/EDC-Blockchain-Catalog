@@ -1,0 +1,2 @@
+./gradlew BlockchainCatalog:blockchain-catalog-prosumer:build
+java -Dedc.keystore=transfer/transfer-07-provider-push-http/certs/cert.pfx -Dedc.keystore.password=123456 -Dedc.vault=BlockchainCatalog/blockchain-catalog-prosumer/consumer-vault.properties -Dedc.fs.config=BlockchainCatalog/blockchain-catalog-prosumer/config2.properties -jar BlockchainCatalog/blockchain-catalog-prosumer/build/libs/consumer.jar

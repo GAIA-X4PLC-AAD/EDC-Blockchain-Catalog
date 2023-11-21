@@ -3,20 +3,20 @@ package berlin.tu.ise.extension.blockchain.logger.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import org.eclipse.edc.api.model.BaseResponseDto;
-import org.eclipse.edc.api.model.CriterionDto;
+import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
 
 import java.util.ArrayList;
 import java.util.List;
+/*
 
 @JsonDeserialize(builder = ContractOfferDto.Builder.class)
-public class ContractOfferDto extends BaseResponseDto {
+public class ContractOfferDto extends ContractOffer {
     private String id;
     private String accessPolicyId;
     private String contractPolicyId;
 
     private String dataUrl;
-    private List<CriterionDto> criteria = new ArrayList<>();
+    private List<String> criteria = new ArrayList<>();
 
     private ContractOfferDto() {
     }
@@ -29,7 +29,7 @@ public class ContractOfferDto extends BaseResponseDto {
         return contractPolicyId;
     }
 
-    public List<CriterionDto> getCriteria() {
+    public List<String> getCriteria() {
         return criteria;
     }
 
@@ -40,7 +40,7 @@ public class ContractOfferDto extends BaseResponseDto {
     public String getDataUrl() { return dataUrl; }
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static final class Builder extends BaseResponseDto.Builder<ContractOfferDto, Builder> {
+    public static final class Builder extends ContractOffer.Builder<ContractOffer, Builder> {
         private Builder() {
             super(new ContractOfferDto());
         }
@@ -81,4 +81,5 @@ public class ContractOfferDto extends BaseResponseDto {
         }
     }
 }
+*/
 

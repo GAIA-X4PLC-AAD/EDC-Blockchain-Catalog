@@ -14,16 +14,14 @@
 
 plugins {
     `java-library`
+    id("application")
 }
 
-val groupId: String by project
-val edcVersion: String by project
-
 dependencies {
-    api("$groupId:control-plane-spi:$edcVersion")
-    api("$groupId:transfer-spi:$edcVersion")
-    api("$groupId:data-plane-spi:$edcVersion")
-    implementation("$groupId:control-plane-core:$edcVersion")
-    implementation("$groupId:api-core:$edcVersion")
+    api(libs.edc.control.plane.spi)
+    api(libs.edc.transfer.spi)
+    api(libs.edc.data.plane.spi)
+    implementation(libs.edc.control.plane.core)
+    implementation(libs.edc.api.core)
 
 }

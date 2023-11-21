@@ -5,13 +5,13 @@ name: Docker
 # separate terms of service, privacy policy, and support
 # documentation.
 
-on: 
-  push:
-    branches: [ "github_action" ]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ "github_action" ]
+#on:
+#  push:
+#    branches: [ "github_action" ]
+#    # Publish semver tags as releases.
+#    tags: [ 'v*.*.*' ]
+#  pull_request:
+#    branches: [ "github_action" ]
 
 env:
   # Use docker.io for Docker Hub if empty

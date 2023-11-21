@@ -26,7 +26,6 @@ dependencies {
     //implementation("$groupId:federated-catalog-core:$edcVersion")
     implementation("$groupId:web-spi:$edcVersion")
 
-    implementation("$groupId:ids:$edcVersion")
 
     api("$groupId:control-plane-spi:$edcVersion")
     implementation("$groupId:http:$edcVersion")
@@ -34,6 +33,8 @@ dependencies {
 
 
     implementation("$groupId:control-plane-spi:$edcVersion")
+    implementation(libs.edc.dsp)
+
 
 
 }

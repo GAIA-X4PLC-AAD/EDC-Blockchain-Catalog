@@ -1,14 +1,14 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener;
 
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.edc.connector.api.management.policy.model.PolicyDefinitionResponseDto;
+import org.eclipse.edc.connector.api.management.policy.PolicyDefinitionApiController;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
+import org.eclipse.edc.connector.policy.spi.event.PolicyDefinitionCreated;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
+import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.spi.event.Event;
+import org.eclipse.edc.spi.event.EventEnvelope;
 import org.eclipse.edc.spi.event.EventSubscriber;
-import org.eclipse.edc.spi.event.policydefinition.PolicyDefinitionCreated;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 public class BlockchainPolicyCreator implements EventSubscriber {
@@ -18,26 +18,32 @@ public class BlockchainPolicyCreator implements EventSubscriber {
 
     private final String edcInterfaceUrl;
 
-    public BlockchainPolicyCreator(Monitor monitor, PolicyDefinitionService policyDefinitionService, String edcInterfaceUrl) {
+    private final PolicyDefinitionApiController policyDefinitionApiController;
+    private final JsonLd jsonLd;
+
+    private BlockchainSmartContractService blockchainSmartContractService;
+    public BlockchainPolicyCreator(Monitor monitor, PolicyDefinitionService policyDefinitionService, String edcInterfaceUrl, PolicyDefinitionApiController policyDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
         this.monitor = monitor;
         this.policyDefinitionService = policyDefinitionService;
         this.edcInterfaceUrl = edcInterfaceUrl;
+        this.policyDefinitionApiController = policyDefinitionApiController;
+        this.jsonLd = jsonLd;
+        this.blockchainSmartContractService = blockchainSmartContractService;
     }
 
 
-    @Override
-    public void on(Event event) {
-        if (!(event instanceof PolicyDefinitionCreated)) {
-            return;
-        }
+    public <E extends Event> void on(EventEnvelope<E> event){
+        var payload = event.getPayload();
+        if (!(payload instanceof PolicyDefinitionCreated)) return;
+
         // the event only returns the policy id, so we need to get the policy object
-        PolicyDefinitionCreated policyDefinitionCreated = (PolicyDefinitionCreated) event;
-        String policyId = policyDefinitionCreated.getPayload().getPolicyDefinitionId();
+        PolicyDefinitionCreated policyDefinitionCreated = (PolicyDefinitionCreated) payload;
+        String policyId = policyDefinitionCreated.getPolicyDefinitionId();
         PolicyDefinition policyDefinition = policyDefinitionService.findById(policyId);
 
         String jsonString = transformToJSON(policyDefinition);
         System.out.println(jsonString);
-        ReturnObject returnObject = BlockchainHelper.sendToPolicySmartContract(jsonString, monitor, edcInterfaceUrl);
+        ReturnObject returnObject = blockchainSmartContractService.sendToPolicySmartContract(jsonString);
         if(returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Policy creation of the Policy with id " + policyDefinition.getId());
         } else {
@@ -52,23 +58,10 @@ public class BlockchainPolicyCreator implements EventSubscriber {
 
         monitor.info(String.format("[%s] formating POJO to JSON ...\n", this.getClass().getSimpleName()));
 
-        ObjectMapper mapper = new ObjectMapper();
+        var policyJson = policyDefinitionApiController.getPolicyDefinition(policyDefinition.getUid());
+        monitor.info(String.format("[%s] Policy JSON: %s\n", this.getClass().getSimpleName(), jsonLd.compact(policyJson).getContent().toString()));
 
-        PolicyDefinitionResponseDto policyDefinitionResponseDto = PolicyDefinitionResponseDto.Builder.newInstance()
-                .policy(policyDefinition.getPolicy())
-                .id(policyDefinition.getUid())
-                .createdAt(policyDefinition.getCreatedAt())
-                .build();
-        // Format them to JSON and print them for debugging. Change later, for now the system out println looks prettier than using monitor
-        String jsonString = "";
-        try {
-            jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(policyDefinitionResponseDto);
-            //System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(policyDefinitionResponseDto));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        return jsonString;
+        return jsonLd.compact(policyJson).getContent().toString();
     }
 
 }

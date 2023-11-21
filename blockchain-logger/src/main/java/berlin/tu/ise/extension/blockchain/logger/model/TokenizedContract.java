@@ -4,12 +4,12 @@ public class TokenizedContract {
     String token_id;
     String name;
     String decimals;
-    ContractOfferDto tokenData;
+    //ContractOfferDto tokenData;
 
 
-    public String getSource() {
+    /*public String getSource() {
         return tokenData.getDataUrl();
-    }
+    }*/
 
     public String getToken_id() {
         return token_id;
@@ -35,11 +35,11 @@ public class TokenizedContract {
         this.decimals = decimals;
     }
 
-    public ContractOfferDto getTokenData() {
+    /*public ContractOfferDto getTokenData() {
         return tokenData;
     }
 
     public void setTokenData(ContractOfferDto tokenData) {
         this.tokenData = tokenData;
-    }
+    }*/
 }

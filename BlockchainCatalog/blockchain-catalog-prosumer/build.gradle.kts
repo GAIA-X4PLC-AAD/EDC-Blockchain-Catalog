@@ -24,6 +24,7 @@ val groupId: String by project
 val edcVersion: String by project
 
 dependencies {
+    /*
     implementation("$groupId:control-plane-core:$edcVersion")
 
     implementation("$groupId:http:$edcVersion")
@@ -33,15 +34,15 @@ dependencies {
 
     implementation("$groupId:auth-tokenbased:$edcVersion")
     implementation("$groupId:management-api:$edcVersion")
+    */
+    //implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
+    //implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
+    //implementation(project(":blockchain-logger"))
 
-    implementation("$groupId:ids:$edcVersion")
 
-    implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
-    implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
-    implementation(project(":blockchain-logger"))
 
-    implementation(project(":transfer:transfer-07-provider-push-http:http-push-connector"))
-    implementation(project(":transfer:transfer-07-provider-push-http:provider-push-http-backend-service"))
+    /*
+
 
     // data plane related dependencies to enable transfer via azurerite
     implementation("$groupId:data-plane-azure-storage:$edcVersion")
@@ -63,7 +64,6 @@ dependencies {
     implementation("$groupId:transfer-data-plane:$edcVersion")
 
     implementation("${groupId}:control-plane-core:${edcVersion}")
-    implementation("${groupId}:ids:${edcVersion}")
     implementation("${groupId}:configuration-filesystem:${edcVersion}")
     implementation("${groupId}:vault-filesystem:${edcVersion}")
     implementation("${groupId}:iam-mock:${edcVersion}")
@@ -82,14 +82,42 @@ dependencies {
 
     api("$groupId:control-plane-spi:$edcVersion")
     api("$groupId:data-plane-spi:$edcVersion")
+    */
 
+    api(libs.edc.control.plane.spi)
+    implementation(libs.edc.http)
+    implementation(libs.edc.dsp)
+    implementation(libs.edc.management.api)
+    implementation(libs.edc.data.plane.selector.core)
+    implementation(libs.edc.iam.mock)
 
-
-
+    //implementation(project(":playground:apiTest"))
+    //implementation(project(":transfer:transfer-07-provider-push-http:http-push-connector"))
+    //implementation(project(":newtransfer:transfer-07-provider-push-http:provider-push-http-backend-service"))
+    implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
+    implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
+    implementation(project(":blockchain-logger"))
 
 
 //    implementation(project(":transfer:StatusChecker"))
 //    implementation(project(":transfer:TransferFileLocal"))
+
+    // provider push http example
+    implementation(libs.edc.control.plane.core)
+    implementation(libs.edc.dsp)
+    implementation(libs.edc.configuration.filesystem)
+    implementation(libs.edc.vault.filesystem)
+    implementation(libs.edc.iam.mock)
+    implementation(libs.edc.management.api)
+    implementation(libs.edc.transfer.data.plane)
+
+    implementation(libs.edc.data.plane.selector.api)
+    implementation(libs.edc.data.plane.selector.core)
+    implementation(libs.edc.data.plane.selector.client)
+
+    implementation(libs.edc.data.plane.api)
+    implementation(libs.edc.data.plane.core)
+    implementation(libs.edc.data.plane.http)
 
 }
 
