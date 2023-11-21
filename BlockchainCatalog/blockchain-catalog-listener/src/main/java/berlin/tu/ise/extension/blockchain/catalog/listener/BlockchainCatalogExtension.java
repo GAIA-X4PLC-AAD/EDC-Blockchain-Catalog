@@ -151,7 +151,7 @@ public class BlockchainCatalogExtension implements ServiceExtension {
 
         eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, originatorAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, blockchainSmartContractService));
 
-        initWithTestDate();
+        //initWithTestDate();
 
         /*
         var dataAddress = HttpDataAddress.Builder.newInstance()
