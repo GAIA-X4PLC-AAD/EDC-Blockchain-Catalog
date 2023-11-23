@@ -94,7 +94,7 @@ public class BlockchainLoggerExtension implements ServiceExtension {
         //contractAgreementObservable.registerListener(contractAgreementEventSubscriber);
 
 
-        eventRouter.registerSync(ContractNegotiationAgreed.class, contractAgreementEventSubscriber);
+        eventRouter.register(ContractNegotiationAgreed.class, contractAgreementEventSubscriber);
 
 
     }
