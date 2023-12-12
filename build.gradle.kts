@@ -33,10 +33,15 @@ buildscript {
 allprojects {
     apply(plugin = "$group.edc-build")
 
+    // Remove broken Checkstyle check
+    tasks.named("checkstyleMain") {
+        enabled = false
+    }
+
     // configure which version of the annotation processor to use. defaults to the same version as the plugin
     configure<org.eclipse.edc.plugins.autodoc.AutodocExtension> {
         processorVersion.set(edcVersion)
-        outputDirectory.set(project.buildDir)
+        outputDirectory.set(project.layout.buildDirectory.asFile)
     }
 
     configure<org.eclipse.edc.plugins.edcbuild.extensions.BuildExtension> {

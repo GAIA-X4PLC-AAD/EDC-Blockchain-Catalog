@@ -98,7 +98,6 @@ dependencies {
     implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
     implementation(project(":blockchain-logger"))
 
-
 //    implementation(project(":transfer:StatusChecker"))
 //    implementation(project(":transfer:TransferFileLocal"))
 
@@ -107,6 +106,7 @@ dependencies {
     implementation(libs.edc.dsp)
     implementation(libs.edc.configuration.filesystem)
     implementation(libs.edc.vault.filesystem)
+    implementation(libs.edc.vault.azure)
     implementation(libs.edc.iam.mock)
     implementation(libs.edc.management.api)
     implementation(libs.edc.transfer.data.plane)
@@ -114,6 +114,7 @@ dependencies {
     implementation(libs.edc.data.plane.selector.api)
     implementation(libs.edc.data.plane.selector.core)
     implementation(libs.edc.data.plane.selector.client)
+    implementation(libs.edc.data.plane.azure.storage)
 
     implementation(libs.edc.data.plane.api)
     implementation(libs.edc.data.plane.core)
@@ -128,5 +129,4 @@ application {
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     exclude("**/pom.properties", "**/pom.xml")
     mergeServiceFiles()
-    archiveFileName.set("consumer.jar")
 }
