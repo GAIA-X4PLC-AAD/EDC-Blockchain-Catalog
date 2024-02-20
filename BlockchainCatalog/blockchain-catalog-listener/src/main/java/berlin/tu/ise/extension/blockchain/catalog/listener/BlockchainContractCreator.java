@@ -55,9 +55,13 @@ public class BlockchainContractCreator implements EventSubscriber {
         ReturnObject returnObject = blockchainSmartContractService.sendToContractSmartContract(jsonString);
         if(returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Contract Definition creation of the Contract with id " + contractDefinition.getId());
-        } else {
-            System.out.printf("[%s] Created Contract %s and minted it successfully with the hash: %s\n", this.getClass().getSimpleName(), contractDefinition.getId(), returnObject.getHash());
+            return;
         }
+
+        System.out.printf("[%s] Created Contract %s and minted it successfully with the hash: %s\n", this.getClass().getSimpleName(), contractDefinition.getId(), returnObject.getHash());
+
+        BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, returnObject.getHash(), idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, monitor, blockchainSmartContractService);
+
 
     }
 

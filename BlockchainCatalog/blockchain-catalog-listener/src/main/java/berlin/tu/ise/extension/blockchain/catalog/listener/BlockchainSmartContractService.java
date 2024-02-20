@@ -54,6 +54,10 @@ public class BlockchainSmartContractService {
         return sendToSmartContract(jsonString, edcInterfaceUrl + "/mint/contract");
     }
 
+    public ReturnObject sendToVerifiableSmartContract(String jsonString) {
+        return sendToSmartContract(jsonString, edcInterfaceUrl + "/mint/verifiable_credentials");
+    }
+
     public ReturnObject sendToSmartContract(String jsonString, String smartContractUrl) {
         monitor.debug(String.format("[%s] Sending data to Smart Contract, this may take some time ...", BlockchainSmartContractService.class.getSimpleName()));
         String returnJson;
@@ -91,6 +95,8 @@ public class BlockchainSmartContractService {
 
         return returnObject;
     }
+
+
 
     public Asset getAssetWithIdFromSmartContract(String id, String edcInterfaceUrl) {
         Asset asset = null;
