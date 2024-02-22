@@ -51,17 +51,29 @@ public class BlockchainContractCreator implements EventSubscriber {
 
         ContractDefinition contractDefinition = contractDefinitionService.findById(contractId);
 
-        String jsonString = transformToJSON(contractDefinition);
-        ReturnObject returnObject = blockchainSmartContractService.sendToContractSmartContract(jsonString);
+        String jsonRepresentationOfContractDefinition = transformToJSON(contractDefinition);
+
+        String verifiablePresentationOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, monitor, blockchainSmartContractService);
+
+        if(verifiablePresentationOfContract == null) {
+            monitor.warning("Something went wrong during the Verifiable Presentation creation for the Contract with id " + contractDefinition.getId());
+            return;
+        }
+
+        monitor.debug("Sending Combined Verifiable Presentation and COntract to Blockchain for Contract with id " + contractDefinition.getId() + " with JSON: " + verifiablePresentationOfContract);
+
+        String combinedVPandContract = "{\n" +
+                "  \"edcContractdefinition\": " + jsonRepresentationOfContractDefinition + ",\n" +
+                "  \"verifiablePresentation\": " + verifiablePresentationOfContract + "\n" +
+                "}";
+
+        ReturnObject returnObject = blockchainSmartContractService.sendToContractSmartContract(combinedVPandContract);
         if(returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Contract Definition creation of the Contract with id " + contractDefinition.getId());
             return;
         }
 
         System.out.printf("[%s] Created Contract %s and minted it successfully with the hash: %s\n", this.getClass().getSimpleName(), contractDefinition.getId(), returnObject.getHash());
-
-        BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, returnObject.getHash(), idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, monitor, blockchainSmartContractService);
-
 
     }
 

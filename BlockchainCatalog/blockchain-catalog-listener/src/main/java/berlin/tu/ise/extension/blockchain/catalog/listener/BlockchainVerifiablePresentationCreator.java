@@ -18,7 +18,7 @@ public class BlockchainVerifiablePresentationCreator {
 
 
 
-    public static void createVerifiablePresentation(ContractDefinition contractDefinition, String hash, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex, ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, Monitor monitor, BlockchainSmartContractService blockchainSmartContractService) {
+    public static String createVerifiablePresentation(ContractDefinition contractDefinition, String hash, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex, ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, Monitor monitor, BlockchainSmartContractService blockchainSmartContractService) {
 
         String jsonString = transformToJSON(contractDefinition, idsWebhookAddress, edcInterfaceUrl, assetIndex, hash);
         monitor.debug("Going to create Verifiable Presentation with following JSON: " + jsonString);
@@ -26,21 +26,14 @@ public class BlockchainVerifiablePresentationCreator {
 
         if(returnString == null) {
             monitor.warning("Something went wrong during the Verifiable Presentation creation for the Contract with id " + contractDefinition.getId());
-            return;
+            return null;
         }
 
         monitor.info("Verifiable Presentation for Contract with id " + contractDefinition.getId() + " created successfully: " + returnString);
 
         monitor.debug("Sending Verifiable Presentation to Blockchain for Contract with id " + contractDefinition.getId() + " with JSON: " + returnString);
 
-        ReturnObject returnObject = blockchainSmartContractService.sendToVerifiableSmartContract(returnString);
-
-        if (returnObject == null) {
-            monitor.warning("Something went wrong during the Blockchain Verifiable Presentation creation for the Contract with id " + contractDefinition.getId());
-            return;
-        }
-
-        monitor.info("Verifiable Presentation for Contract with id " + contractDefinition.getId() + " created successfully: " + returnObject.getStatus() + " " + returnObject.getHash());
+        return returnString;
 
     }
 

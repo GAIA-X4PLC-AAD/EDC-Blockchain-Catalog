@@ -150,7 +150,7 @@ public class BlockchainSmartContractService {
 
         HttpURLConnection c = null;
         try {
-            URL u = new URL(edcInterfaceUrl + "/all/contract");
+            URL u = new URL(edcInterfaceUrl + "/all/edccontract");
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
             c.setRequestProperty("Content-length", "0");
@@ -268,7 +268,7 @@ public class BlockchainSmartContractService {
 
         HttpURLConnection c = null;
         try {
-            URL u = new URL(edcInterfaceUrl + "/all/contract");
+            URL u = new URL(edcInterfaceUrl + "/all/edccontract");
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
             c.setRequestProperty("Content-length", "0");
