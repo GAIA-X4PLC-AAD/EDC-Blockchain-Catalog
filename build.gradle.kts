@@ -53,11 +53,6 @@ allprojects {
         configDirectory.set(rootProject.file("resources"))
     }
 
-    // Configure checkstyleMain Task to be disabled
-    tasks.named("checkstyleMain") {
-        enabled = false
-    }
-
     // EdcRuntimeExtension uses this to determine the runtime classpath of the module to run.
     tasks.register("printClasspath") {
         doLast {
@@ -65,4 +60,7 @@ allprojects {
         }
     }
 
+    tasks.named("checkstyleMain") {
+        enabled = false
+    }
 }

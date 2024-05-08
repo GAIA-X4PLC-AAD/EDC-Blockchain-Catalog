@@ -31,16 +31,16 @@ dependencyResolutionManagement {
 
 
 // modules for code samples ------------------------------------------------------------------------
-include(":other:custom-runtime")
 include("BlockchainCatalog:blockchain-catalog-api")
 include("BlockchainCatalog:blockchain-catalog-listener")
 include("BlockchainCatalog:blockchain-catalog-prosumer")
+include("BlockchainCatalog:blockchain-catalog-azure")
 include("playground:apiTest")
 findProject(":BlockchainCatalog:blockchain-catalog-prosumer")?.name = "blockchain-catalog-prosumer"
 
 include("blockchain-logger")
 
-include("transfer:TransferFileLocal")
+// include("transfer:TransferFileLocal")
 // include("transfer:StatusChecker")
 //include("transfer:transfer-07-provider-push-http:provider-push-http-backend-service")
 include("transfer:transfer-07-provider-push-http:http-push-connector")
@@ -50,7 +50,7 @@ include("transfer:transfer-07-provider-push-http:http-push-provider")
 include("newtransfer:transfer-07-provider-push-http:provider-push-http-backend-service")
 
 // modules for code samples ------------------------------------------------------------------------
-include(":other:custom-runtime")
+//include(":other:custom-runtime")
 
 include(":system-tests")
 include("playground")
