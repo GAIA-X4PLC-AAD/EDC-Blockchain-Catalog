@@ -1,7 +1,5 @@
 version: "3.8"
-
 services:
-
   connector-1:
     container_name: connector-1
     build:
@@ -23,8 +21,9 @@ services:
       OTEL_EXPORTER_JAEGER_ENDPOINT: http://jaeger:14250
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
       OTEL_METRICS_EXPORTER: prometheus
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: http://prometheus:9090
       OTEL_LOGS_EXPORTER: none
-      WEDC_BLOCKCHAIN_INTERFACE_URL: "http://edc-interface-1:3000"
+      EDC_BLOCKCHAIN_INTERFACE_URL: "http://edc-interface-1:3000"
       IDS_WEBHOOK_ADDRESS: "http://connector-1:8282"
       WEB_HTTP_PORT: "8181"
       WEB_HTTP_PATH: "/api"
@@ -53,7 +52,42 @@ services:
       -Dedc.keystore.password=123456
       -Dedc.vault=vault.properties
       -jar app.jar
-
+  edc-interface-1:
+    container_name: edc-interface-1
+    image: julianlegler/edc_blockchain_interface:0.2.2
+    ports:
+      - "3000:3000"
+    environment:
+      PINATA_KEY: "${PINATA_KEY}"
+      #demo
+      #ASSET_ADDRESS: "KT1F8fKCkcseDMetbMCkmhgfZBWyQijj69aA"
+      #POLICY_ADDRESS: "KT1KAbNjW3LX9Naa3koJSr6dN1YEQJ4Zwc1k"
+      #CONTRACT_ADDRESS: "KT1U4tQpYzSCq7HPUTx8q5qMWMtNvqC5zJRp"
+      #TRANSFER_ADDRESS: "KT1SgL6QbTTRGwp958YcdeVztgatsryS2CGb"
+      #AGREEMENT_ADDRESS: "KT19dNiYWs36qB6YUUa3q747SX3YjKGK3Z4r"
+      #dev
+      ASSET_ADDRESS: "KT1TrcEU6o8MmmnJuL5weNhfrZFT7DFN9Ppi"
+      POLICY_ADDRESS: "KT1JtP1xS9t4sPu9uKchjqb5PVdRdDn7bRNs"
+      CONTRACT_ADDRESS: "KT1QzJR59dvx3pHaCgLUoffSTMKqqHZEYTkh"
+      TRANSFER_ADDRESS: "KT1SgL6QbTTRGwp958YcdeVztgatsryS2CGb"
+      AGREEMENT_ADDRESS: "KT19dNiYWs36qB6YUUa3q747SX3YjKGK3Z4r"
+      VERIFIABLE_CREDENTIALS_ADDRESS: "KT1XgUq6rzN9q6YMh44TbLffEz3zb54HbY2H"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # - //usr/bin/docker:/usr/bin/docker
+  data-dashboard-1:
+      container_name: data-dashboard-1
+      image: julianlegler/edc_blockchain_dashboard:0.2.0 #johann1999/data-dashboard:linux-amd64
+      ports:
+        - "5500:80"
+      environment:
+        COMMENT: "This file will be replaced at runtime when deployed to the cloud"
+        DATA_MANAGEMENT_URL: "http://localhost:8182/management" # TODO: unsolvable CORS problems when trying to connect to connector-2:9192 instead of localhost:9192 - is it a docker network issue because it uses the address for external and docker internal requests?
+        CATALOG_URL: "http://localhost:8181/api" # TODO: unsolvable CORS problems when trying to connect to connector-2:9192 instead of localhost:9192 - is it a docker network issue because it uses the address for external and docker internal requests?
+        STORAGE_ACCOUNT: "company1assets"
+        STORAGE_EXPLORER_LINK_TEMPLATE: "storageexplorer://v:1"
+        API_KEY: "password"
+        THEME: "theme-1"
   connector-2:
     container_name: connector-2
     build:
@@ -104,12 +138,74 @@ services:
       -Dedc.keystore.password=123456
       -Dedc.vault=vault.properties
       -jar app.jar
+  edc-interface-2:
+    container_name: edc-interface-2
+    image: julianlegler/edc_blockchain_interface:0.2.2
+    environment:
+      PINATA_KEY: "${PINATA_KEY}"
+      #demo
+      #ASSET_ADDRESS: "KT1F8fKCkcseDMetbMCkmhgfZBWyQijj69aA"
+      #POLICY_ADDRESS: "KT1KAbNjW3LX9Naa3koJSr6dN1YEQJ4Zwc1k"
+      #CONTRACT_ADDRESS: "KT1U4tQpYzSCq7HPUTx8q5qMWMtNvqC5zJRp"
+      #TRANSFER_ADDRESS: "KT1SgL6QbTTRGwp958YcdeVztgatsryS2CGb"
+      #AGREEMENT_ADDRESS: "KT19dNiYWs36qB6YUUa3q747SX3YjKGK3Z4r"
+      #dev
+      ASSET_ADDRESS: "KT1TrcEU6o8MmmnJuL5weNhfrZFT7DFN9Ppi"
+      POLICY_ADDRESS: "KT1JtP1xS9t4sPu9uKchjqb5PVdRdDn7bRNs"
+      CONTRACT_ADDRESS: "KT1QzJR59dvx3pHaCgLUoffSTMKqqHZEYTkh"
+      TRANSFER_ADDRESS: "KT1SgL6QbTTRGwp958YcdeVztgatsryS2CGb"
+      AGREEMENT_ADDRESS: "KT19dNiYWs36qB6YUUa3q747SX3YjKGK3Z4r"
+      VERIFIABLE_CREDENTIALS_ADDRESS: "KT1XgUq6rzN9q6YMh44TbLffEz3zb54HbY2H"
+  data-dashboard-2:
+    container_name: data-dashboard-2
+    image: julianlegler/edc_blockchain_dashboard:0.2.0 #johann1999/data-dashboard:linux-amd64
+    ports:
+      - "5502:80"
+    environment:
+      COMMENT: "This file will be replaced at runtime when deployed to the cloud"
+      DATA_MANAGEMENT_URL: "http://localhost:9192/management" # TODO: unsolvable CORS problems when trying to connect to connector-2:9192 instead of localhost:9192 - is it a docker network issue because it uses the address for external and docker internal requests?
+      CATALOG_URL: "http://localhost:9191/api" # TODO: unsolvable CORS problems when trying to connect to connector-2:9192 instead of localhost:9192 - is it a docker network issue because it uses the address for external and docker internal requests?
+      STORAGE_ACCOUNT: "company1assets"
+      STORAGE_EXPLORER_LINK_TEMPLATE: "storageexplorer://v:1"
+      API_KEY: "password"
+      THEME: "theme-2"
+    #  azurite:
+    #    container_name: azurite
+    #    image: mcr.microsoft.com/azure-storage/azurite
+    #    ports:
+    #      - 10000:10000
+    #    environment:
+    #      AZURITE_ACCOUNTS: company1assets:key1;company2assets:key2;company3assets:key3
+  http-push-backend-services:
+    container_name: http-push-backend-services
+    image: julianlegler/edc_blockchain_transfer:0.2.0
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./container-data:/data
+  edc_blockchain_listener:
+    container_name: edc_blockchain_listener
+    image: sonak53/edc_blockchain_listener:latest
+  #  octez-node:
+  #    container_name: octez-node-alpha
+  #    image: tezos/tezos:latest
+  #    hostname: octez-node
+  #    command: octez-node
+  #    ports:
+  #      - 9732:9732
+  #      - 8732:8732
+  #    environment:
+  #      NODE_HOST: octez-node
+  #      PROTOCOL: alpha
+  #    volumes:
+  #      - ./node_data:/var/run/tezos/node
+  #      - ./client_data:/var/run/tezos/client
+  #    restart: on-failure
   jaeger:
     image: jaegertracing/all-in-one
     ports:
       - "16686:16686"
       - "4318:4318"
-
   prometheus:
     image: prom/prometheus:v2.30.3
     volumes:
