@@ -26,35 +26,29 @@ val edcVersion: String by project
 dependencies {
 
     api(libs.edc.control.plane.spi)
-    implementation(libs.edc.http)
-    implementation(libs.edc.dsp)
-    implementation(libs.edc.management.api)
-    implementation(libs.edc.data.plane.selector.core)
-    implementation(libs.edc.iam.mock)
+    implementation("org.example:edc-http")
+    implementation("org.example:dsp-spi")
+    implementation("org.example:edc-management-api")
+    implementation("org.example:edc-data-plane-selector-core")
+    implementation("org.example:edc-iam-mock")
 
     implementation(project(":BlockchainCatalog:blockchain-catalog-api"))
     implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
     implementation(project(":blockchain-logger"))
 
     // provider push http example
-    implementation(libs.edc.control.plane.core)
-    implementation(libs.edc.dsp)
-    implementation(libs.edc.configuration.filesystem)
-    implementation(libs.edc.vault.filesystem)
-    implementation(libs.edc.iam.mock)
-    implementation(libs.edc.management.api)
-    implementation(libs.edc.transfer.data.plane)
-
-    implementation(libs.edc.data.plane.selector.api)
-    implementation(libs.edc.data.plane.selector.core)
-    implementation(libs.edc.data.plane.selector.client)
-
-    implementation(libs.edc.data.plane.api)
-    implementation(libs.edc.data.plane.core)
-    implementation(libs.edc.data.plane.http)
-
+    implementation("org.example:edc-controle-plane-core")
+    implementation("org.example:edc-configuration-filesystem")
+    implementation("org.example:edc-vault-filesystem")
+    implementation("org.example:edc-transfer-data-plane")
+    implementation("org.example:edc-data-plane-selector-client")
+    implementation("org.example:edc-data-plane-selector-api")
+    implementation("org.example:edc-data-plane-core")
+    implementation("org.example:edc-data-plane-http")
+    
     implementation(libs.opentelemetry.exporter.jaeger)
     implementation(libs.edc.api.observability)
+
     runtimeOnly(libs.edc.monitor.jdk.logger)
 }
 

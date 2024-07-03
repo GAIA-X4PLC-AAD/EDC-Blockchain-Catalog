@@ -37,6 +37,8 @@ dependencies {
     implementation(libs.edc.http)
     implementation(libs.edc.dsp)
     implementation(libs.edc.management.api)
+    implementation(libs.opentelemetry.exporter.jaeger)
+    implementation(libs.edc.api.observability)
     // using the dsp api now instead of ids api
     // dsp-api-configuration should contain the TypeTransformerRegistry which can transform objects to json ld and vise versa
 

@@ -28,6 +28,52 @@ dependencyResolutionManagement {
     }
 }
 
+// Include the external projects
+includeBuild("Connector") {
+    dependencySubstitution {
+        substitute(module("org.example:edc-control-plane-spi")).using(project(":spi:control-plane:control-plane-spi"))
+        substitute(module("org.example:edc-http")).using(project(":extensions:common:http"))
+        substitute(module("org.example:edc-dsp")).using(project(":data-protocols:dsp:dsp-spi"))
+        substitute(module("org.example:edc-management-api")).using(project(":extensions:control-plane:api:management-api"))
+        substitute(module("org.example:edc-data-plane-selector-core")).using(project(":core:data-plane-selector:data-plane-selector-core"))
+        substitute(module("org.example:edc-iam-mock")).using(project(":extensions:common:iam:iam-mock"))
+        substitute(module("org.example:edc-configuration-filesystem")).using(project(":extensions:common:configuration:configuration-filesystem"))
+        substitute(module("org.example:edc-vault-filesystem")).using(project(":extensions:common:vault:vault-filesystem"))
+        substitute(module("org.example:edc-transfer-data-plane")).using(project(":extensions:control-plane:transfer:transfer-data-plane"))
+        substitute(module("org.example:edc-data-plane-selector-api")).using(project(":extensions:data-plane-selector:data-plane-selector-api"))
+        substitute(module("org.example:edc-data-plane-selector-client")).using(project(":extensions:data-plane-selector:data-plane-selector-client"))
+        substitute(module("org.example:edc-data-plane-core")).using(project(":core:data-plane:data-plane-core"))
+        substitute(module("org.example:edc-data-plane-http")).using(project(":extensions:data-plane:data-plane-http"))
+        substitute(module("org.example:edc-controle-plane-core")).using(project(":core:control-plane:control-plane-core"))
+        substitute(module("org.example:dsp-spi")).using(project(":data-protocols:dsp:dsp-spi"))
+
+
+        // Add other substitutions as needed
+        project(":extensions:common:http")
+        project(":data-protocols:dsp:dsp-spi")
+        project(":extensions:control-plane:api:management-api")
+        project(":core:data-plane-selector:data-plane-selector-core")
+        project(":extensions:common:iam:iam-mock")
+
+        // provider push http example
+        project(":core:control-plane:control-plane-core")
+        project(":data-protocols:dsp:dsp-spi")
+        project(":extensions:common:configuration:configuration-filesystem")
+        project(":extensions:common:vault:vault-filesystem")
+        project(":extensions:common:iam:iam-mock")
+        project(":extensions:control-plane:api:management-api")
+        project(":extensions:control-plane:transfer:transfer-data-plane")
+
+        project(":extensions:data-plane-selector:data-plane-selector-api")
+        project(":core:data-plane-selector:data-plane-selector-core")
+        project(":extensions:data-plane-selector:data-plane-selector-client")
+
+        project(":extensions:data-plane:data-plane-api")
+        project(":core:data-plane:data-plane-core")
+        project(":extensions:data-plane:data-plane-http")
+    }
+}
+
 
 
 // modules for code samples ------------------------------------------------------------------------
