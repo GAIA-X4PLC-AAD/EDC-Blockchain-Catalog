@@ -1,11 +1,12 @@
-FROM gradle:8.1.1-jdk17-alpine AS build
+FROM gradle:8.1.1-jdk17 AS build
 COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
 RUN /home/gradle/src/gradlew BlockchainCatalog:blockchain-catalog-prosumer:build
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 COPY --from=build ./home/gradle/src/BlockchainCatalog/blockchain-catalog-prosumer/build/libs/consumer.jar app.jar
+COPY --from=build ./home/gradle/src/BlockchainCatalog/blockchain-catalog-prosumer/build/libs/opentelemetry-javaagent-*.jar opentelemetry-javaagent.jar
 COPY --from=build ./home/gradle/src/BlockchainCatalog/blockchain-catalog-prosumer/config.properties config.properties
 COPY --from=build ./home/gradle/src/BlockchainCatalog/blockchain-catalog-prosumer/provider-vault.properties vault.properties
 COPY --from=build ./home/gradle/src/transfer/transfer-07-provider-push-http/certs/cert.pfx cert.pfx
