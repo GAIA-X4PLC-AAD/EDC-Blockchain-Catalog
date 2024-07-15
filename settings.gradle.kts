@@ -43,9 +43,9 @@ include("blockchain-logger")
 // include("transfer:TransferFileLocal")
 // include("transfer:StatusChecker")
 //include("transfer:transfer-07-provider-push-http:provider-push-http-backend-service")
-include("transfer:transfer-07-provider-push-http:http-push-connector")
-include("transfer:transfer-07-provider-push-http:http-push-consumer")
-include("transfer:transfer-07-provider-push-http:http-push-provider")
+//include("transfer:transfer-07-provider-push-http:http-push-connector")
+//include("transfer:transfer-07-provider-push-http:http-push-consumer")
+//include("transfer:transfer-07-provider-push-http:http-push-provider")
 
 include("newtransfer:transfer-07-provider-push-http:provider-push-http-backend-service")
 
