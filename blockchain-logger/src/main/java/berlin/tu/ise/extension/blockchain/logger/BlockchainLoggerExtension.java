@@ -88,7 +88,7 @@ public class BlockchainLoggerExtension implements ServiceExtension {
         monitor.info("BlockchainLoggerExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
         TransferProcessEventSubscriber transferProcessEventSubscriber = new TransferProcessEventSubscriber(monitor, transferProcessStore, contractDefinitionStore, contractNegotiationStore, context.getConnectorId(), edcInterfaceUrl);
-        transferProcessObservable.registerListener(transferProcessEventSubscriber);
+        eventRouter.register(TransferProcessInitiated.class, transferProcessEventSubscriber);
 
         ContractAgreementEventSubscriber contractAgreementEventSubscriber = new ContractAgreementEventSubscriber(monitor, contractNegotiationStore, context.getConnectorId(), edcInterfaceUrl);
         //contractAgreementObservable.registerListener(contractAgreementEventSubscriber);

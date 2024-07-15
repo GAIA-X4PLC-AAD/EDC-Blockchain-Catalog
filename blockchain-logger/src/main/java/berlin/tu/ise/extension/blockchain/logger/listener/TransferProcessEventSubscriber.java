@@ -7,10 +7,14 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.offer.store.ContractDefinitionStore;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
 import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessListener;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
+import org.eclipse.edc.spi.event.Event;
+import org.eclipse.edc.spi.event.EventEnvelope;
+import org.eclipse.edc.spi.event.EventSubscriber;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.BufferedReader;
@@ -25,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class TransferProcessEventSubscriber implements TransferProcessListener {
+public class TransferProcessEventSubscriber implements EventSubscriber {
 
     private Monitor monitor;
 
@@ -62,7 +66,23 @@ public class TransferProcessEventSubscriber implements TransferProcessListener {
         */
 
     @Override
-    public void completed(TransferProcess process) {
+    public <E extends Event> void on(EventEnvelope<E> eventEnvelope) {
+        var event = eventEnvelope.getPayload();
+        if (!(event instanceof TransferProcessInitiated process)) {
+            return;
+        }
+
+        TransferProcess transferProcess = transferProcessStore.findById(process.getTransferProcessId());
+
+        if (transferProcess == null) {
+            monitor.warning(String.format("Transfer Process with id %s not found in local Transfer Process Store.", process.getTransferProcessId()));
+            return;
+        }
+
+        transferProcessInitiated(transferProcess);
+    }
+
+    public void transferProcessInitiated(TransferProcess process) {
 
         monitor.debug("Transfer Process Event: " + process.getDataRequest().getProcessId());
 
@@ -133,6 +153,8 @@ public class TransferProcessEventSubscriber implements TransferProcessListener {
 
         return returnObject;
     }
+
+
 /*
     public static List<ContractOfferDto> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl) {
         ContractOfferDto contractOfferDto = null;
