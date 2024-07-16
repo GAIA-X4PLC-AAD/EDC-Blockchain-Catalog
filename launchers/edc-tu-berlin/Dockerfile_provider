@@ -1,0 +1,15 @@
+FROM gradle:8.1.1-jdk17 AS build
+COPY --chown=gradle:gradle . /home/gradle/src
+WORKDIR /home/gradle/src
+RUN /home/gradle/src/gradlew launchers:edc-tu-berlin:build
+
+FROM eclipse-temurin:17-jre
+
+COPY --from=build ./home/gradle/src/launchers/edc-tu-berlin/build/libs/edc-tu-berlin.jar app.jar
+COPY --from=build ./home/gradle/src/launchers/edc-tu-berlin/build/libs/opentelemetry-javaagent-*.jar opentelemetry-javaagent.jar
+COPY --from=build ./home/gradle/src/launchers/edc-tu-berlin/config.properties config.properties
+COPY --from=build ./home/gradle/src/launchers/edc-tu-berlin/provider-vault.properties vault.properties
+COPY --from=build ./home/gradle/src/transfer/transfer-07-provider-push-http/certs/cert.pfx cert.pfx
+
+
+ENTRYPOINT [ "sh", "-c", "exec java -Dedc.fs.config=config.properties -Dedc.keystore=cert.pfx -Dedc.keystore.password=123456 -Dedc.vault=vault.properties $JVM_ARGS -jar app.jar"]

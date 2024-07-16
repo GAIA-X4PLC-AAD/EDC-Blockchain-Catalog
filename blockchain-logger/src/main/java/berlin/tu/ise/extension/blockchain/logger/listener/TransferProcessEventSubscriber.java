@@ -112,8 +112,6 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
         } else {
             monitor.debug("[TransferProcessEventSubscriber] Data could not be sent to Smart Contract");
         }
-
-
     }
 
     public static ReturnOperationObject sendToSmartContract(String jsonString, Monitor monitor, String smartContractUrl) {
