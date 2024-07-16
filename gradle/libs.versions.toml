@@ -80,4 +80,4 @@ restAssured = { module = "io.rest-assured:rest-assured", version.ref = "restAssu
 postgres = { module = "org.postgresql:postgresql", version.ref = "postgres" }
 
 [plugins]
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
