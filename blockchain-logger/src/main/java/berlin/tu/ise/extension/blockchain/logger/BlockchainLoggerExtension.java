@@ -77,9 +77,6 @@ public class BlockchainLoggerExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-        var transferProcessObservable = context.getService(TransferProcessObservable.class);
-        var contractAgreementObservable = context.getService(ContractNegotiationObservable.class);
-
 
         this.context = context;
 
@@ -92,12 +89,8 @@ public class BlockchainLoggerExtension implements ServiceExtension {
         eventRouter.register(TransferProcessInitiated.class, transferProcessEventSubscriber);
 
         ContractAgreementEventSubscriber contractAgreementEventSubscriber = new ContractAgreementEventSubscriber(monitor, contractNegotiationStore, context.getConnectorId(), edcInterfaceUrl);
-        //contractAgreementObservable.registerListener(contractAgreementEventSubscriber);
-
 
         eventRouter.register(ContractNegotiationAgreed.class, contractAgreementEventSubscriber);
-
-
     }
 
 

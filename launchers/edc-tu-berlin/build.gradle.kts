@@ -55,17 +55,21 @@ dependencies {
 
     implementation(libs.opentelemetry.exporter.jaeger)
     implementation(libs.edc.api.observability)
-    runtimeOnly(libs.edc.monitor.jdk.logger)
+    //runtimeOnly(libs.edc.monitor.jdk.logger)
 }
 
 application {
     mainClass.set("org.eclipse.edc.boot.system.runtime.BaseRuntime")
 }
 
+var distTar = tasks.getByName("distTar")
+var distZip = tasks.getByName("distZip")
+
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     exclude("**/pom.properties", "**/pom.xml")
     mergeServiceFiles()
-    archiveFileName.set("consumer.jar")
+    archiveFileName.set("edc-tu-berlin.jar")
+    dependsOn(distTar, distZip)
 }
 
 val openTelemetry by configurations.creating
