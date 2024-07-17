@@ -29,7 +29,7 @@ dependencies {
 
     api("$groupId:control-plane-spi:$edcVersion")
     implementation("$groupId:http:$edcVersion")
-    implementation(project(":BlockchainCatalog:blockchain-catalog-listener"))
+    implementation(project(":extensions:blockchain:catalog-listener"))
 
 
     implementation("$groupId:control-plane-spi:$edcVersion")
