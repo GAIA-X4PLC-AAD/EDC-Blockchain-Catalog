@@ -41,6 +41,13 @@ edc-http = { module = "org.eclipse.edc:http", version.ref = "edc" }
 edc-iam-mock = { module = "org.eclipse.edc:iam-mock", version.ref = "edc" }
 edc-jersey-micrometer = { module = "org.eclipse.edc:jersey-micrometer", version.ref = "edc" }
 edc-jetty-micrometer = { module = "org.eclipse.edc:jetty-micrometer", version.ref = "edc" }
+edc-control-plane-store-sql-asset = { module = "org.eclipse.edc:asset-index-sql", version.ref = "edc" }
+edc-control-plane-store-sql-contractDefinition = { module = "org.eclipse.edc:contract-definition-store-sql", version.ref = "edc" }
+edc-control-plane-store-sql-contractNegotiation = { module = "org.eclipse.edc:contract-negotiation-store-sql", version.ref = "edc" }
+edc-control-plane-store-sql-controlPlane = { module = "org.eclipse.edc:control-plane-sql", version.ref = "edc" }
+edc-control-plane-store-sql-policyDefinition = { module = "org.eclipse.edc:policy-definition-store-sql", version.ref = "edc" }
+edc-control-plane-store-sql-transferProcess = { module = "org.eclipse.edc:transfer-process-store-sql", version.ref = "edc" }
+
 edc-junit = { module = "org.eclipse.edc:junit", version.ref = "edc" }
 edc-management-api = { module = "org.eclipse.edc:management-api", version.ref = "edc" }
 edc-micrometer-core = { module = "org.eclipse.edc:micrometer-core", version.ref = "edc" }
