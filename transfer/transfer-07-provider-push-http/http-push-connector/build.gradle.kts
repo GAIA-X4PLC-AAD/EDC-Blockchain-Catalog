@@ -30,7 +30,7 @@ val edcVersion = "0.0.1-milestone-8"
 
 dependencies {
     implementation("${edcGroupId}:control-plane-core:${edcVersion}")
-//    implementation("${edcGroupId}:ids:${edcVersion}")
+    implementation("${edcGroupId}:ids:${edcVersion}")
     implementation("${edcGroupId}:configuration-filesystem:${edcVersion}")
     implementation("${edcGroupId}:vault-filesystem:${edcVersion}")
     implementation("${edcGroupId}:iam-mock:${edcVersion}")

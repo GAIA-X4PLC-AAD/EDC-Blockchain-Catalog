@@ -35,20 +35,9 @@ include("launchers:edc-tu-berlin")
 include("launchers:push-http-backend")
 
 // modules for code samples ------------------------------------------------------------------------
-include(":other:custom-runtime")
 include("extensions:blockchain:catalog-api")
 include("extensions:blockchain:catalog-listener")
 include("extensions:blockchain:logger")
 
-
-
-//include("BlockchainCatalog:blockchain-catalog-prosumer")
-include("playground:apiTest")
-//findProject(":BlockchainCatalog:blockchain-catalog-prosumer")?.name = "blockchain-catalog-prosumer"
 include("extensions:transfer:http-push:provider-push-http-backend-service")
 
-// modules for code samples ------------------------------------------------------------------------
-include(":other:custom-runtime")
-
-include(":system-tests")
-include("playground")
