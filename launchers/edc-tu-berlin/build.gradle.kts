@@ -54,12 +54,12 @@ dependencies {
     implementation(libs.edc.data.plane.core)
     implementation(libs.edc.data.plane.http)
 
-    implementation(libs.edc.control.plane.store.sql.asset)
-    implementation(libs.edc.control.plane.store.sql.policyDefinition)
-    implementation(libs.edc.control.plane.store.sql.contractDefinition)
-    implementation(libs.edc.control.plane.store.sql.contractNegotiation)
+//    implementation(libs.edc.control.plane.store.sql.asset)
+//    implementation(libs.edc.control.plane.store.sql.policyDefinition)
+//    implementation(libs.edc.control.plane.store.sql.contractDefinition)
+//    implementation(libs.edc.control.plane.store.sql.contractNegotiation)
+//    implementation(libs.edc.control.plane.store.sql.transferProcess)
     implementation(libs.edc.control.plane.store.sql.controlPlane)
-    implementation(libs.edc.control.plane.store.sql.transferProcess)
 
     implementation(libs.opentelemetry.exporter.jaeger)
     implementation(libs.edc.api.observability)
