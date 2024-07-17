@@ -162,7 +162,7 @@ public class BlockchainAssetCreator implements EventSubscriber {
             asset.getProperties().put(EDC_NAMESPACE + "originator", providerUrl);
 
         var jsonAsset = jsonLd.compact(assetApiController.getAsset(asset.getId())).getContent().toString();
-        monitor.info(String.format("[%s] formatted POJO to JSON: %s", this.getClass().getSimpleName(), jsonAsset));
+        monitor.debug(String.format("[%s] formatted POJO to JSON: %s", this.getClass().getSimpleName(), jsonAsset));
 
         return jsonAsset;
     }
