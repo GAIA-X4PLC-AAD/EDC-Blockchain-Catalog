@@ -10,6 +10,6 @@ COPY --from=build ./home/gradle/src/launchers/edc-tu-berlin/build/libs/opentelem
 COPY --from=build ./home/gradle/src/launchers/edc-tu-berlin/build/libs/opentelemetry-exporter-jaeger-*.jar opentelemetry-exporter-jaeger.jar
 COPY --from=build ./home/gradle/src/launchers/edc-tu-berlin/config2.properties config.properties
 COPY --from=build ./home/gradle/src/launchers/edc-tu-berlin/consumer-vault.properties vault.properties
-COPY --from=build ./home/gradle/src/transfer/transfer-07-provider-push-http/certs/cert.pfx cert.pfx
+COPY --from=build ./home/gradle/src/launchers/edc-tu-berlin/certs/cert.pfx cert.pfx
 
 ENTRYPOINT [ "java", "-Dedc.fs.config=config.properties", "-Dedc.keystore=cert.pfx", "-Dedc.keystore.password=123456", "-Dedc.vault=vault.properties", $JVM_ARGS, "-jar", "app.jar"]
