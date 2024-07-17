@@ -59,7 +59,10 @@ dependencies {
 //    implementation(libs.edc.control.plane.store.sql.contractDefinition)
 //    implementation(libs.edc.control.plane.store.sql.contractNegotiation)
 //    implementation(libs.edc.control.plane.store.sql.transferProcess)
+    implementation(libs.edc.sql.pool)
     implementation(libs.edc.control.plane.store.sql.controlPlane)
+
+    implementation(libs.postgres)
 
     implementation(libs.opentelemetry.exporter.jaeger)
     implementation(libs.edc.api.observability)
