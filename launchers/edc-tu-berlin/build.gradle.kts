@@ -25,6 +25,10 @@ val edcVersion: String by project
 
 dependencies {
 
+    implementation(project(":extensions:blockchain:catalog-listener"))
+    implementation(project(":extensions:blockchain:logger"))
+    implementation(project(":extensions:blockchain:blockchain-catalog-api"))
+
     implementation(libs.edc.configuration.filesystem)
 
     api(libs.edc.control.plane.spi)
@@ -34,9 +38,8 @@ dependencies {
     implementation(libs.edc.data.plane.selector.core)
     implementation(libs.edc.iam.mock)
 
-    implementation(project(":extensions:blockchain:catalog-api"))
-    implementation(project(":extensions:blockchain:catalog-listener"))
-    implementation(project(":extensions:blockchain:logger"))
+
+
 
     // provider push http example
     implementation(libs.edc.control.plane.core)

@@ -1,10 +1,9 @@
-package berlin.tu.ise.blockchain.catalog.api;
+package berlin.tu.ise.extension.blockchain.catalog.api;
 
 import berlin.tu.ise.extension.blockchain.catalog.listener.BlockchainSmartContractService;
 import jakarta.json.Json;
 import org.eclipse.edc.catalog.spi.DataServiceRegistry;
 import org.eclipse.edc.catalog.spi.DatasetResolver;
-import org.eclipse.edc.catalog.spi.Distribution;
 import org.eclipse.edc.catalog.spi.DistributionResolver;
 import org.eclipse.edc.connector.api.management.configuration.ManagementApiConfiguration;
 import org.eclipse.edc.connector.api.management.configuration.transform.ManagementApiTypeTransformerRegistry;
@@ -21,15 +20,12 @@ import org.eclipse.edc.policy.model.LiteralExpression;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Setting;
-import org.eclipse.edc.spi.asset.DataAddressResolver;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
-import org.eclipse.edc.spi.system.health.HealthCheckResult;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
 import org.eclipse.edc.web.spi.WebService;
-import org.intellij.lang.annotations.JdkConstants;
 
 import java.util.Map;
 
@@ -88,6 +84,7 @@ public class BlockchainCatalogApiExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
+        var monitor = context.getMonitor();
         this.context = context;
         registerTransformers();
         monitor.info("Initializing Blockchain Catalog API Extension");
