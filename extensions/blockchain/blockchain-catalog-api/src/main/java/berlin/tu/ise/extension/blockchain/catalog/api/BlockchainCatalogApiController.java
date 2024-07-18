@@ -1,4 +1,4 @@
-package berlin.tu.ise.blockchain.catalog.api;
+package berlin.tu.ise.extension.blockchain.catalog.api;
 
 
 import berlin.tu.ise.extension.blockchain.catalog.listener.BlockchainSmartContractService;
@@ -19,7 +19,6 @@ import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
-import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
 import org.eclipse.edc.web.spi.exception.InvalidRequestException;
 
 import java.time.LocalDateTime;

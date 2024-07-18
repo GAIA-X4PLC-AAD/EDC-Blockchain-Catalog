@@ -1,4 +1,4 @@
-package berlin.tu.ise.blockchain.catalog.api;
+package berlin.tu.ise.extension.blockchain.catalog.api;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
