@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
+
 public class BlockchainContractCreator implements EventSubscriber {
 
     private final Monitor monitor;
@@ -108,19 +110,23 @@ public class BlockchainContractCreator implements EventSubscriber {
     private String getVerifiablePresentationsFromAssets(final ContractDefinition contractDefinition) {
         final List<String> ccpResponses = new ArrayList<>();
         contractDefinition.getAssetsSelector().forEach(criterion -> {
-            final Object operandRight = criterion.getOperandRight();
-            if (operandRight instanceof Asset asset) {
-                monitor.debug("Asset found: " + asset.getId());
-                final Object ccpResponse = asset.getProperty("edc.claimComplianceProviderResponse");
-                if (ccpResponse == null) {
-                    monitor.warning("No CCP-Response found for Asset with id " + asset.getId());
-                } else {
-                    monitor.debug("CCP-Response found for Asset with id " + asset.getId());
-                    ccpResponses.add(ccpResponse.toString());
-                }
+            final Object operandLeft = criterion.getOperandLeft();
+            if (operandLeft.equals(EDC_NAMESPACE + "id")) {
+                final Object operandRight = criterion.getOperandRight();
+                final Asset asset = assetIndex.findById(operandRight.toString());
+                if (asset != null) {
+                    monitor.debug("Asset found: " + asset.getId());
+                    final Object ccpResponse = asset.getProperty(EDC_NAMESPACE + "claimComplianceProviderResponse");
+                    if (ccpResponse == null) {
+                        monitor.warning("No CCP-Response found for Asset with id " + asset.getId());
+                    } else {
+                        monitor.debug("CCP-Response found for Asset with id " + asset.getId());
+                        ccpResponses.add(ccpResponse.toString());
+                    }
 
-            } else {
-                monitor.warning("OperandRight is not an Asset. Skipping this criterion.");
+                } else {
+                    monitor.warning("Asset " + operandRight+ " not found. Skipping this criterion.");
+                }
             }
         });
         if (ccpResponses.isEmpty()) {
