@@ -38,6 +38,8 @@ dependencies {
     implementation(libs.edc.data.plane.selector.core)
     implementation(libs.edc.iam.mock)
 
+    implementation(libs.edc.transaction.local)
+
 
     // provider push http example
     implementation(libs.edc.control.plane.core)
