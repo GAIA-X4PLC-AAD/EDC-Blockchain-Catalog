@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-@SuppressWarnings("checkstyle:SummaryJavadoc")
 public class BlockchainSmartContractService {
 
     private final Monitor monitor;
@@ -68,6 +67,12 @@ public class BlockchainSmartContractService {
         return sendToSmartContract(jsonString, edcInterfaceUrl + "/mint/verifiable_credentials");
     }
 
+    /** Send a JSON string to a smart contract.
+     *
+     * @param jsonString The JSON string to send
+     * @param smartContractUrl The URL of the smart contract
+     * @return The return object
+     */
     public ReturnObject sendToSmartContract(String jsonString, String smartContractUrl) {
         monitor.debug(String.format("[%s] Sending data to Smart Contract, this may take some time ...", BlockchainSmartContractService.class.getSimpleName()));
         String returnJson;
@@ -108,7 +113,6 @@ public class BlockchainSmartContractService {
 
 
 
-    @SuppressWarnings({"checkstyle:Indentation", "checkstyle:MissingSwitchDefault", "checkstyle:WhitespaceAround"})
     public Asset getAssetWithIdFromSmartContract(String id, String edcInterfaceUrl) {
         Asset asset = null;
         ObjectMapper mapper = new ObjectMapper();
@@ -154,7 +158,10 @@ public class BlockchainSmartContractService {
         return null;
     }
 
-    @SuppressWarnings({"checkstyle:OperatorWrap", "checkstyle:WhitespaceAfter", "checkstyle:WhitespaceAround", "checkstyle:MissingSwitchDefault"})
+    /** Get all contract definitions from the smart contract.
+     *
+     * @return List of ContractDefinitionResponseDto
+     */
     public List<ContractDefinition> getAllContractDefinitionsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -274,7 +281,6 @@ public class BlockchainSmartContractService {
      *
      * @return HashMap of Source URIs and Lists of ContractDefinitionResponseDto
      */
-    @SuppressWarnings({"checkstyle:WhitespaceAfter", "checkstyle:WhitespaceAround", "checkstyle:OperatorWrap", "checkstyle:MissingSwitchDefault"})
     public HashMap<String, List<ContractOfferMessage>> getAllContractDefinitionsFromSmartContractGroupedBySource(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
         HashMap<String, List<ContractOfferMessage>> returnMap = new HashMap<>();
         ContractOfferMessage contractDefinitionResponseDto = null;
@@ -430,7 +436,10 @@ public class BlockchainSmartContractService {
 
      */
 
-    @SuppressWarnings("checkstyle:MissingSwitchDefault")
+    /** Get all policy definitions from the smart contract and group them by source.
+     *
+     * @return HashMap of Source URIs and Lists of PolicyDefinitionResponseDto
+     */
     public List<Asset> getAllAssetsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
 
@@ -546,8 +555,10 @@ public class BlockchainSmartContractService {
 
     }
 
-
-    @SuppressWarnings({"checkstyle:Indentation", "checkstyle:OperatorWrap", "checkstyle:WhitespaceAfter", "checkstyle:WhitespaceAround", "checkstyle:MissingSwitchDefault"})
+    /** Get all policy definitions from the smart contract
+     *
+     * @return List of PolicyDefinitionResponseDto
+     */
     public List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
 

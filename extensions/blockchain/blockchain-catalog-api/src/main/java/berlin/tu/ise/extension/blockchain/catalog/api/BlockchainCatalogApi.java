@@ -10,7 +10,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.eclipse.edc.catalog.spi.model.FederatedCatalogCacheQuery;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
 
-
+/**
+ * This interface defines the API for the blockchain catalog.
+ */
 @OpenAPIDefinition
 @Tag(name = "Blockchain Catalog")
 public interface BlockchainCatalogApi {

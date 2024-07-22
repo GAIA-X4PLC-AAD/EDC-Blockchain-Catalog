@@ -47,6 +47,9 @@ import java.util.Map;
 
 import static org.eclipse.edc.spi.CoreConstants.JSON_LD;
 
+/**
+ * This class is the entry point for the Blockchain Catalog API extension.
+ */
 @Extension(value = BlockchainCatalogApiExtension.NAME)
 public class BlockchainCatalogApiExtension implements ServiceExtension {
     public static final String NAME = "Blockchain Catalog API Extension";
