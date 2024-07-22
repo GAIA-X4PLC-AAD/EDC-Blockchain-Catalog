@@ -39,8 +39,6 @@ dependencies {
     implementation(libs.edc.iam.mock)
 
 
-
-
     // provider push http example
     implementation(libs.edc.control.plane.core)
     implementation(libs.edc.dsp)
@@ -57,13 +55,11 @@ dependencies {
     implementation(libs.edc.data.plane.core)
     implementation(libs.edc.data.plane.http)
 
-//    implementation(libs.edc.control.plane.store.sql.asset)
-//    implementation(libs.edc.control.plane.store.sql.policyDefinition)
-//    implementation(libs.edc.control.plane.store.sql.contractDefinition)
-//    implementation(libs.edc.control.plane.store.sql.contractNegotiation)
-//    implementation(libs.edc.control.plane.store.sql.transferProcess)
     implementation(libs.edc.sql.pool)
     implementation(libs.edc.control.plane.store.sql.controlPlane)
+
+    implementation(libs.edc.sql.pool)
+    //implementation(libs.edc.control.plane.store.sql.controlPlane)
 
     implementation(libs.postgres)
 
