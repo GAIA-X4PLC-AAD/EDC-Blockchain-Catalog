@@ -8,7 +8,10 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.eclipse.edc.catalog.spi.*;
+import org.eclipse.edc.catalog.spi.Catalog;
+import org.eclipse.edc.catalog.spi.DataServiceRegistry;
+import org.eclipse.edc.catalog.spi.Dataset;
+import org.eclipse.edc.catalog.spi.DistributionResolver;
 import org.eclipse.edc.catalog.spi.model.FederatedCatalogCacheQuery;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractOffer;
@@ -24,7 +27,8 @@ import org.eclipse.edc.web.spi.exception.InvalidRequestException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.String.format;
 
@@ -33,18 +37,19 @@ import static java.lang.String.format;
 @Path("/{a:federatedcatalog|blockchaincatalog}")
 public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
-    private Monitor monitor;
-    private TypeTransformerRegistry transformerRegistry;
+    private final Monitor monitor;
+    private final TypeTransformerRegistry transformerRegistry;
 
-    private DistributionResolver distributionResolver;
+    private final DistributionResolver distributionResolver;
 
-    private DataServiceRegistry dataServiceRegistry;
+    private final DataServiceRegistry dataServiceRegistry;
 
-    private JsonLd jsonLd;
+    private final JsonLd jsonLd;
 
-    private BlockchainSmartContractService blockchainSmartContractService;
+    private final BlockchainSmartContractService blockchainSmartContractService;
 
-    public BlockchainCatalogApiController(Monitor monitor,  TypeTransformerRegistry transformerRegistry, DistributionResolver distributionResolver, DataServiceRegistry dataServiceRegistry, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
+    public BlockchainCatalogApiController(Monitor monitor,  TypeTransformerRegistry transformerRegistry, DistributionResolver distributionResolver,
+                                          DataServiceRegistry dataServiceRegistry, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
         this.monitor = monitor;
         this.transformerRegistry = transformerRegistry;
         this.distributionResolver = distributionResolver;
@@ -193,6 +198,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
     /**
      * Connecting the actual Asset Objects with Policy Objects to the ContractOffer Object
+
      * @param contract the contract to be created
      * @param assetList the list of all existing assets in the blockchain
      * @param policyDefinitionList the list of all existing policies in the blockchain
@@ -253,7 +259,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
     // better to check all available criterias and left and right operands if the content is "name" and then we know that the other side is the asset id
     private String getAssetIdFromCriterions(ContractDefinition contract, List<Asset> assetList, String assetIdPropertyName) {
 
-        for (Criterion criterion: contract.getAssetsSelector()) {
+        for (Criterion criterion : contract.getAssetsSelector()) {
             if (criterion.getOperandLeft().equals(assetIdPropertyName)) {
                 return String.valueOf(criterion.getOperandRight());
             } else if (criterion.getOperandRight().equals(assetIdPropertyName)) {
@@ -264,8 +270,8 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
     }
 
     private PolicyDefinition getPolicyById(String policyId, List<PolicyDefinition> policyDefinitionResponseDtoList) {
-        for (PolicyDefinition p: policyDefinitionResponseDtoList) {
-            if(p.getId().equals(policyId)) {
+        for (PolicyDefinition p : policyDefinitionResponseDtoList) {
+            if (p.getId().equals(policyId)) {
                 return p;
             }
         }
@@ -273,8 +279,8 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
     }
 
     private Asset getAssetById(String assetId, List<Asset> assetEntryDtoList) {
-        for (Asset a: assetEntryDtoList) {
-            if(a.getId().equals(assetId)) {
+        for (Asset a : assetEntryDtoList) {
+            if (a.getId().equals(assetId)) {
                 return a;
             }
         }
@@ -282,8 +288,8 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
     }
 
     private Asset getAssetByName(String assetId, List<Asset> assetEntryDtoList) {
-        for (Asset a: assetEntryDtoList) {
-            if(a.getId().equals(assetId)) {
+        for (Asset a : assetEntryDtoList) {
+            if (a.getId().equals(assetId)) {
                 return a;
             }
         }
