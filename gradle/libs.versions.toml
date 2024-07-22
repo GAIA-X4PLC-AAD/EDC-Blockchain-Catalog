@@ -49,7 +49,8 @@ edc-control-plane-store-sql-controlPlane = { module = "org.eclipse.edc:control-p
 edc-control-plane-store-sql-policyDefinition = { module = "org.eclipse.edc:policy-definition-store-sql", version.ref = "edc" }
 edc-control-plane-store-sql-transferProcess = { module = "org.eclipse.edc:transfer-process-store-sql", version.ref = "edc" }
 edc-sql-pool = { module = "org.eclipse.edc:sql-pool-apache-commons", version.ref = "edc" }
-
+edc-spi-fcc = { module = "org.eclipse.edc:federated-catalog-spi", version.ref = "edc" }
+edc-spi-web = { module = "org.eclipse.edc:web-spi", version.ref = "edc" }
 edc-junit = { module = "org.eclipse.edc:junit", version.ref = "edc" }
 edc-management-api = { module = "org.eclipse.edc:management-api", version.ref = "edc" }
 edc-micrometer-core = { module = "org.eclipse.edc:micrometer-core", version.ref = "edc" }
