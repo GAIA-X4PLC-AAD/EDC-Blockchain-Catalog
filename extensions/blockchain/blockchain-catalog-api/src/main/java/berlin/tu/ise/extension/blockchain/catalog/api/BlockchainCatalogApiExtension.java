@@ -86,8 +86,9 @@ public class BlockchainCatalogApiExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
         this.context = context;
-        registerTransformers();
+        monitor = context.getMonitor();
         monitor.info("Initializing Blockchain Catalog API Extension");
+        registerTransformers();
         monitor.info("EDC Blockchain Interface URL: " + getEdcBlockchainInterfaceUrl());
         BlockchainSmartContractService blockchainSmartContractService = new BlockchainSmartContractService(monitor, transformerRegistry, validator, jsonLd, getEdcBlockchainInterfaceUrl());
         var catalogController = new BlockchainCatalogApiController(monitor, transformerRegistry, distributionResolver, dataServiceRegistry, jsonLd, blockchainSmartContractService);
