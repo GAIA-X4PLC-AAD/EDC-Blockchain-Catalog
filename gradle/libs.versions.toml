@@ -4,7 +4,7 @@ format.version = "1.1"
 [versions]
 assertj = "3.24.2"
 awaitility = "4.2.0"
-edc = "0.2.0"
+edc = "0.2.1"
 jakarta-json = "2.0.1"
 junit-pioneer = "2.0.1"
 jupiter = "5.10.0"
@@ -48,6 +48,7 @@ edc-control-plane-store-sql-contractNegotiation = { module = "org.eclipse.edc:co
 edc-control-plane-store-sql-controlPlane = { module = "org.eclipse.edc:control-plane-sql", version.ref = "edc" }
 edc-control-plane-store-sql-policyDefinition = { module = "org.eclipse.edc:policy-definition-store-sql", version.ref = "edc" }
 edc-control-plane-store-sql-transferProcess = { module = "org.eclipse.edc:transfer-process-store-sql", version.ref = "edc" }
+edc-transaction-local = { module = "org.eclipse.edc:transaction-local",  version.ref = "edc" }
 edc-sql-pool = { module = "org.eclipse.edc:sql-pool-apache-commons", version.ref = "edc" }
 edc-spi-fcc = { module = "org.eclipse.edc:federated-catalog-spi", version.ref = "edc" }
 edc-spi-web = { module = "org.eclipse.edc:web-spi", version.ref = "edc" }
