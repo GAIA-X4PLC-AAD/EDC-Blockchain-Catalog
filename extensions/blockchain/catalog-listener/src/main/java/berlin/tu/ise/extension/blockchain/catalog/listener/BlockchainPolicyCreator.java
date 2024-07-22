@@ -11,6 +11,7 @@ import org.eclipse.edc.spi.event.EventEnvelope;
 import org.eclipse.edc.spi.event.EventSubscriber;
 import org.eclipse.edc.spi.monitor.Monitor;
 
+/** This class listens for PolicyDefinitionCreated events and sends the policy to the blockchain smart contract service. */
 public class BlockchainPolicyCreator implements EventSubscriber {
 
     private final Monitor monitor;

@@ -14,6 +14,7 @@ import org.eclipse.edc.spi.types.domain.asset.Asset;
 
 import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
 
+/** This class listens for AssetCreated events and sends the asset to the blockchain smart contract service. */
 public class BlockchainAssetCreator implements EventSubscriber {
 
 
