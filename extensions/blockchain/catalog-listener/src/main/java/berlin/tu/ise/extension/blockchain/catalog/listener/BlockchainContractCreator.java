@@ -39,7 +39,8 @@ public class BlockchainContractCreator implements EventSubscriber {
     private final JsonLd jsonLd;
     private BlockchainSmartContractService blockchainSmartContractService;
 
-    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex, ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
+    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex,
+                                     ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
         this.monitor = monitor;
         this.idsWebhookAddress = idsWebhookAddress;
         this.contractDefinitionService = contractDefinitionService;
@@ -57,7 +58,7 @@ public class BlockchainContractCreator implements EventSubscriber {
 
 
     @Override
-    public <E extends Event> void on(EventEnvelope<E> event){
+    public <E extends Event> void on(EventEnvelope<E> event) {
         var payload = event.getPayload();
         if (!(payload instanceof ContractDefinitionCreated)) return;
         // the event only returns the contract id, so we need to get the contract object
@@ -68,7 +69,7 @@ public class BlockchainContractCreator implements EventSubscriber {
 
         ContractDefinition contractDefinition = contractDefinitionService.findById(contractId);
 
-        String jsonRepresentationOfContractDefinition = transformToJSON(contractDefinition);
+        String jsonRepresentationOfContractDefinition = transformToJson(contractDefinition);
 
         String verifiablePresentationsOfContract;
         String combinedVPandContract;
@@ -101,8 +102,8 @@ public class BlockchainContractCreator implements EventSubscriber {
 
         monitor.debug("Sending Combined Verifiable Presentation and Contract to Blockchain for Contract with id " + contractDefinition.getId() + " with JSON: " + verifiablePresentationsOfContract);
 
-        ReturnObject returnObject = blockchainSmartContractService.sendToContractSmartContract(combinedVPandContract);
-        if(returnObject == null) {
+        ReturnObject returnObject = blockchainSmartContractService.sendToContractSmartContract(combinedVpAndContract);
+        if (returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Contract Definition creation of the Contract with id " + contractDefinition.getId());
             return;
         }
@@ -149,9 +150,10 @@ public class BlockchainContractCreator implements EventSubscriber {
         }
     }
 
-    private String transformToJSON(ContractDefinition contractDefinition) {
+    private String transformToJson(ContractDefinition contractDefinition) {
 
-        monitor.info(String.format("[%s] ContractDefinition: for '%s' and '%s' targeting '%s' created in EDC, start now with Blockchain related steps ...", this.getClass().getSimpleName(), contractDefinition.getContractPolicyId(), contractDefinition.getAccessPolicyId(), "not implemented"));
+        monitor.info(String.format("[%s] ContractDefinition: for '%s' and '%s' targeting '%s' created in EDC, start now with Blockchain related steps ...",
+                this.getClass().getSimpleName(), contractDefinition.getContractPolicyId(), contractDefinition.getAccessPolicyId(), "not implemented"));
 
         monitor.info(String.format("[%s] formating POJO to JSON ...", this.getClass().getSimpleName()));
 

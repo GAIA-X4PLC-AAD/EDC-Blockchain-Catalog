@@ -6,14 +6,12 @@ import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
-import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromAssetTransformer;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.HttpDataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 
-import javax.xml.crypto.Data;
-
 public class TokenziedAsset  {
+    @SuppressWarnings("CheckStyle")
     String token_id;
     String name;
     String decimals;
@@ -24,8 +22,8 @@ public class TokenziedAsset  {
         return token_id;
     }
 
-    public void setToken_id(String token_id) {
-        this.token_id = token_id;
+    public void setToken_id(String tokenId) {
+        this.token_id = tokenId;
     }
 
     public String getName() {

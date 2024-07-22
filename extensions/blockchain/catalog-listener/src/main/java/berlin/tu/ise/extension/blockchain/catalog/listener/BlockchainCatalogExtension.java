@@ -26,30 +26,40 @@ import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionServic
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
 import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessObservable;
 import org.eclipse.edc.core.transform.transformer.OdrlTransformersFactory;
-import org.eclipse.edc.core.transform.transformer.from.*;
-import org.eclipse.edc.core.transform.transformer.to.*;
+import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromAssetTransformer;
+import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromCatalogTransformer;
+import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromCriterionTransformer;
+import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromDataAddressTransformer;
+import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromDataServiceTransformer;
+import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromDatasetTransformer;
+import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromDistributionTransformer;
+import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromPolicyTransformer;
+import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromQuerySpecTransformer;
+import org.eclipse.edc.core.transform.transformer.to.JsonObjectToAssetTransformer;
+import org.eclipse.edc.core.transform.transformer.to.JsonObjectToCatalogTransformer;
+import org.eclipse.edc.core.transform.transformer.to.JsonObjectToCriterionTransformer;
+import org.eclipse.edc.core.transform.transformer.to.JsonObjectToDataAddressTransformer;
+import org.eclipse.edc.core.transform.transformer.to.JsonObjectToDataServiceTransformer;
+import org.eclipse.edc.core.transform.transformer.to.JsonObjectToDatasetTransformer;
+import org.eclipse.edc.core.transform.transformer.to.JsonObjectToDistributionTransformer;
+import org.eclipse.edc.core.transform.transformer.to.JsonObjectToQuerySpecTransformer;
+import org.eclipse.edc.core.transform.transformer.to.JsonValueToGenericTypeTransformer;
 import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.policy.model.AtomicConstraint;
 import org.eclipse.edc.policy.model.LiteralExpression;
 import org.eclipse.edc.policy.model.Policy;
-import org.eclipse.edc.protocol.dsp.api.configuration.DspApiConfigurationExtension;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Setting;
 import org.eclipse.edc.spi.asset.AssetIndex;
-import org.eclipse.edc.spi.asset.DataAddressResolver;
-import org.eclipse.edc.spi.entity.Entity;
 import org.eclipse.edc.spi.event.EventRouter;
 import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.eclipse.edc.spi.types.TypeManager;
-import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.HttpDataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
-import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
-import org.eclipse.edc.web.spi.WebService;
 
 import java.util.Map;
 
@@ -61,9 +71,6 @@ import static org.eclipse.edc.spi.CoreConstants.JSON_LD;
 public class BlockchainCatalogExtension implements ServiceExtension {
     public static final String NAME = "Blockchain Extension: Catalog";
 
-
-    @Inject
-    private TransferProcessObservable transferProcessObservable;
 
     //@Inject
     //private TypeTransformerRegistry transformerRegistry;
@@ -87,9 +94,9 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     private EventRouter eventRouter;
 
     @Setting
-    private final static String EDC_BLOCKCHAIN_INTERFACE_URL = "edc.blockchain.interface.url";
+    private static final String EDC_BLOCKCHAIN_INTERFACE_URL = "edc.blockchain.interface.url";
 
-    private final static String DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL = "http://edc-interface:3000/";
+    private static final String DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL = "http://edc-interface:3000/";
 
     private String getEdcBlockchainInterfaceUrl() {
         return context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL);
@@ -101,17 +108,8 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     private  ServiceExtensionContext context;
 
     @Inject
-    private WebService webService;
-
-    @Inject
-    private ManagementApiConfiguration config;
-
-    @Inject
     private ManagementApiTypeTransformerRegistry transformerRegistry;
 
-
-    @Inject
-    private DataAddressResolver dataAddressResolver;
 
     @Inject
     private JsonObjectValidatorRegistry validator;
