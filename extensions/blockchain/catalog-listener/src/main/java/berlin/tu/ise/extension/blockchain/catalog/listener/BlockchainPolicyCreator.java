@@ -22,7 +22,9 @@ public class BlockchainPolicyCreator implements EventSubscriber {
     private final JsonLd jsonLd;
 
     private BlockchainSmartContractService blockchainSmartContractService;
-    public BlockchainPolicyCreator(Monitor monitor, PolicyDefinitionService policyDefinitionService, String edcInterfaceUrl, PolicyDefinitionApiController policyDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
+
+    public BlockchainPolicyCreator(Monitor monitor, PolicyDefinitionService policyDefinitionService, String edcInterfaceUrl, PolicyDefinitionApiController policyDefinitionApiController,
+                                   JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
         this.monitor = monitor;
         this.policyDefinitionService = policyDefinitionService;
         this.edcInterfaceUrl = edcInterfaceUrl;
@@ -32,7 +34,7 @@ public class BlockchainPolicyCreator implements EventSubscriber {
     }
 
 
-    public <E extends Event> void on(EventEnvelope<E> event){
+    public <E extends Event> void on(EventEnvelope<E> event) {
         var payload = event.getPayload();
         if (!(payload instanceof PolicyDefinitionCreated)) return;
 
@@ -41,10 +43,10 @@ public class BlockchainPolicyCreator implements EventSubscriber {
         String policyId = policyDefinitionCreated.getPolicyDefinitionId();
         PolicyDefinition policyDefinition = policyDefinitionService.findById(policyId);
 
-        String jsonString = transformToJSON(policyDefinition);
+        String jsonString = transformToJson(policyDefinition);
         System.out.println(jsonString);
         ReturnObject returnObject = blockchainSmartContractService.sendToPolicySmartContract(jsonString);
-        if(returnObject == null) {
+        if (returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Policy creation of the Policy with id " + policyDefinition.getId());
         } else {
             System.out.printf("[%s] Created Policy %s and minted it successfully with the hash: %s\n", this.getClass().getSimpleName(), policyDefinition.getId(), returnObject.getHash());
@@ -53,7 +55,7 @@ public class BlockchainPolicyCreator implements EventSubscriber {
 
 
 
-    private String transformToJSON(PolicyDefinition policyDefinition) {
+    private String transformToJson(PolicyDefinition policyDefinition) {
         monitor.info(String.format("[%s] Policy: '%s' created in EDC, start now with Blockchain related steps ...\n", this.getClass().getSimpleName(), policyDefinition.getUid()));
 
         monitor.info(String.format("[%s] formating POJO to JSON ...\n", this.getClass().getSimpleName()));

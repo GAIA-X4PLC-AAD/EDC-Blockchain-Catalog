@@ -5,6 +5,7 @@ import jakarta.json.JsonObject;
 
 public class TokenizedObject {
 
+    @SuppressWarnings("CheckStyle")
     String token_id;
     String name;
     String decimals;
@@ -15,8 +16,8 @@ public class TokenizedObject {
         return token_id;
     }
 
-    public void setToken_id(String token_id) {
-        this.token_id = token_id;
+    public void setToken_id(String tokenId) {
+        this.token_id = tokenId;
     }
 
     public String getName() {

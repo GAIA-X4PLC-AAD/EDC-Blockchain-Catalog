@@ -28,7 +28,8 @@ public class BlockchainContractCreator implements EventSubscriber {
     private final JsonLd jsonLd;
     private BlockchainSmartContractService blockchainSmartContractService;
 
-    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex, ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
+    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex,
+                                     ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
         this.monitor = monitor;
         this.idsWebhookAddress = idsWebhookAddress;
         this.contractDefinitionService = contractDefinitionService;
@@ -40,7 +41,7 @@ public class BlockchainContractCreator implements EventSubscriber {
     }
 
     @Override
-    public <E extends Event> void on(EventEnvelope<E> event){
+    public <E extends Event> void on(EventEnvelope<E> event) {
         var payload = event.getPayload();
         if (!(payload instanceof ContractDefinitionCreated)) return;
         // the event only returns the contract id, so we need to get the contract object
@@ -51,24 +52,24 @@ public class BlockchainContractCreator implements EventSubscriber {
 
         ContractDefinition contractDefinition = contractDefinitionService.findById(contractId);
 
-        String jsonRepresentationOfContractDefinition = transformToJSON(contractDefinition);
+        String jsonRepresentationOfContractDefinition = transformToJson(contractDefinition);
 
-        String verifiablePresentationOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, monitor, blockchainSmartContractService);
+        String verifiablePresentationOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, monitor);
 
-        if(verifiablePresentationOfContract == null) {
+        if (verifiablePresentationOfContract == null) {
             monitor.warning("Something went wrong during the Verifiable Presentation creation for the Contract with id " + contractDefinition.getId());
             return;
         }
 
         monitor.debug("Sending Combined Verifiable Presentation and COntract to Blockchain for Contract with id " + contractDefinition.getId() + " with JSON: " + verifiablePresentationOfContract);
 
-        String combinedVPandContract = "{\n" +
+        String combinedVpAndContract = "{\n" +
                 "  \"edcContractdefinition\": " + jsonRepresentationOfContractDefinition + ",\n" +
                 "  \"verifiablePresentation\": " + verifiablePresentationOfContract + "\n" +
                 "}";
 
-        ReturnObject returnObject = blockchainSmartContractService.sendToContractSmartContract(combinedVPandContract);
-        if(returnObject == null) {
+        ReturnObject returnObject = blockchainSmartContractService.sendToContractSmartContract(combinedVpAndContract);
+        if (returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Contract Definition creation of the Contract with id " + contractDefinition.getId());
             return;
         }
@@ -78,9 +79,10 @@ public class BlockchainContractCreator implements EventSubscriber {
     }
 
 
-    private String transformToJSON(ContractDefinition contractDefinition) {
+    private String transformToJson(ContractDefinition contractDefinition) {
 
-        monitor.info(String.format("[%s] ContractDefinition: for '%s' and '%s' targeting '%s' created in EDC, start now with Blockchain related steps ...", this.getClass().getSimpleName(), contractDefinition.getContractPolicyId(), contractDefinition.getAccessPolicyId(), "not implemented"));
+        monitor.info(String.format("[%s] ContractDefinition: for '%s' and '%s' targeting '%s' created in EDC, start now with Blockchain related steps ...",
+                this.getClass().getSimpleName(), contractDefinition.getContractPolicyId(), contractDefinition.getAccessPolicyId(), "not implemented"));
 
         monitor.info(String.format("[%s] formating POJO to JSON ...", this.getClass().getSimpleName()));
 

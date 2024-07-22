@@ -1,12 +1,12 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener.model;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.json.JsonObject;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 
 public class TokenizedPolicyDefinition {
+    @SuppressWarnings("CheckStyle")
     String token_id;
     String name;
     String decimals;
@@ -17,8 +17,8 @@ public class TokenizedPolicyDefinition {
         return token_id;
     }
 
-    public void setToken_id(String token_id) {
-        this.token_id = token_id;
+    public void setToken_id(String tokenId) {
+        this.token_id = tokenId;
     }
 
     public String getName() {

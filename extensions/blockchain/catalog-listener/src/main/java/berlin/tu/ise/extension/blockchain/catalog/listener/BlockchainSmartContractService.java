@@ -1,10 +1,16 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener;
 
-import berlin.tu.ise.extension.blockchain.catalog.listener.model.*;
+import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
+import berlin.tu.ise.extension.blockchain.catalog.listener.model.TokenizedContract;
+import berlin.tu.ise.extension.blockchain.catalog.listener.model.TokenizedObject;
+import berlin.tu.ise.extension.blockchain.catalog.listener.model.TokenizedPolicyDefinition;
+import berlin.tu.ise.extension.blockchain.catalog.listener.model.TokenziedAsset;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.json.*;
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonValue;
 import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
@@ -16,7 +22,10 @@ import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
 import org.eclipse.edc.web.spi.exception.InvalidRequestException;
 import org.eclipse.edc.web.spi.exception.ValidationFailureException;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -25,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+@SuppressWarnings("checkstyle:SummaryJavadoc")
 public class BlockchainSmartContractService {
 
     private final Monitor monitor;
@@ -42,7 +52,7 @@ public class BlockchainSmartContractService {
         this.edcInterfaceUrl = edcInterfaceUrl;
     }
 
-    public ReturnObject sendToAssetSmartContract(String jsonString ) {
+    public ReturnObject sendToAssetSmartContract(String jsonString) {
         return sendToSmartContract(jsonString, edcInterfaceUrl + "/mint/asset");
     }
 
@@ -62,9 +72,9 @@ public class BlockchainSmartContractService {
         monitor.debug(String.format("[%s] Sending data to Smart Contract, this may take some time ...", BlockchainSmartContractService.class.getSimpleName()));
         String returnJson;
         ReturnObject returnObject = null;
-        try{
+        try {
             URL url = new URL(smartContractUrl);
-            HttpURLConnection http = (HttpURLConnection)url.openConnection();
+            HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod("POST");
             http.setDoOutput(true);
             http.setRequestProperty("Content-Type", "application/json");
@@ -89,7 +99,7 @@ public class BlockchainSmartContractService {
 
             System.out.println(http.getResponseCode() + " " + http.getResponseMessage());
             http.disconnect();
-        } catch(Exception e) {
+        } catch (Exception e) {
             monitor.severe(e.toString());
         }
 
@@ -98,13 +108,14 @@ public class BlockchainSmartContractService {
 
 
 
+    @SuppressWarnings({"checkstyle:Indentation", "checkstyle:MissingSwitchDefault", "checkstyle:WhitespaceAround"})
     public Asset getAssetWithIdFromSmartContract(String id, String edcInterfaceUrl) {
         Asset asset = null;
         ObjectMapper mapper = new ObjectMapper();
 
         HttpURLConnection c = null;
         try {
-            URL u = new URL(edcInterfaceUrl + "/asset/"+id);
+            URL u = new URL(edcInterfaceUrl + "/asset/" + id);
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
             c.setRequestProperty("Content-length", "0");
@@ -125,10 +136,12 @@ public class BlockchainSmartContractService {
                     br.close();
 
                     return mapper.readValue(sb.toString(), TokenziedAsset.class).getTokenDataAsAsset();
+                default:
+                    return null;
             }
 
         } catch (IOException ex) {
-           System.out.println(ex);
+            System.out.println(ex);
         } finally {
             if (c != null) {
                 try {
@@ -141,6 +154,7 @@ public class BlockchainSmartContractService {
         return null;
     }
 
+    @SuppressWarnings({"checkstyle:OperatorWrap", "checkstyle:WhitespaceAfter", "checkstyle:WhitespaceAround", "checkstyle:MissingSwitchDefault"})
     public List<ContractDefinition> getAllContractDefinitionsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -174,11 +188,10 @@ public class BlockchainSmartContractService {
 
                     tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedContract>>() {});
 
-                    for (TokenizedContract tokenizedContract: tokenziedContractList) {
-                        if(tokenizedContract != null) {
+                    for (TokenizedContract tokenizedContract : tokenziedContractList) {
+                        if (tokenizedContract != null) {
 
-                            if(tokenizedContract != null && tokenizedContract.getTokenData() != null
-                                    && tokenizedContract.getTokenData().containsKey("@id")) {
+                            if (tokenizedContract != null && tokenizedContract.getTokenData() != null && tokenizedContract.getTokenData().containsKey("@id")) {
                                 if (!tokenizedContract.getTokenData().containsKey("@context")) {
                                     monitor.warning("TokenizedContractDefinition " + tokenizedContract.getTokenData().getString("@id") + " does not contain @context - Skipping");
                                     continue;
@@ -202,11 +215,11 @@ public class BlockchainSmartContractService {
                                     //validatorRegistry.validate(ContractDefinition.CONTRACT_DEFINITION_TYPE, tokenizedContract.getTokenData()).orElseThrow(ValidationFailureException::new);
                                     //monitor.debug("Faulty Policy detection: " + tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).getJsonObject("edc:operator").toString());
 
-                                    if (tokenizedContract.getTokenData().containsKey("edc:assetsSelector")
-                                            && tokenizedContract.getTokenData().get("edc:assetsSelector").getValueType() == JsonValue.ValueType.ARRAY
-                                            && tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").size() > 0
-                                            && tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).containsKey("edc:operator")
-                                            && tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).getString("edc:operator").toString().equals("in")) {
+                                    if (tokenizedContract.getTokenData().containsKey("edc:assetsSelector") &&
+                                            tokenizedContract.getTokenData().get("edc:assetsSelector").getValueType() == JsonValue.ValueType.ARRAY &&
+                                            tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").size() > 0 &&
+                                            tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).containsKey("edc:operator") &&
+                                            tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).getString("edc:operator").toString().equals("in")) {
                                         monitor.debug("Contract definition contains 'in' operator instead of '='. Skipping as not supported");
                                         continue;
                                     }
@@ -234,6 +247,8 @@ public class BlockchainSmartContractService {
                     }
                     monitor.debug("Validation failed for " + (tokenziedContractList.size() - contractOfferDtoList.size()) + " contract definitions and succeeded for " + contractOfferDtoList.size() + " contract definitions");
                     return contractOfferDtoList;
+                default:
+                    return null;
             }
 
 
@@ -255,9 +270,11 @@ public class BlockchainSmartContractService {
 
 
 
-    /**
+    /** Get all contract definitions from the smart contract and group them by source.
+     *
      * @return HashMap of Source URIs and Lists of ContractDefinitionResponseDto
      */
+    @SuppressWarnings({"checkstyle:WhitespaceAfter", "checkstyle:WhitespaceAround", "checkstyle:OperatorWrap", "checkstyle:MissingSwitchDefault"})
     public HashMap<String, List<ContractOfferMessage>> getAllContractDefinitionsFromSmartContractGroupedBySource(String edcInterfaceUrl, Monitor monitor, TypeTransformerRegistry transformerRegistry, JsonObjectValidatorRegistry validatorRegistry) {
         HashMap<String, List<ContractOfferMessage>> returnMap = new HashMap<>();
         ContractOfferMessage contractDefinitionResponseDto = null;
@@ -291,11 +308,11 @@ public class BlockchainSmartContractService {
                     tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedContract>>() {
                     });
 
-                    for (TokenizedContract tokenizedContract: tokenziedContractList) {
-                        if(tokenizedContract != null) {
+                    for (TokenizedContract tokenizedContract : tokenziedContractList) {
+                        if (tokenizedContract != null) {
 
-                            if(tokenizedContract != null && tokenizedContract.getTokenData() != null
-                                    && tokenizedContract.getTokenData().containsKey("@id")) {
+                            if (tokenizedContract != null && tokenizedContract.getTokenData() != null &&
+                                    tokenizedContract.getTokenData().containsKey("@id")) {
                                 if (!tokenizedContract.getTokenData().containsKey("@context")) {
                                     monitor.warning("TokenizedContractDefinition " + tokenizedContract.getTokenData().getString("@id") + " does not contain @context - Skipping");
                                     continue;
@@ -322,7 +339,7 @@ public class BlockchainSmartContractService {
 
 
                                     // add to returnMap with source as key TODO: mocked for testing
-                                    if(!returnMap.containsKey(contract.getCounterPartyAddress())) {
+                                    if (!returnMap.containsKey(contract.getCounterPartyAddress())) {
                                         returnMap.put(contract.getCounterPartyAddress(), new ArrayList<>());
                                     }
                                     returnMap.get(contract.getCounterPartyAddress()).add(contract);
@@ -344,6 +361,8 @@ public class BlockchainSmartContractService {
                     }
 
                     return returnMap;
+                default:
+                    return null;
             }
 
 
@@ -411,6 +430,7 @@ public class BlockchainSmartContractService {
 
      */
 
+    @SuppressWarnings("checkstyle:MissingSwitchDefault")
     public List<Asset> getAllAssetsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
 
@@ -504,6 +524,8 @@ public class BlockchainSmartContractService {
                     monitor.debug("Validation failed for " + failedCounter + " assets and succeeded for " + assetResponseList.size() + " assets");
 
                     return assetResponseList;
+                default:
+                    return null;
             }
 
 
@@ -525,6 +547,7 @@ public class BlockchainSmartContractService {
     }
 
 
+    @SuppressWarnings({"checkstyle:Indentation", "checkstyle:OperatorWrap", "checkstyle:WhitespaceAfter", "checkstyle:WhitespaceAround", "checkstyle:MissingSwitchDefault"})
     public List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
 
@@ -549,19 +572,19 @@ public class BlockchainSmartContractService {
                     StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = br.readLine()) != null) {
-                        sb.append(line+"\n");
+                        sb.append(line + "\n");
                     }
                     br.close();
 
                     tokenizedPolicyDefinitionList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedPolicyDefinition>>(){});
                     monitor.debug("Read policies from edc-interface: " + tokenizedPolicyDefinitionList.size() + " policies and going validate them");
                     //monitor.debug("Read policies from edc-interface: " + sb.toString());
-                    for (TokenizedPolicyDefinition tokenizedPolicyDefinition: tokenizedPolicyDefinitionList) {
+                    for (TokenizedPolicyDefinition tokenizedPolicyDefinition : tokenizedPolicyDefinitionList) {
                         if (tokenizedPolicyDefinition != null) {
                             monitor.debug("Validating policy definition: " + tokenizedPolicyDefinition.getTokenData());
                         }
-                        if(tokenizedPolicyDefinition != null && tokenizedPolicyDefinition.getTokenData() != null
-                            && tokenizedPolicyDefinition.getTokenData().containsKey("@id")) {
+                        if (tokenizedPolicyDefinition != null && tokenizedPolicyDefinition.getTokenData() != null &&
+                                tokenizedPolicyDefinition.getTokenData().containsKey("@id")) {
                             if (!tokenizedPolicyDefinition.getTokenData().containsKey("@context")) {
                                 monitor.warning("TokenizedPolicyDefinition " + tokenizedPolicyDefinition.getTokenData().getString("@id") + " does not contain @context - Skipping");
                                 continue;
@@ -600,6 +623,8 @@ public class BlockchainSmartContractService {
                     }
                     monitor.debug("Read " + policyDefinitionList.size() + " policy definitions from edc-interface");
                     return policyDefinitionList;
+                default:
+                    return null;
             }
 
         } catch (MalformedURLException ex) {
