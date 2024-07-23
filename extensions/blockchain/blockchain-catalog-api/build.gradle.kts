@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.edc.http)
 
     implementation(libs.edc.configuration.filesystem)
-    implementation(libs.edc.iam.mock)
+    //implementation(libs.edc.iam.mock)
     implementation(libs.edc.auth.tokenbased)
     implementation(libs.edc.management.api)
 

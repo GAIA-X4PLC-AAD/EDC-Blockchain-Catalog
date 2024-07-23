@@ -41,6 +41,7 @@ edc-data-plane-util = { module = "org.eclipse.edc:data-plane-util", version.ref 
 edc-dsp = { module = "org.eclipse.edc:dsp", version.ref = "edc" }
 edc-http = { module = "org.eclipse.edc:http", version.ref = "edc" }
 edc-iam-mock = { module = "org.eclipse.edc:iam-mock", version.ref = "edc" }
+edc-iam-oauth2 = { module = "org.eclipse.edc:oauth2-service", version.ref = "edc" }
 edc-jersey-micrometer = { module = "org.eclipse.edc:jersey-micrometer", version.ref = "edc" }
 edc-jetty-micrometer = { module = "org.eclipse.edc:jetty-micrometer", version.ref = "edc" }
 edc-control-plane-store-sql-asset = { module = "org.eclipse.edc:asset-index-sql", version.ref = "edc" }
