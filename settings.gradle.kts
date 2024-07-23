@@ -41,7 +41,7 @@ include("launchers:azure")
 include("extensions:blockchain:blockchain-catalog-api")
 include("extensions:blockchain:catalog-listener")
 include("extensions:blockchain:logger")
+include("extensions:helper")
 
 
 include("extensions:transfer:http-push:provider-push-http-backend-service")
-
