@@ -121,6 +121,8 @@ public class BlockchainCatalogExtension implements ServiceExtension {
 
         registerTransformers();
 
+        jsonLd.registerNamespace("tuberlin", "https://ise.tu.berlin/edc/v0.0.1/ns/");
+
         validator.register(EDC_POLICY_DEFINITION_TYPE, PolicyDefinitionValidator.instance());
         validator.register(Asset.EDC_ASSET_TYPE, AssetValidator.instance());
 
