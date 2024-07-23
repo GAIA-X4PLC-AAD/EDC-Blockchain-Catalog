@@ -25,8 +25,6 @@ val edcVersion: String by project
 
 dependencies {
 
-
-
     implementation(project(":extensions:blockchain:catalog-listener"))
     implementation(project(":extensions:blockchain:logger"))
     implementation(project(":extensions:blockchain:blockchain-catalog-api"))
