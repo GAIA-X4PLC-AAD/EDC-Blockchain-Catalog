@@ -6,6 +6,7 @@ import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
 import org.eclipse.edc.connector.policy.spi.event.PolicyDefinitionCreated;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
 import org.eclipse.edc.jsonld.spi.JsonLd;
+import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.event.Event;
 import org.eclipse.edc.spi.event.EventEnvelope;
 import org.eclipse.edc.spi.event.EventSubscriber;
@@ -13,6 +14,8 @@ import org.eclipse.edc.spi.monitor.Monitor;
 
 /** This class listens for PolicyDefinitionCreated events and sends the policy to the blockchain smart contract service. */
 public class BlockchainPolicyCreator implements EventSubscriber {
+
+    private static final String TU_BERLIN_NS = "https://ise.tu.berlin/edc/v0.0.1/ns/";
 
     private final Monitor monitor;
     private final PolicyDefinitionService policyDefinitionService;
@@ -49,8 +52,11 @@ public class BlockchainPolicyCreator implements EventSubscriber {
         ReturnObject returnObject = blockchainSmartContractService.sendToPolicySmartContract(jsonString);
         if (returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Policy creation of the Policy with id " + policyDefinition.getId());
+            throw new EdcException("Something went wrong during the Blockchain Policy creation of the Policy with id " + policyDefinition.getId());
         } else {
-            System.out.printf("[%s] Created Policy %s and minted it successfully with the hash: %s\n", this.getClass().getSimpleName(), policyDefinition.getId(), returnObject.getHash());
+            monitor.debug(String.format("[%s] Created Policy %s and minted it successfully with the hash: %s\n", this.getClass().getSimpleName(), policyDefinition.getId(), returnObject.getHash()));
+            policyDefinition.getPolicy().getExtensibleProperties().put(TU_BERLIN_NS + "blockchainhashvalue", returnObject.getHash());
+            var result = policyDefinitionService.update(policyDefinition);
         }
     }
 

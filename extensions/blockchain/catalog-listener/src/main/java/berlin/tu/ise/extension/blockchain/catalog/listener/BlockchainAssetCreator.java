@@ -10,6 +10,7 @@ import org.eclipse.edc.connector.asset.spi.event.AssetCreated;
 import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.service.spi.result.ServiceResult;
+import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.event.Event;
 import org.eclipse.edc.spi.event.EventEnvelope;
@@ -25,6 +26,7 @@ import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
 /** This class listens for AssetCreated events and sends the asset to the blockchain smart contract service. */
 public class BlockchainAssetCreator implements EventSubscriber {
 
+    private static final String TU_BERLIN_NS = "https://ise.tu.berlin/edc/v0.0.1/ns/";
 
     private final Monitor monitor;
 
@@ -74,8 +76,14 @@ public class BlockchainAssetCreator implements EventSubscriber {
         ReturnObject returnObject = blockchainSmartContractService.sendToAssetSmartContract(jsonString);
         if (returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Asset creation of the Asset with id " + asset.getId());
+            throw new EdcException("Something went wrong during the Blockchain Asset creation of the Asset with id " + asset.getId());
         } else {
             monitor.info(String.format("[%s] Created Asset %s and minted it successfully with the hash: %s", this.getClass().getSimpleName(), asset.getId(), returnObject.getHash()));
+            var properties = asset.getProperties();
+            properties.put(TU_BERLIN_NS + "blockchainhashvalue", returnObject.getHash());
+            asset.toBuilder().properties(properties).build();
+            var result = assetIndex.updateAsset(asset);
+            monitor.debug("Updated asset with blockchain hash: " + result);
         }
     }
 
