@@ -70,32 +70,36 @@ public class BlockchainContractCreator implements EventSubscriber {
 
         String jsonRepresentationOfContractDefinition = transformToJSON(contractDefinition);
 
-        String verifiablePresentationOfContract;
+        String verifiablePresentationsOfContract;
         String combinedVPandContract;
 
         if (this.claimComplianceProviderEndpoint == null || this.claimComplianceProviderEndpoint.isEmpty()) {
             monitor.debug("CCP-URL is not configured. Creating new VP the legacy way.");
-            verifiablePresentationOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, monitor, blockchainSmartContractService);
+            verifiablePresentationsOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, monitor, blockchainSmartContractService);
 
             combinedVPandContract = "{\n" +
                     "  \"edcContractdefinition\": " + jsonRepresentationOfContractDefinition + ",\n" +
-                    "  \"verifiablePresentation\": " + verifiablePresentationOfContract + "\n" +
+                    "  \"verifiablePresentation\": " + verifiablePresentationsOfContract + "\n" +
                     "}";
         } else {
             monitor.debug("CCP-URL is configured. Get VPs from Asset(s).");
-            verifiablePresentationOfContract = getVerifiablePresentationsFromAssets(contractDefinition);
-            combinedVPandContract = "{\n" +
-                    "  \"edcContractdefinition\": " + jsonRepresentationOfContractDefinition + ",\n" +
-                    "  \"claimComplianceProviderResponses\": " + verifiablePresentationOfContract + "\n" +
-                    "}";
+            verifiablePresentationsOfContract = getVerifiablePresentationsFromAssets(contractDefinition);
+            if (verifiablePresentationsOfContract == null) {
+                monitor.info("No CCP-Responses found for Contract with id " + contractDefinition.getId() + ". Creating new VP the legacy way.");
+                verifiablePresentationsOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, monitor, blockchainSmartContractService);
+                combinedVPandContract = "{\n" +
+                        "  \"edcContractdefinition\": " + jsonRepresentationOfContractDefinition + ",\n" +
+                        "  \"verifiablePresentation\": " + verifiablePresentationsOfContract + "\n" +
+                        "}";
+            } else {
+                combinedVPandContract = "{\n" +
+                        "  \"edcContractdefinition\": " + jsonRepresentationOfContractDefinition + ",\n" +
+                        "  \"claimComplianceProviderResponses\": " + verifiablePresentationsOfContract + "\n" +
+                        "}";
+            }
         }
 
-        if(verifiablePresentationOfContract == null) {
-            monitor.warning("Something went wrong during the Verifiable Presentation creation / CCP response extraction for the Contract with id " + contractDefinition.getId());
-            return;
-        }
-
-        monitor.debug("Sending Combined Verifiable Presentation and Contract to Blockchain for Contract with id " + contractDefinition.getId() + " with JSON: " + verifiablePresentationOfContract);
+        monitor.debug("Sending Combined Verifiable Presentation and Contract to Blockchain for Contract with id " + contractDefinition.getId() + " with JSON: " + verifiablePresentationsOfContract);
 
         ReturnObject returnObject = blockchainSmartContractService.sendToContractSmartContract(combinedVPandContract);
         if(returnObject == null) {
