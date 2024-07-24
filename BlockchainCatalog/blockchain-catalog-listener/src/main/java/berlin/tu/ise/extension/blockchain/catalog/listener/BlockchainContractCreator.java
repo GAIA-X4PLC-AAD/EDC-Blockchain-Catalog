@@ -85,6 +85,7 @@ public class BlockchainContractCreator implements EventSubscriber {
             monitor.debug("CCP-URL is configured. Get VPs from Asset(s).");
             verifiablePresentationsOfContract = getVerifiablePresentationsFromAssets(contractDefinition);
             if (verifiablePresentationsOfContract == null) {
+                monitor.info("No CCP-Responses found for Contract with id " + contractDefinition.getId() + ". Creating new VP the legacy way.");
                 verifiablePresentationsOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, monitor, blockchainSmartContractService);
                 combinedVPandContract = "{\n" +
                         "  \"edcContractdefinition\": " + jsonRepresentationOfContractDefinition + ",\n" +
