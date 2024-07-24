@@ -40,6 +40,7 @@ dependencies {
     // using the dsp api now instead of ids api
     // dsp-api-configuration should contain the TypeTransformerRegistry which can transform objects to json ld and vise versa
 
+    implementation(project(":NewService"))
 
 
 }

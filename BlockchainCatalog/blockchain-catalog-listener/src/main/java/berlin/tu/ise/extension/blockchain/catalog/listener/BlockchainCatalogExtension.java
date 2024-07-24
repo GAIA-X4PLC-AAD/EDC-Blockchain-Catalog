@@ -1,5 +1,6 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener;
 
+import berlin.tu.ise.NewService;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import org.eclipse.edc.api.validation.DataAddressValidator;
@@ -122,10 +123,16 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         return NAME;
     }
 
+    @Inject
+    private NewService newService;
+
     @Override
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
         this.context = context;
+
+        newService.newMethod();
+
 
         registerTransformers();
 

@@ -54,3 +54,6 @@ include(":other:custom-runtime")
 
 include(":system-tests")
 include("playground")
+include("NewService")
+
+
