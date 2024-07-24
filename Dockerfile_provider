@@ -11,5 +11,4 @@ COPY --from=build ./home/gradle/src/BlockchainCatalog/blockchain-catalog-prosume
 COPY --from=build ./home/gradle/src/BlockchainCatalog/blockchain-catalog-prosumer/provider-vault.properties vault.properties
 COPY --from=build ./home/gradle/src/transfer/transfer-07-provider-push-http/certs/cert.pfx cert.pfx
 
-
 ENTRYPOINT [ "sh", "-c", "exec java -Dedc.fs.config=config.properties -Dedc.keystore=cert.pfx -Dedc.keystore.password=123456 -Dedc.vault=vault.properties $JVM_ARGS -jar app.jar"]
