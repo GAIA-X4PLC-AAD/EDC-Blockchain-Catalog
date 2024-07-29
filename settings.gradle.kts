@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022 Fraunhofer Institute for Software and Systems Engineering
+ *  Copyright (c) 2022 Fraunhofer Institute for Software and Systems En gineering
  *
  *  This program and the accompanying materials are made available under the
  *  terms of the Apache License, Version 2.0 which is available at
@@ -12,7 +12,7 @@
  *
  */
 
-rootProject.name = "Samples-Blockchain"
+rootProject.name = "TU-Berlin-EDC-Blockchain-Extensions"
 
 pluginManagement {
     repositories {
@@ -30,27 +30,18 @@ dependencyResolutionManagement {
 
 
 
-// modules for code samples ------------------------------------------------------------------------
-include("BlockchainCatalog:blockchain-catalog-api")
-include("BlockchainCatalog:blockchain-catalog-listener")
-include("BlockchainCatalog:blockchain-catalog-prosumer")
-include("BlockchainCatalog:blockchain-catalog-azure")
-include("playground:apiTest")
-findProject(":BlockchainCatalog:blockchain-catalog-prosumer")?.name = "blockchain-catalog-prosumer"
-
-include("blockchain-logger")
-
-// include("transfer:TransferFileLocal")
-// include("transfer:StatusChecker")
-//include("transfer:transfer-07-provider-push-http:provider-push-http-backend-service")
-//include("transfer:transfer-07-provider-push-http:http-push-connector")
-//include("transfer:transfer-07-provider-push-http:http-push-consumer")
-//include("transfer:transfer-07-provider-push-http:http-push-provider")
-
-include("newtransfer:transfer-07-provider-push-http:provider-push-http-backend-service")
+// launchers ---------------------------------------------------------------------------------------
+include("launchers:edc-tu-berlin")
+include("launchers:push-http-backend")
+include("launchers:azure")
 
 // modules for code samples ------------------------------------------------------------------------
-//include(":other:custom-runtime")
+//include("extensions:blockchain:catalog-api")
+// extensions:blockchain:blockchain-catalog-api is actually in extensions:blockchain:catalog-api
+include("extensions:blockchain:blockchain-catalog-api")
+include("extensions:blockchain:catalog-listener")
+include("extensions:blockchain:logger")
 
-include(":system-tests")
-include("playground")
+
+include("extensions:transfer:http-push:provider-push-http-backend-service")
+

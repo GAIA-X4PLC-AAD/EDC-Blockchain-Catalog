@@ -1,2 +1,2 @@
-./gradlew newtransfer:transfer-07-provider-push-http:provider-push-http-backend-service:build
-java -jar newtransfer/transfer-07-provider-push-http/provider-push-http-backend-service/build/libs/provider-push-http-backend-service.jar
+./gradlew launchers:push-http-backend:build
+java -jar launchers/push-http-backend/build/libs/push-http-backend-service.jar

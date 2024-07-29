@@ -4,13 +4,15 @@ format.version = "1.1"
 [versions]
 assertj = "3.24.2"
 awaitility = "4.2.0"
-edc = "0.2.0"
+edc = "0.2.1"
 jakarta-json = "2.0.1"
 junit-pioneer = "2.0.1"
 jupiter = "5.10.0"
 openTelemetry = "1.18.0"
 restAssured = "5.3.1"
 rsApi = "3.1.0"
+shadow = "7.1.2"
+postgres = "42.6.0"
 
 
 [libraries]
@@ -40,6 +42,16 @@ edc-http = { module = "org.eclipse.edc:http", version.ref = "edc" }
 edc-iam-mock = { module = "org.eclipse.edc:iam-mock", version.ref = "edc" }
 edc-jersey-micrometer = { module = "org.eclipse.edc:jersey-micrometer", version.ref = "edc" }
 edc-jetty-micrometer = { module = "org.eclipse.edc:jetty-micrometer", version.ref = "edc" }
+edc-control-plane-store-sql-asset = { module = "org.eclipse.edc:asset-index-sql", version.ref = "edc" }
+edc-control-plane-store-sql-contractDefinition = { module = "org.eclipse.edc:contract-definition-store-sql", version.ref = "edc" }
+edc-control-plane-store-sql-contractNegotiation = { module = "org.eclipse.edc:contract-negotiation-store-sql", version.ref = "edc" }
+edc-control-plane-store-sql-controlPlane = { module = "org.eclipse.edc:control-plane-sql", version.ref = "edc" }
+edc-control-plane-store-sql-policyDefinition = { module = "org.eclipse.edc:policy-definition-store-sql", version.ref = "edc" }
+edc-control-plane-store-sql-transferProcess = { module = "org.eclipse.edc:transfer-process-store-sql", version.ref = "edc" }
+edc-transaction-local = { module = "org.eclipse.edc:transaction-local",  version.ref = "edc" }
+edc-sql-pool = { module = "org.eclipse.edc:sql-pool-apache-commons", version.ref = "edc" }
+edc-spi-fcc = { module = "org.eclipse.edc:federated-catalog-spi", version.ref = "edc" }
+edc-spi-web = { module = "org.eclipse.edc:web-spi", version.ref = "edc" }
 edc-junit = { module = "org.eclipse.edc:junit", version.ref = "edc" }
 edc-management-api = { module = "org.eclipse.edc:management-api", version.ref = "edc" }
 edc-micrometer-core = { module = "org.eclipse.edc:micrometer-core", version.ref = "edc" }
@@ -64,5 +76,8 @@ opentelemetry = "io.opentelemetry.javaagent:opentelemetry-javaagent:2.0.0"
 opentelemetry-exporter-jaeger = { module = "io.opentelemetry:opentelemetry-exporter-jaeger", version = "1.34.1" }
 restAssured = { module = "io.rest-assured:rest-assured", version.ref = "restAssured" }
 
+
+postgres = { module = "org.postgresql:postgresql", version.ref = "postgres" }
+
 [plugins]
-shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }

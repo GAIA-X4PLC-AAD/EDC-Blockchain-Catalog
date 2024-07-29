@@ -4,7 +4,7 @@ services:
     container_name: connector-1
     build:
       context: ../
-      dockerfile: Dockerfile_consumer
+      dockerfile: ../launchers/edc-tu-berlin/Dockerfile_consumer
     volumes:
       - ./:/open-telemetry
     ports:
@@ -92,7 +92,7 @@ services:
     container_name: connector-2
     build:
       context: ../
-      dockerfile: Dockerfile_provider
+      dockerfile: ../launchers/edc-tu-berlin/Dockerfile_provider
     volumes:
       - ./:/open-telemetry
     ports:
