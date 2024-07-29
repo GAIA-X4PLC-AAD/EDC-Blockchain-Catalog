@@ -71,14 +71,13 @@ public class BlockchainAssetCreator implements EventSubscriber {
         String assetId = assetCreated.getAssetId();
         monitor.debug("AssetCreated event triggered for assetId: " + assetId);
         Asset asset = assetIndex.findById(assetId);
-        Asset updatedAsset = processAssetWithClaimComplianceProvider(asset);
         String jsonString = transformToJson(asset);
         ReturnObject returnObject = blockchainSmartContractService.sendToAssetSmartContract(jsonString);
         if (returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Asset creation of the Asset with id " + asset.getId());
             throw new EdcException("Something went wrong during the Blockchain Asset creation of the Asset with id " + asset.getId());
         } else {
-            monitor.info(String.format("[%s] Created Asset %s and minted it successfully with the hash: %s", this.getClass().getSimpleName(), asset.getId(), returnObject.getHash()));
+            monitor.debug(String.format("[%s] Created Asset %s and minted it successfully with the hash: %s", this.getClass().getSimpleName(), asset.getId(), returnObject.getHash()));
             var properties = asset.getProperties();
             properties.put(TU_BERLIN_NS + "blockchainhashvalue", returnObject.getHash());
             asset.toBuilder().properties(properties).build();

@@ -1,18 +1,13 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener;
 
 import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import org.eclipse.edc.api.validation.DataAddressValidator;
-import org.eclipse.edc.connector.api.management.asset.transform.JsonObjectToAssetEntryNewDtoTransformer;
 import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
 import org.eclipse.edc.connector.api.management.asset.validation.AssetValidator;
-import org.eclipse.edc.connector.api.management.configuration.ManagementApiConfiguration;
 import org.eclipse.edc.connector.api.management.configuration.transform.ManagementApiTypeTransformerRegistry;
 import org.eclipse.edc.connector.api.management.contractdefinition.ContractDefinitionApiController;
 import org.eclipse.edc.connector.api.management.contractdefinition.transform.JsonObjectFromContractDefinitionTransformer;
 import org.eclipse.edc.connector.api.management.contractdefinition.transform.JsonObjectToContractDefinitionTransformer;
 import org.eclipse.edc.connector.api.management.policy.PolicyDefinitionApiController;
-import org.eclipse.edc.connector.api.management.policy.PolicyDefinitionApiExtension;
 import org.eclipse.edc.connector.api.management.policy.transform.JsonObjectFromPolicyDefinitionTransformer;
 import org.eclipse.edc.connector.api.management.policy.transform.JsonObjectToPolicyDefinitionTransformer;
 import org.eclipse.edc.connector.api.management.policy.validation.PolicyDefinitionValidator;
@@ -24,7 +19,6 @@ import org.eclipse.edc.connector.policy.spi.event.PolicyDefinitionCreated;
 import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
-import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessObservable;
 import org.eclipse.edc.core.transform.transformer.OdrlTransformersFactory;
 import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromAssetTransformer;
 import org.eclipse.edc.core.transform.transformer.from.JsonObjectFromCatalogTransformer;
@@ -71,7 +65,6 @@ import static org.eclipse.edc.spi.CoreConstants.JSON_LD;
 public class BlockchainCatalogExtension implements ServiceExtension {
     public static final String NAME = "Blockchain Extension: Catalog";
 
-
     //@Inject
     //private TypeTransformerRegistry transformerRegistry;
 
@@ -101,9 +94,6 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     private String getEdcBlockchainInterfaceUrl() {
         return context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL);
     }
-
-    @Setting
-    private final static String CCP_INTERFACE_URL = "ccp.interface.url";
 
     private  ServiceExtensionContext context;
 
@@ -147,13 +137,15 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         var edcInterfaceUrl = context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL); // getEdcBlockchainInterfaceUrl();
         monitor.info("BlockchainCatalogExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
+        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetIndex, originatorAddress, assetApiController, jsonLd, blockchainSmartContractService);
         final String ccpInterfaceUrl = context.getSetting(CCP_INTERFACE_URL, CCP_INTERFACE_URL);
         BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetIndex, assetService, edcInterfaceUrl, originatorAddress, assetApiController, jsonLd, blockchainSmartContractService, ccpInterfaceUrl);
         eventRouter.registerSync(AssetCreated.class, blockchainAssetCreator); // asynchronous dispatch
 
         eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl, policyDefinitionApiController, jsonLd, blockchainSmartContractService));
 
-        eventRouter.registerSync(ContractDefinitionCreated.class, new BlockchainContractCreator(monitor, contractDefinitionService, originatorAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, blockchainSmartContractService, ccpInterfaceUrl));
+        eventRouter.registerSync(ContractDefinitionCreated.class,
+                new BlockchainContractCreator(monitor, contractDefinitionService, originatorAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, blockchainSmartContractService));
 
         //initWithTestDate();
 
