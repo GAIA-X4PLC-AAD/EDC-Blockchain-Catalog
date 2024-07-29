@@ -54,6 +54,7 @@ import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.HttpDataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
+import org.eclipse.edc.web.spi.WebService;
 
 import java.util.Map;
 
@@ -72,6 +73,8 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     @Inject
     private AssetService assetService;
 
+    @Setting
+    private static final String CCP_INTERFACE_URL = "ccp.interface.url";
 
     // Needs to be injected to get Access to PolicyDefinitionObservable
     @Inject
@@ -137,7 +140,6 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         var edcInterfaceUrl = context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL); // getEdcBlockchainInterfaceUrl();
         monitor.info("BlockchainCatalogExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
-        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetIndex, originatorAddress, assetApiController, jsonLd, blockchainSmartContractService);
         final String ccpInterfaceUrl = context.getSetting(CCP_INTERFACE_URL, CCP_INTERFACE_URL);
         BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetIndex, assetService, edcInterfaceUrl, originatorAddress, assetApiController, jsonLd, blockchainSmartContractService, ccpInterfaceUrl);
         eventRouter.registerSync(AssetCreated.class, blockchainAssetCreator); // asynchronous dispatch
@@ -145,7 +147,7 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl, policyDefinitionApiController, jsonLd, blockchainSmartContractService));
 
         eventRouter.registerSync(ContractDefinitionCreated.class,
-                new BlockchainContractCreator(monitor, contractDefinitionService, originatorAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, blockchainSmartContractService));
+                new BlockchainContractCreator(monitor, contractDefinitionService, originatorAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, blockchainSmartContractService, ccpInterfaceUrl));
 
         //initWithTestDate();
 

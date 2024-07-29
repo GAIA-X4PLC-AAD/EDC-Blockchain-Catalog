@@ -33,6 +33,7 @@ dependencyResolutionManagement {
 // launchers ---------------------------------------------------------------------------------------
 include("launchers:edc-tu-berlin")
 include("launchers:push-http-backend")
+include("launchers:azure")
 
 // modules for code samples ------------------------------------------------------------------------
 //include("extensions:blockchain:catalog-api")

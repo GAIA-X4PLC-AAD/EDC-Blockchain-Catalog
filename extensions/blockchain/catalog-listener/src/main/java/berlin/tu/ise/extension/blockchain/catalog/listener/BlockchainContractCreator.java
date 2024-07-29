@@ -14,9 +14,7 @@ import org.eclipse.edc.spi.event.EventSubscriber;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
@@ -34,13 +32,13 @@ public class BlockchainContractCreator implements EventSubscriber {
 
     private final ContractDefinitionApiController contractDefinitionApiController;
 
-    private String claimComplianceProviderEndpoint;
+    private final String claimComplianceProviderEndpoint;
 
     private final JsonLd jsonLd;
-    private BlockchainSmartContractService blockchainSmartContractService;
+    private final BlockchainSmartContractService blockchainSmartContractService;
 
     public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex,
-                                     ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
+                                     ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService, String claimComplianceProviderEndpoint) {
         this.monitor = monitor;
         this.idsWebhookAddress = idsWebhookAddress;
         this.contractDefinitionService = contractDefinitionService;
@@ -49,12 +47,9 @@ public class BlockchainContractCreator implements EventSubscriber {
         this.contractDefinitionApiController = contractDefinitionApiController;
         this.jsonLd = jsonLd;
         this.blockchainSmartContractService = blockchainSmartContractService;
-    }
-
-    public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex, ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService, String claimComplianceProviderEndpoint) {
-        this(monitor, contractDefinitionService, idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, blockchainSmartContractService);
         this.claimComplianceProviderEndpoint = claimComplianceProviderEndpoint;
     }
+
 
 
     @Override
@@ -72,13 +67,13 @@ public class BlockchainContractCreator implements EventSubscriber {
         String jsonRepresentationOfContractDefinition = transformToJson(contractDefinition);
 
         String verifiablePresentationsOfContract;
-        String combinedVPandContract;
+        String combinedVpAndContract;
 
         if (this.claimComplianceProviderEndpoint == null || this.claimComplianceProviderEndpoint.isEmpty()) {
             monitor.debug("CCP-URL is not configured. Creating new VP the legacy way.");
-            verifiablePresentationsOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, monitor, blockchainSmartContractService);
+            verifiablePresentationsOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, monitor);
 
-            combinedVPandContract = "{\n" +
+            combinedVpAndContract = "{\n" +
                     "  \"edcContractdefinition\": " + jsonRepresentationOfContractDefinition + ",\n" +
                     "  \"verifiablePresentation\": " + verifiablePresentationsOfContract + "\n" +
                     "}";
@@ -87,13 +82,13 @@ public class BlockchainContractCreator implements EventSubscriber {
             verifiablePresentationsOfContract = getVerifiablePresentationsFromAssets(contractDefinition);
             if (verifiablePresentationsOfContract == null) {
                 monitor.info("No CCP-Responses found for Contract with id " + contractDefinition.getId() + ". Creating new VP the legacy way.");
-                verifiablePresentationsOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, monitor, blockchainSmartContractService);
-                combinedVPandContract = "{\n" +
+                verifiablePresentationsOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, monitor);
+                combinedVpAndContract = "{\n" +
                         "  \"edcContractdefinition\": " + jsonRepresentationOfContractDefinition + ",\n" +
                         "  \"verifiablePresentation\": " + verifiablePresentationsOfContract + "\n" +
                         "}";
             } else {
-                combinedVPandContract = "{\n" +
+                combinedVpAndContract = "{\n" +
                         "  \"edcContractdefinition\": " + jsonRepresentationOfContractDefinition + ",\n" +
                         "  \"claimComplianceProviderResponses\": " + verifiablePresentationsOfContract + "\n" +
                         "}";
@@ -130,7 +125,7 @@ public class BlockchainContractCreator implements EventSubscriber {
                     }
 
                 } else {
-                    monitor.warning("Asset " + operandRight+ " not found. Skipping this criterion.");
+                    monitor.warning("Asset " + operandRight + " not found. Skipping this criterion.");
                 }
             }
         });
