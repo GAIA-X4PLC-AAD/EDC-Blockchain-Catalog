@@ -2,20 +2,15 @@ package berlin.tu.ise.extension.blockchain.logger;
 
 import berlin.tu.ise.extension.blockchain.logger.listener.ContractAgreementEventSubscriber;
 import berlin.tu.ise.extension.blockchain.logger.listener.TransferProcessEventSubscriber;
-import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAccepted;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAgreed;
-import org.eclipse.edc.connector.contract.spi.negotiation.observe.ContractNegotiationListener;
-import org.eclipse.edc.connector.contract.spi.negotiation.observe.ContractNegotiationObservable;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.offer.store.ContractDefinitionStore;
 import org.eclipse.edc.connector.spi.asset.AssetService;
 import org.eclipse.edc.connector.spi.contractagreement.ContractAgreementService;
 import org.eclipse.edc.connector.spi.contractdefinition.ContractDefinitionService;
 import org.eclipse.edc.connector.spi.policydefinition.PolicyDefinitionService;
-import org.eclipse.edc.connector.transfer.spi.TransferProcessManager;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
 import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessObservable;
-import org.eclipse.edc.connector.transfer.spi.status.StatusCheckerRegistry;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
@@ -64,9 +59,9 @@ public class BlockchainLoggerExtension implements ServiceExtension {
     private ContractDefinitionStore contractDefinitionStore;
 
     @Setting
-    private final static String EDC_BLOCKCHAIN_INTERFACE_URL = "edc.blockchain.interface.url";
+    private static final String EDC_BLOCKCHAIN_INTERFACE_URL = "edc.blockchain.interface.url";
 
-    private final static String DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL = "http://edc-interface:3000/";
+    private static final String DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL = "http://edc-interface:3000/";
 
     private String getEdcBlockchainInterfaceUrl() {
         return context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL);

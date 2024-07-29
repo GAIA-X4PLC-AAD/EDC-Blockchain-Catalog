@@ -54,7 +54,6 @@ import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.HttpDataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
-import org.eclipse.edc.web.spi.WebService;
 
 import java.util.Map;
 

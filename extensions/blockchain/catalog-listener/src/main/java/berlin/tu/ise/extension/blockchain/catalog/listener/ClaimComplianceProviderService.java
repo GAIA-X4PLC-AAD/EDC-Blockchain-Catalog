@@ -16,7 +16,7 @@ public class ClaimComplianceProviderService {
     protected static String callClaimComplianceProvider(final String claimComplianceServiceEndpoint, final String claims,
                                                         final String participantCredentials, final Monitor monitor) throws CcpRequestException {
         try {
-            final HttpURLConnection conn = getHttpURLConnection(claimComplianceServiceEndpoint, claims, participantCredentials);
+            final HttpURLConnection conn = getHttpUrlConnection(claimComplianceServiceEndpoint, claims, participantCredentials);
             final StringBuilder response = readResponse(conn);
             final int statusCode = conn.getResponseCode();
             if (statusCode != 200) {
@@ -30,7 +30,7 @@ public class ClaimComplianceProviderService {
 
     private static @NotNull StringBuilder readResponse(final HttpURLConnection conn) throws IOException {
         final StringBuilder response = new StringBuilder();
-        try (final BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
             String responseLine;
             while ((responseLine = br.readLine()) != null) {
                 response.append(responseLine.trim());
@@ -39,7 +39,7 @@ public class ClaimComplianceProviderService {
         return response;
     }
 
-    private static @NotNull HttpURLConnection getHttpURLConnection(final String claimComplianceServiceEndpoint, final String claims, final String participantCredentials) throws IOException {
+    private static @NotNull HttpURLConnection getHttpUrlConnection(final String claimComplianceServiceEndpoint, final String claims, final String participantCredentials) throws IOException {
         final URL url = new URL(claimComplianceServiceEndpoint);
         final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
@@ -49,7 +49,7 @@ public class ClaimComplianceProviderService {
 
         final String jsonInputString = String.format("{\"claims\": %s, \"verifiableCredentials\": %s}", claims, participantCredentials);
 
-        try(final OutputStream os = conn.getOutputStream()) {
+        try (OutputStream os = conn.getOutputStream()) {
             final byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
             os.write(input, 0, input.length);
         }

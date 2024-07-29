@@ -20,7 +20,9 @@ import org.eclipse.edc.spi.types.domain.asset.Asset;
 
 import java.util.Base64;
 
-import static berlin.tu.ise.extension.blockchain.catalog.listener.Constants.*;
+import static berlin.tu.ise.extension.blockchain.catalog.listener.Constants.CLAIMS_LIST_FIELD_NAME;
+import static berlin.tu.ise.extension.blockchain.catalog.listener.Constants.CLAIM_COMPLIANCE_PROVIDER_RESPONSE_FIELD_NAME;
+import static berlin.tu.ise.extension.blockchain.catalog.listener.Constants.GX_PARTICIPANT_CREDENTIALS_FIELD_NAME;
 import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
 
 /** This class listens for AssetCreated events and sends the asset to the blockchain smart contract service. */
@@ -45,7 +47,8 @@ public class BlockchainAssetCreator implements EventSubscriber {
 
     private final BlockchainSmartContractService blockchainSmartContractService;
 
-    public BlockchainAssetCreator(Monitor monitor, AssetIndex assetIndex, AssetService assetService, String edcInterfaceUrl, String providerUrl, AssetApiController assetApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
+    public BlockchainAssetCreator(Monitor monitor, AssetIndex assetIndex, AssetService assetService, String edcInterfaceUrl,
+                                  String providerUrl, AssetApiController assetApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService) {
         this.monitor = monitor;
         this.assetIndex = assetIndex;
         this.assetService = assetService;
@@ -56,7 +59,8 @@ public class BlockchainAssetCreator implements EventSubscriber {
         this.blockchainSmartContractService = blockchainSmartContractService;
     }
 
-    public BlockchainAssetCreator(Monitor monitor, AssetIndex assetIndex, AssetService assetService, String edcInterfaceUrl, String providerUrl, AssetApiController assetApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService, String claimComplianceProviderEndpoint) {
+    public BlockchainAssetCreator(Monitor monitor, AssetIndex assetIndex, AssetService assetService, String edcInterfaceUrl,
+                                  String providerUrl, AssetApiController assetApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService, String claimComplianceProviderEndpoint) {
         this(monitor, assetIndex, assetService, edcInterfaceUrl, providerUrl, assetApiController, jsonLd, blockchainSmartContractService);
         this.claimComplianceProviderEndpoint = claimComplianceProviderEndpoint;
     }
@@ -134,7 +138,7 @@ public class BlockchainAssetCreator implements EventSubscriber {
         return updatedAsset.getContent();
     }
 
-    private String callComplianceProvider(final String decodedClaimsList, final String decodedGxParticipantCredentials) throws CcpRequestException{
+    private String callComplianceProvider(final String decodedClaimsList, final String decodedGxParticipantCredentials) throws CcpRequestException {
         return ClaimComplianceProviderService.callClaimComplianceProvider(this.claimComplianceProviderEndpoint,
                 decodedClaimsList, decodedGxParticipantCredentials, this.monitor);
     }

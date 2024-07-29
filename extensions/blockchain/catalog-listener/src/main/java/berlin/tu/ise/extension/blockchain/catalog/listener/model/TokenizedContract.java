@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.json.JsonObject;
 
 public class TokenizedContract {
-    @SuppressWarnings("CheckStyle")
+
     String token_id;
     String name;
     String decimals;

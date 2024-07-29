@@ -1,12 +1,8 @@
 package berlin.tu.ise.extension.blockchain.logger.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
-import java.util.List;
 
 public class TransferProcessEventLog {
     public String assetId;

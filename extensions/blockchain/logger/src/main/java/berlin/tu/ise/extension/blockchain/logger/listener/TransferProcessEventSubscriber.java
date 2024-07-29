@@ -1,14 +1,12 @@
 package berlin.tu.ise.extension.blockchain.logger.listener;
 
-import berlin.tu.ise.extension.blockchain.logger.model.*;
+import berlin.tu.ise.extension.blockchain.logger.model.ReturnOperationObject;
+import berlin.tu.ise.extension.blockchain.logger.model.TransferProcessEventLog;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.offer.store.ContractDefinitionStore;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
-import org.eclipse.edc.connector.transfer.spi.observe.TransferProcessListener;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
@@ -18,15 +16,11 @@ import org.eclipse.edc.spi.event.EventSubscriber;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class TransferProcessEventSubscriber implements EventSubscriber {
@@ -42,6 +36,7 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
     private String edcInterfaceUrl;
 
     private String ownConnectorId;
+
     public TransferProcessEventSubscriber(Monitor monitor, TransferProcessStore transferProcessStore, ContractDefinitionStore contractDefinitionStore, ContractNegotiationStore contractNegotiationStore, String ownConnectorId, String edcInterfaceUrl) {
         this.monitor = monitor;
         this.transferProcessStore = transferProcessStore;
@@ -118,9 +113,9 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
         monitor.debug("[TransferProcessEventSubscriber] Sending data to Smart Contract, this may take some time ...");
         String returnJson;
         ReturnOperationObject returnObject = null;
-        try{
+        try {
             URL url = new URL(smartContractUrl + "/transfer/add");
-            HttpURLConnection http = (HttpURLConnection)url.openConnection();
+            HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod("POST");
             http.setDoOutput(true);
             http.setRequestProperty("Content-Type", "application/json");
@@ -145,77 +140,10 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
 
             System.out.println(http.getResponseCode() + " " + http.getResponseMessage());
             http.disconnect();
-        } catch(Exception e) {
+        } catch (Exception e) {
             monitor.severe(e.toString());
         }
 
         return returnObject;
     }
-
-
-/*
-    public static List<ContractOfferDto> getAllContractDefinitionsFromSmartContract(String edcInterfaceUrl) {
-        ContractOfferDto contractOfferDto = null;
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        List<TokenizedContract> tokenziedContractList;
-        List<ContractOfferDto> contractOfferDtoList = new ArrayList<>();
-
-        HttpURLConnection c = null;
-        try {
-            URL u = new URL(edcInterfaceUrl + "/all/contract");
-            c = (HttpURLConnection) u.openConnection();
-            c.setRequestMethod("GET");
-            c.setRequestProperty("Content-length", "0");
-            c.setUseCaches(false);
-            c.setAllowUserInteraction(false);
-            c.connect();
-            int status = c.getResponseCode();
-
-            switch (status) {
-                case 200:
-                case 201:
-                    BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line).append("\n");
-                    }
-                    br.close();
-
-                    System.out.println(sb);
-
-                    tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<>() {
-                    });
-
-
-                    for (TokenizedContract tokenizedContract: tokenziedContractList) {
-                        if(tokenizedContract != null) {
-                            contractOfferDtoList.add(tokenizedContract.getTokenData());
-                        }
-
-                    }
-
-                    return contractOfferDtoList;
-            }
-
-
-        } catch (MalformedURLException ex) {
-            System.out.println(ex);
-        } catch (IOException ex) {
-            System.out.println(ex);
-        } finally {
-            if (c != null) {
-                try {
-                    c.disconnect();
-                } catch (Exception ex) {
-                    System.out.println(ex);
-                }
-            }
-        }
-        return null;
-    }
-    */
 }
-// TransferProcessCancelled
