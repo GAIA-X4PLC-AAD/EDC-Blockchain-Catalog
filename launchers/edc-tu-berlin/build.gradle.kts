@@ -47,7 +47,7 @@ dependencies {
     implementation(libs.edc.dsp)
     implementation(libs.edc.vault.filesystem)
     //implementation(libs.edc.iam.mock)
-    implementation(libs.edc.iam.oauth2)
+    //implementation(libs.edc.iam.oauth2)
     implementation(libs.edc.management.api)
     implementation(libs.edc.transfer.data.plane)
 
@@ -72,6 +72,9 @@ dependencies {
     //runtimeOnly(libs.edc.monitor.jdk.logger)
 
     implementation(project(":extensions:helper"))
+    implementation(project(":external:oauth2:oauth2-service"))
+
+
 }
 
 application {

@@ -13,6 +13,7 @@ restAssured = "5.3.1"
 rsApi = "3.1.0"
 shadow = "7.1.2"
 postgres = "42.6.0"
+nimbus = "9.31"
 
 
 [libraries]
@@ -52,7 +53,10 @@ edc-control-plane-store-sql-transferProcess = { module = "org.eclipse.edc:transf
 edc-transaction-local = { module = "org.eclipse.edc:transaction-local",  version.ref = "edc" }
 edc-sql-pool = { module = "org.eclipse.edc:sql-pool-apache-commons", version.ref = "edc" }
 edc-spi-fcc = { module = "org.eclipse.edc:federated-catalog-spi", version.ref = "edc" }
+edc-spi-oauth2 = { module = "org.eclipse.edc:oauth2-spi", version.ref = "edc" }
+edc-spi-http = { module = "org.eclipse.edc:http-spi", version.ref = "edc" }
 edc-spi-web = { module = "org.eclipse.edc:web-spi", version.ref = "edc" }
+edc-jwt-core = { module = "org.eclipse.edc:jwt-core", version.ref = "edc" }
 edc-junit = { module = "org.eclipse.edc:junit", version.ref = "edc" }
 edc-management-api = { module = "org.eclipse.edc:management-api", version.ref = "edc" }
 edc-micrometer-core = { module = "org.eclipse.edc:micrometer-core", version.ref = "edc" }
@@ -76,6 +80,7 @@ opentelemetry-annotations = { module = "io.opentelemetry:opentelemetry-extension
 opentelemetry = "io.opentelemetry.javaagent:opentelemetry-javaagent:2.0.0"
 opentelemetry-exporter-jaeger = { module = "io.opentelemetry:opentelemetry-exporter-jaeger", version = "1.34.1" }
 restAssured = { module = "io.rest-assured:rest-assured", version.ref = "restAssured" }
+nimbus-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus" }
 
 
 postgres = { module = "org.postgresql:postgresql", version.ref = "postgres" }
