@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
@@ -19,6 +20,8 @@ import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
 import org.eclipse.edc.validator.spi.JsonObjectValidatorRegistry;
+import org.eclipse.edc.validator.spi.ValidationResult;
+import org.eclipse.edc.validator.spi.Violation;
 import org.eclipse.edc.web.spi.exception.InvalidRequestException;
 import org.eclipse.edc.web.spi.exception.ValidationFailureException;
 
@@ -111,53 +114,6 @@ public class BlockchainSmartContractService {
         return returnObject;
     }
 
-
-
-    public Asset getAssetWithIdFromSmartContract(String id, String edcInterfaceUrl) {
-        Asset asset = null;
-        ObjectMapper mapper = new ObjectMapper();
-
-        HttpURLConnection c = null;
-        try {
-            URL u = new URL(edcInterfaceUrl + "/asset/" + id);
-            c = (HttpURLConnection) u.openConnection();
-            c.setRequestMethod("GET");
-            c.setRequestProperty("Content-length", "0");
-            c.setUseCaches(false);
-            c.setAllowUserInteraction(false);
-            c.connect();
-            int status = c.getResponseCode();
-
-            switch (status) {
-                case 200:
-                case 201:
-                    BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line).append("\n");
-                    }
-                    br.close();
-
-                    return mapper.readValue(sb.toString(), TokenziedAsset.class).getTokenDataAsAsset();
-                default:
-                    return null;
-            }
-
-        } catch (IOException ex) {
-            System.out.println(ex);
-        } finally {
-            if (c != null) {
-                try {
-                    c.disconnect();
-                } catch (Exception ex) {
-                    System.out.println(ex);
-                }
-            }
-        }
-        return null;
-    }
-
     /** Get all contract definitions from the smart contract.
      *
      * @return List of ContractDefinitionResponseDto
@@ -231,7 +187,7 @@ public class BlockchainSmartContractService {
                                         continue;
                                     }
                                     var jsonContract = jsonLd.expand(tokenizedContract.getTokenData()).getContent();
-                                    monitor.debug("Expanded contract definition: " + jsonContract.toString());
+                                    //monitor.debug("Expanded contract definition: " + jsonContract.toString());
                                     var contract = transformerRegistry.transform(jsonContract, ContractDefinition.class)
                                             .orElseThrow(InvalidRequestException::new);
 
@@ -388,53 +344,16 @@ public class BlockchainSmartContractService {
         return null;
     }
 
-    /*
-    public static PolicyDefinition getPolicyWithIdFromSmartContract(String id, String edcInterfaceUrl) {
-        PolicyDefinition policy = null;
-        ObjectMapper mapper = new ObjectMapper();
-
-        HttpURLConnection c = null;
-        try {
-            URL u = new URL(edcInterfaceUrl + "/policy/"+id);
-            c = (HttpURLConnection) u.openConnection();
-            c.setRequestMethod("GET");
-            c.setRequestProperty("Content-length", "0");
-            c.setUseCaches(false);
-            c.setAllowUserInteraction(false);
-            c.connect();
-            int status = c.getResponseCode();
-
-            switch (status) {
-                case 200:
-                case 201:
-                    BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line).append("\n");
-                    }
-                    br.close();
-
-                    return mapper.readValue(sb.toString(), TokenizedPolicyDefinition.class).getTokenData();
-            }
-
-        } catch (MalformedURLException ex) {
-            System.out.println(ex);
-        } catch (IOException ex) {
-            System.out.println(ex);
-        } finally {
-            if (c != null) {
-                try {
-                    c.disconnect();
-                } catch (Exception ex) {
-                    System.out.println(ex);
-                }
-            }
+    private ValidationResult isJsonObjectAnValidAsset(JsonObject assetAsJson) {
+        if (!assetAsJson.containsKey("@id")) {
+            monitor.warning("TokenizedAsset does not contain @id");
+            return ValidationResult.failure(new Violation("TokenizedAsset does not contain @id", "@id", assetAsJson));
         }
-        return null;
-    }
+        monitor.debug("Validating asset: " + assetAsJson.getString("@id"));
+        // It is important to expand the json before validation as otherwise the exact paths in the json does not match the schema
+        return validatorRegistry.validate(Asset.EDC_ASSET_TYPE, assetAsJson);
 
-     */
+    }
 
     /** Get all policy definitions from the smart contract and group them by source.
      *
@@ -459,84 +378,56 @@ public class BlockchainSmartContractService {
             c.connect();
             int status = c.getResponseCode();
 
-            switch (status) {
-                case 200:
-                case 201:
-                    BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line).append("\n");
-                    }
-                    br.close();
-
-                    //monitor.debug("Read from edc-interface: " + sb.toString() + " and going on to map it to a list of TokenizedObjects");
-                    List<TokenziedAsset> assetList = mapper.readValue(sb.toString(), new TypeReference<List<TokenziedAsset>>() {});
-
-                    /*
-                        I first tried to use the normal transformer and validator but it didnt work and i dont know why
-                        So I will just transform them manually, but its the inferior solution
-                     */
-                    monitor.debug("Read " + assetList.size() + " assets from edc-interface and going on to validate them");
-                    int failedCounter = 0;
-                    for (TokenziedAsset tokenziedAsset : assetList) {
-
-                        if (tokenziedAsset == null || tokenziedAsset.tokenData == null) {
-                            monitor.warning("TokenizedAsset is null? IPFS file to new?");
-                            continue;
-                        }
-                        if (!tokenziedAsset.tokenData.containsKey("@id")) {
-                            monitor.debug("TokenizedAsset does not contain @id");
-                            continue;
-                        }
-                        if (!tokenziedAsset.tokenData.containsKey("@context")) {
-                            monitor.debug("TokenziedAsset " + tokenziedAsset.tokenData.getString("@id") + " does not contain @context - Skipping");
-                            continue;
-                        }
-                        /*
-                        if(!tokenziedAsset.getTokenData().containsKey("@id")) {
-                            monitor.warning("TokenizedAsset does not contain @id");
-                            continue;
-                        }
-                        monitor.debug("Validating asset: " + tokenziedAsset.getTokenData());
-                        try {
-                            validatorRegistry.validate(EDC_ASSET_TYPE, tokenziedAsset.getTokenData()).orElseThrow(ValidationFailureException::new);
-                        } catch (ValidationFailureException vex) {
-                            monitor.warning("Validation failed for asset with message: " + vex.getMessage());
-                            failedCounter++;
-                            continue;
-                        } catch (ClassCastException cce) {
-                            monitor.warning("We ignore this exception as the validator seems to be buggy: " + cce.getMessage());
-                        }
-
-                         */
-                        try {
-                            var asset = transformerRegistry.transform(jsonLd.expand(tokenziedAsset.tokenData).getContent(), Asset.class)
-                                    .orElseThrow(InvalidRequestException::new);
-                            assetResponseList.add(asset);
-                        } catch (InvalidRequestException irex) {
-                            monitor.warning("Transformation failed for asset " + tokenziedAsset.getTokenData().getString("@id") + " with message: " + irex.getMessage());
-                            failedCounter++;
-                            continue;
-                        }
-                        /*
-                        try {
-                            var asset = tokenziedAsset.getTokenDataAsAsset();
-                            assetResponseList.add(asset);
-                        } catch (IllegalArgumentException iae) {
-                            monitor.warning("Transformation failed for asset with message: " + iae.getMessage());
-                            failedCounter++;
-                            continue;
-                        }*/
-                    }
-
-                    monitor.debug("Validation failed for " + failedCounter + " assets and succeeded for " + assetResponseList.size() + " assets");
-
-                    return assetResponseList;
-                default:
-                    return null;
+            if (status != 200 && status != 201) {
+                monitor.warning("Failed to fetch assets from edc-interface with status code: " + status);
+                return null;
             }
 
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            br.close();
+
+            List<TokenziedAsset> assetList = mapper.readValue(sb.toString(), new TypeReference<>() {
+            });
+
+            monitor.debug("Read " + assetList.size() + " assets from edc-interface and going on to validate them");
+            int failedCounter = 0;
+            for (TokenziedAsset tokenziedAsset : assetList) {
+
+                if (tokenziedAsset == null || tokenziedAsset.getTokenData(jsonLd) == null) {
+                    monitor.warning("TokenizedAsset is null? IPFS file to new?");
+                    failedCounter++;
+                    continue;
+                }
+
+                var assetAsExpandedJson = tokenziedAsset.getTokenData(jsonLd);
+
+                ValidationResult result = isJsonObjectAnValidAsset(assetAsExpandedJson);
+
+                if (result.failed()) {
+                    monitor.warning("Validation failed for asset with message in result: " + result.getFailureDetail());
+                    failedCounter++;
+                    continue;
+                }
+
+                try {
+                    var asset = transformerRegistry.transform(jsonLd.expand(tokenziedAsset.getTokenData(jsonLd)).getContent(), Asset.class)
+                            .orElseThrow(InvalidRequestException::new);
+                    assetResponseList.add(asset);
+                } catch (InvalidRequestException irex) {
+                    monitor.warning("Transformation failed for asset " + tokenziedAsset.getTokenData(jsonLd).getString("@id") + " with message: " + irex.getMessage());
+                    failedCounter++;
+                    continue;
+                }
+
+            }
+
+            monitor.debug("Validation failed for " + failedCounter + " assets and succeeded for " + assetResponseList.size() + " assets");
 
         } catch (MalformedURLException ex) {
             System.out.println(ex);
@@ -551,7 +442,7 @@ public class BlockchainSmartContractService {
                 }
             }
         }
-        return null;
+        return assetResponseList;
 
     }
 
