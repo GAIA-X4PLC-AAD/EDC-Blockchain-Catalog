@@ -8,8 +8,6 @@ import berlin.tu.ise.extension.blockchain.catalog.listener.model.TokenziedAsset;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.json.Json;
-import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractOfferMessage;
@@ -467,82 +465,74 @@ public class BlockchainSmartContractService {
             c.connect();
             int status = c.getResponseCode();
 
-            switch (status) {
-                case 200:
-                case 201:
-                    BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line + "\n");
-                    }
-                    br.close();
-
-                    tokenizedPolicyDefinitionList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedPolicyDefinition>>(){});
-                    monitor.debug("Read policies from edc-interface: " + tokenizedPolicyDefinitionList.size() + " policies and going validate them");
-                    //monitor.debug("Read policies from edc-interface: " + sb.toString());
-                    for (TokenizedPolicyDefinition tokenizedPolicyDefinition : tokenizedPolicyDefinitionList) {
-                        if (tokenizedPolicyDefinition != null) {
-                            monitor.debug("Validating policy definition: " + tokenizedPolicyDefinition.getTokenData());
-                        }
-                        if (tokenizedPolicyDefinition != null && tokenizedPolicyDefinition.getTokenData() != null &&
-                                tokenizedPolicyDefinition.getTokenData().containsKey("@id")) {
-                            if (!tokenizedPolicyDefinition.getTokenData().containsKey("@context")) {
-                                monitor.warning("TokenizedPolicyDefinition " + tokenizedPolicyDefinition.getTokenData().getString("@id") + " does not contain @context - Skipping");
-                                continue;
-                            }
-                            try {
-                                monitor.debug("Going to validate and transform policy definition: " + tokenizedPolicyDefinition.getTokenData().getString("@id"));
-                                var preTransformedPolicyDefinition = tokenizedPolicyDefinition.getTokenData();
-
-
-                                JsonValue policyNode = preTransformedPolicyDefinition.get("edc:policy");
-                                if (policyNode.getValueType() == JsonValue.ValueType.OBJECT) {
-                                    JsonArray policyArray = Json.createArrayBuilder().add(policyNode).build();
-                                    preTransformedPolicyDefinition = Json.createObjectBuilder(preTransformedPolicyDefinition)
-                                            .remove("edc:policy")
-                                            .add("edc:policy", policyArray)
-                                            .build();
-                                }
-
-                                var expandedTokenizedPolicyDefinition = jsonLd.expand(preTransformedPolicyDefinition).getContent();
-                                validatorRegistry.validate(PolicyDefinition.EDC_POLICY_DEFINITION_TYPE, expandedTokenizedPolicyDefinition).orElseThrow(ValidationFailureException::new);
-
-                                var policyDefinition = transformerRegistry.transform(expandedTokenizedPolicyDefinition, PolicyDefinition.class)
-                                        .orElseThrow(InvalidRequestException::new);
-                                policyDefinitionList.add(policyDefinition);
-                            } catch (ValidationFailureException vex) {
-                                monitor.warning("Validation failed for policy definition with message: " + vex.getMessage());
-                                continue;
-                            } catch (InvalidRequestException irex) {
-                                monitor.warning("Transformation failed for policy definition with message: " + irex.getMessage());
-                                continue;
-                            }
-                        } else {
-                            monitor.debug("TokenizedPolicyDefinition is null or does not contain @id");
-                        }
-
-                    }
-                    monitor.debug("Read " + policyDefinitionList.size() + " policy definitions from edc-interface");
-                    return policyDefinitionList;
-                default:
-                    return null;
+            if (status != 200 && status != 201) {
+                monitor.warning("Failed to fetch policies from edc-interface with status code: " + status);
+                return null;
             }
 
-        } catch (MalformedURLException ex) {
-            System.out.println(ex);
+            BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line + "\n");
+            }
+            br.close();
+
+            tokenizedPolicyDefinitionList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedPolicyDefinition>>(){});
+            monitor.debug("Read policies from edc-interface: " + tokenizedPolicyDefinitionList.size() + " policies and going validate them");
+            //monitor.debug("Read policies from edc-interface: " + sb.toString());
+            for (TokenizedPolicyDefinition tokenizedPolicyDefinition : tokenizedPolicyDefinitionList) {
+                if (tokenizedPolicyDefinition == null) {
+                    monitor.warning("TokenizedPolicyDefinition is null");
+                    continue;
+                }
+                JsonObject policyAsExpandedJson = tokenizedPolicyDefinition.getTokenData(jsonLd);
+
+                if (policyAsExpandedJson == null) {
+                    monitor.warning("TokenizedPolicyDefinition does not contain tokenData");
+                    continue;
+                }
+
+                if (policyAsExpandedJson.getString("@id") == null) {
+                    monitor.warning("TokenizedPolicyDefinition does not contain @id");
+                    continue;
+                }
+                monitor.debug("Validating policy definition: " + policyAsExpandedJson.getString("@id"));
+
+                ValidationResult result = validatorRegistry.validate(PolicyDefinition.EDC_POLICY_DEFINITION_TYPE, policyAsExpandedJson);
+
+                if (result.failed()) {
+                    monitor.warning("Validation failed for policy definition with message: " + result.getFailureDetail());
+                    continue;
+                }
+
+                try {
+                    monitor.debug("Transforming policy definition: " + policyAsExpandedJson.getString("@id"));
+
+                    var policyDefinition = transformerRegistry.transform(policyAsExpandedJson, PolicyDefinition.class)
+                            .orElseThrow(InvalidRequestException::new);
+                    policyDefinitionList.add(policyDefinition);
+                } catch (ValidationFailureException vex) {
+                    monitor.warning("Validation failed for policy definition with message: " + vex.getMessage());
+                    continue;
+                } catch (InvalidRequestException irex) {
+                    monitor.warning("Transformation failed for policy definition with message: " + irex.getMessage());
+                    continue;
+                }
+            }
+            monitor.info("Read " + policyDefinitionList.size() + " policy definitions from edc-interface");
+
         } catch (IOException ex) {
-            System.out.println(ex);
-            ex.printStackTrace();
+            monitor.warning(ex.getMessage());
         } finally {
             if (c != null) {
                 try {
                     c.disconnect();
                 } catch (Exception ex) {
-                    System.out.println(ex);
+                    monitor.warning(ex.getMessage());
                 }
             }
         }
-        return null;
+        return policyDefinitionList;
     }
 }
