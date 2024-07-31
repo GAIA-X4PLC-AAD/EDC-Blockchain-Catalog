@@ -131,23 +131,23 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
         // iterate over all sources of contractDefinitionResponseDtoGroupedBySource and fetch all contracts for each source
 
+        var extendedDebugging = false;
 
-
-        monitor.debug("-------------------------------------------------");
+        if (extendedDebugging) monitor.debug("-------------------------------------------------");
         for (Asset asset : assetList) {
-            monitor.debug("Asset: " + asset.getId());
-            monitor.debug("AssetName: " + asset.getName());
-            monitor.debug("AssetProperties: " + asset.getProperties().toString());
-            monitor.debug("AssetDataAddress: " + asset.getDataAddress().toString());
+            if (extendedDebugging) monitor.debug("Asset: " + asset.getId());
+            if (extendedDebugging) monitor.debug("AssetName: " + asset.getName());
+            if (extendedDebugging) monitor.debug("AssetProperties: " + asset.getProperties().toString());
+            if (extendedDebugging) monitor.debug("AssetDataAddress: " + asset.getDataAddress().toString());
         }
         for (PolicyDefinition policyDefinition : policyDefinitionList) {
-            monitor.debug("Policy: " + policyDefinition.getId());
-            monitor.debug("PolicyTarget: " + policyDefinition.getPolicy().getTarget());
+            if (extendedDebugging) monitor.debug("Policy: " + policyDefinition.getId());
+            if (extendedDebugging) monitor.debug("PolicyTarget: " + policyDefinition.getPolicy().getTarget());
         }
         for (ContractDefinition contractDefinition : contractDefinitionList) {
-            monitor.debug("Contract: " + contractDefinition.getId());
-            monitor.debug("ContractPolicyId: " + contractDefinition.getContractPolicyId());
-            monitor.debug("ContractCriteria: " + contractDefinition.getAccessPolicyId());
+            if (extendedDebugging) monitor.debug("Contract: " + contractDefinition.getId());
+            if (extendedDebugging) monitor.debug("ContractPolicyId: " + contractDefinition.getContractPolicyId());
+            if (extendedDebugging) monitor.debug("ContractCriteria: " + contractDefinition.getAccessPolicyId());
         }
 
 
@@ -155,7 +155,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         assert contractDefinitionList != null;
         for (ContractDefinition contract : contractDefinitionList) {
 
-            monitor.debug(format("[%s] fetching contract %s", this.getClass().getSimpleName(), contract.getId()));
+            if (extendedDebugging) monitor.debug(format("[%s] fetching contract %s", this.getClass().getSimpleName(), contract.getId()));
 
 
             // TODO: Refactor - connect everything together
