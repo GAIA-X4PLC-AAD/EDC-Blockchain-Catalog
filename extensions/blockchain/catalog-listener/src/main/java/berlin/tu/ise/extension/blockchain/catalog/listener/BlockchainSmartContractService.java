@@ -134,99 +134,81 @@ public class BlockchainSmartContractService {
             c.connect();
             int status = c.getResponseCode();
 
-            switch (status) {
-                case 200:
-                case 201:
-                    BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line).append("\n");
-                    }
-                    br.close();
-
-                    monitor.debug(sb.toString());
-
-                    tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedContract>>() {});
-
-                    for (TokenizedContract tokenizedContract : tokenziedContractList) {
-                        if (tokenizedContract != null) {
-
-                            if (tokenizedContract != null && tokenizedContract.getTokenData() != null && tokenizedContract.getTokenData().containsKey("@id")) {
-                                if (!tokenizedContract.getTokenData().containsKey("@context")) {
-                                    monitor.warning("TokenizedContractDefinition " + tokenizedContract.getTokenData().getString("@id") + " does not contain @context - Skipping");
-                                    continue;
-                                }
-                                monitor.debug("Validating contract definition: " + tokenizedContract.getTokenData());
-                                try {
-                                    /*
-                                    var preTransformedPolicyDefinition = tokenizedContract.getTokenData();
-
-                                    JsonValue policyNode = preTransformedPolicyDefinition.get("edc:policy");
-                                    if (policyNode.getValueType() == JsonValue.ValueType.OBJECT) {
-                                        JsonArray policyArray = Json.createArrayBuilder().add(policyNode).build();
-                                        preTransformedPolicyDefinition = Json.createObjectBuilder(preTransformedPolicyDefinition)
-                                                .remove("edc:policy")
-                                                .add("edc:policy", policyArray)
-                                                .build();
-                                    }
-
-                                     */
-
-                                    //validatorRegistry.validate(ContractDefinition.CONTRACT_DEFINITION_TYPE, tokenizedContract.getTokenData()).orElseThrow(ValidationFailureException::new);
-                                    //monitor.debug("Faulty Policy detection: " + tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).getJsonObject("edc:operator").toString());
-
-                                    if (tokenizedContract.getTokenData().containsKey("edc:assetsSelector") &&
-                                            tokenizedContract.getTokenData().get("edc:assetsSelector").getValueType() == JsonValue.ValueType.ARRAY &&
-                                            tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").size() > 0 &&
-                                            tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).containsKey("edc:operator") &&
-                                            tokenizedContract.getTokenData().getJsonArray("edc:assetsSelector").getJsonObject(0).getString("edc:operator").toString().equals("in")) {
-                                        monitor.debug("Contract definition contains 'in' operator instead of '='. Skipping as not supported");
-                                        continue;
-                                    }
-                                    var jsonContract = jsonLd.expand(tokenizedContract.getTokenData()).getContent();
-                                    //monitor.debug("Expanded contract definition: " + jsonContract.toString());
-                                    var contract = transformerRegistry.transform(jsonContract, ContractDefinition.class)
-                                            .orElseThrow(InvalidRequestException::new);
-
-                                    contractOfferDtoList.add(contract);
-
-                                } catch (ValidationFailureException vex) {
-                                    monitor.warning("Validation failed for contract definition with message: " + vex.getMessage());
-                                    continue;
-                                } catch (InvalidRequestException irex) {
-                                    monitor.warning("Transformation failed for contract definition with message: " + irex.getMessage());
-                                    continue;
-                                }
-                            } else {
-                                monitor.warning("TokenizedContractDefinition is null or does not contain @id");
-                            }
-
-
-                        }
-
-                    }
-                    monitor.debug("Validation failed for " + (tokenziedContractList.size() - contractOfferDtoList.size()) + " contract definitions and succeeded for " + contractOfferDtoList.size() + " contract definitions");
-                    return contractOfferDtoList;
-                default:
-                    return null;
+            if (status != 200 && status != 201) {
+                monitor.warning("Failed to fetch contracts from edc-interface with status code: " + status);
+                return null;
             }
 
 
-        } catch (MalformedURLException ex) {
-            System.out.println(ex);
+            BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            br.close();
+
+            tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedContract>>() {});
+
+            for (TokenizedContract tokenizedContract : tokenziedContractList) {
+                if (tokenizedContract == null) {
+                    monitor.warning("TokenizedContractDefinition is null");
+                    continue;
+                }
+
+                JsonObject contractAsExpandedJson = jsonLd.expand(tokenizedContract.getTokenData()).getContent();
+
+                if (contractAsExpandedJson == null) {
+                    monitor.warning("TokenizedContractDefinition does not contain tokenData");
+                    continue;
+                }
+
+                if (contractAsExpandedJson.getString("@id") == null) {
+                    monitor.warning("TokenizedContractDefinition does not contain @id");
+                    continue;
+                }
+
+                monitor.debug("Validating contract definition: " + contractAsExpandedJson.getString("@id"));
+                try {
+
+
+                    ValidationResult result = validatorRegistry.validate(ContractDefinition.CONTRACT_DEFINITION_TYPE, contractAsExpandedJson);
+
+                    if (result.failed()) {
+                        monitor.warning("Validation failed for contract definition with message: " + result.getFailureDetail());
+                        continue;
+                    }
+
+
+                    var contract = transformerRegistry.transform(contractAsExpandedJson, ContractDefinition.class)
+                            .orElseThrow(InvalidRequestException::new);
+
+                    contractOfferDtoList.add(contract);
+
+                } catch (ValidationFailureException vex) {
+                    monitor.warning("Validation failed for contract definition with message: " + vex.getMessage());
+                    continue;
+                } catch (InvalidRequestException irex) {
+                    monitor.warning("Transformation failed for contract definition with message: " + irex.getMessage());
+                    continue;
+                }
+
+            }
+            monitor.info("Validation failed for " + (tokenziedContractList.size() - contractOfferDtoList.size()) + " contract definitions and succeeded for " + contractOfferDtoList.size() + " contract definitions");
+
+
         } catch (IOException ex) {
-            System.out.println(ex);
+            monitor.warning(ex.getMessage());
         } finally {
             if (c != null) {
                 try {
                     c.disconnect();
                 } catch (Exception ex) {
-                    System.out.println(ex);
+                    monitor.warning(ex.getMessage());
                 }
             }
         }
-        return null;
+        return contractOfferDtoList;
     }
 
 
@@ -425,18 +407,16 @@ public class BlockchainSmartContractService {
 
             }
 
-            monitor.debug("Validation failed for " + failedCounter + " assets and succeeded for " + assetResponseList.size() + " assets");
+            monitor.info("Validation failed for " + failedCounter + " assets and succeeded for " + assetResponseList.size() + " assets");
 
-        } catch (MalformedURLException ex) {
-            System.out.println(ex);
         } catch (IOException ex) {
-            System.out.println(ex);
+            monitor.warning(ex.getMessage());
         } finally {
             if (c != null) {
                 try {
                     c.disconnect();
                 } catch (Exception ex) {
-                    System.out.println(ex);
+                    monitor.warning(ex.getMessage());
                 }
             }
         }
@@ -474,7 +454,7 @@ public class BlockchainSmartContractService {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) {
-                sb.append(line + "\n");
+                sb.append(line).append("\n");
             }
             br.close();
 
