@@ -9,6 +9,6 @@ ENV JAR_NAME "edc-tu-berlin.jar"
 ENV JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
 COPY --from=build ./home/gradle/src/launchers/azure/build/libs/$JAR_NAME .
-COPY resources/logging/logging.properties .
+COPY ./home/gradle/src/resources/logging/logging.properties .
 
 ENTRYPOINT [ "sh", "-c", "exec java $JVM_ARGS -Djava.util.logging.config.file=logging.properties -jar $JAR_NAME"]
