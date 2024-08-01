@@ -10,7 +10,7 @@ ENV JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,add
 
 COPY --from=build ./home/gradle/src/launchers/azure/build/libs/$JAR_NAME .
 
-RUN find / -name "logging.properties"
+RUN find / -name "logging.properties" -print
 
 COPY ./home/gradle/src/resources/logging/logging.properties .
 
