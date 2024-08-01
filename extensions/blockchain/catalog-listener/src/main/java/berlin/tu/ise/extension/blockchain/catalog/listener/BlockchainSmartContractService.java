@@ -358,7 +358,7 @@ public class BlockchainSmartContractService {
                                     continue;
                                 }
                             } else {
-                                monitor.warning("TokenizedPolicyDefinition is null or does not contain @id");
+                                monitor.debug("TokenizedPolicyDefinition is null or does not contain @id");
                             }
 
 
@@ -486,11 +486,11 @@ public class BlockchainSmartContractService {
                             continue;
                         }
                         if (!tokenziedAsset.tokenData.containsKey("@id")) {
-                            monitor.warning("TokenizedAsset does not contain @id");
+                            monitor.debug("TokenizedAsset does not contain @id");
                             continue;
                         }
                         if (!tokenziedAsset.tokenData.containsKey("@context")) {
-                            monitor.warning("TokenziedAsset " + tokenziedAsset.tokenData.getString("@id") + " does not contain @context - Skipping");
+                            monitor.debug("TokenziedAsset " + tokenziedAsset.tokenData.getString("@id") + " does not contain @context - Skipping");
                             continue;
                         }
                         /*
@@ -628,7 +628,7 @@ public class BlockchainSmartContractService {
                                 continue;
                             }
                         } else {
-                            monitor.warning("TokenizedPolicyDefinition is null or does not contain @id");
+                            monitor.debug("TokenizedPolicyDefinition is null or does not contain @id");
                         }
 
                     }
