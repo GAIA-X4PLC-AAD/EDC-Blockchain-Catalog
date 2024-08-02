@@ -191,7 +191,7 @@ public class BlockchainSmartContractService {
                     }
                     br.close();
 
-                    System.out.println(sb);
+                    monitor.debug(sb.toString());
 
                     tokenziedContractList = mapper.readValue(sb.toString(), new TypeReference<List<TokenizedContract>>() {});
 
