@@ -73,7 +73,6 @@ public class BlockchainAssetCreator implements EventSubscriber {
         // the event only returns the asset id, so we need to get the asset from the index
         AssetCreated assetCreated = (AssetCreated) payload;
         String assetId = assetCreated.getAssetId();
-        monitor.info("Monitor class: " + monitor.getClass().getSimpleName());
         monitor.debug("AssetCreated event triggered for assetId: " + assetId);
         Asset asset = assetIndex.findById(assetId);
         String jsonString = transformToJson(asset);
