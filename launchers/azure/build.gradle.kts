@@ -56,6 +56,8 @@ dependencies {
     implementation(libs.edc.data.plane.api)
     implementation(libs.edc.data.plane.core)
     implementation(libs.edc.data.plane.http)
+
+    implementation(libs.edc.monitor.jdk.logger)
 }
 
 application {

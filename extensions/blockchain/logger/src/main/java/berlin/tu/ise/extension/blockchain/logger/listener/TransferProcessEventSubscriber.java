@@ -133,7 +133,7 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
             }
 
             while ((returnJson = br.readLine()) != null) {
-                System.out.println(returnJson);
+                monitor.debug(returnJson);
                 ObjectMapper mapper = new ObjectMapper();
                 returnObject = mapper.readValue(returnJson, ReturnOperationObject.class);
             }
