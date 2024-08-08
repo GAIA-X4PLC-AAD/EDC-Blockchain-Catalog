@@ -18,6 +18,10 @@ public class CcpCallingService {
 
     public CcpCallingService(String url) {
         final OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
+        if (url != null && !url.endsWith("/")) {
+            // Add trailing slash if not present since retrofit requires it
+            url = url + "/";
+        }
         final Retrofit retrofit = new Retrofit.Builder()
                 .client(okHttpClient)
                 .baseUrl(url)
