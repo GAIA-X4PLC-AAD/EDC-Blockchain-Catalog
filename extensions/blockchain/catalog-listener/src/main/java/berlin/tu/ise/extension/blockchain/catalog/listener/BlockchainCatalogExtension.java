@@ -112,10 +112,10 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     @Inject
     private JsonLd jsonLd;
 
-    @Inject
-    private CcpIntegrationForAssetService ccpIntegrationForAssetService;
-    @Inject
-    private CcpIntegrationForContractDefinitionService ccpIntegrationForContractDefinitionService;
+//    @Inject
+//    private CcpIntegrationForAssetService ccpIntegrationForAssetService;
+//    @Inject
+//    private CcpIntegrationForContractDefinitionService ccpIntegrationForContractDefinitionService;
 
     @Override
     public String name() {
@@ -126,6 +126,11 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
         this.context = context;
+
+        // TODO: remove those lines as soon as dependency injection is working
+        final var ccpIntegrationForAssetService = new CcpIntegrationForAssetService(monitor);
+        final var ccpIntegrationForContractDefinitionService = new CcpIntegrationForContractDefinitionService(monitor);
+
 
         registerTransformers();
 
