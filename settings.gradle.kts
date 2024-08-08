@@ -28,8 +28,6 @@ dependencyResolutionManagement {
     }
 }
 
-
-
 // launchers ---------------------------------------------------------------------------------------
 include("launchers:edc-tu-berlin")
 include("launchers:push-http-backend")
@@ -42,6 +40,7 @@ include("extensions:blockchain:blockchain-catalog-api")
 include("extensions:blockchain:catalog-listener")
 include("extensions:blockchain:logger")
 
-
 include("extensions:transfer:http-push:provider-push-http-backend-service")
+
+include("extensions:claim-compliance-provider-integration")
 
