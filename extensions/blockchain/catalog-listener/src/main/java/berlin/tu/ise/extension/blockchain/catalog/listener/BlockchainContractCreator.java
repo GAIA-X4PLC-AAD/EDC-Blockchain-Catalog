@@ -1,7 +1,8 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener;
 
 import berlin.tu.ise.extension.blockchain.catalog.listener.model.ReturnObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.msg.plcaad.edc.ccp.contractdefinition.CcpIntegrationForContractDefinitionService;
+import com.msg.plcaad.edc.ccp.exception.CcpException;
 import org.eclipse.edc.connector.api.management.contractdefinition.ContractDefinitionApiController;
 import org.eclipse.edc.connector.contract.spi.event.contractdefinition.ContractDefinitionCreated;
 import org.eclipse.edc.connector.contract.spi.types.offer.ContractDefinition;
@@ -12,12 +13,6 @@ import org.eclipse.edc.spi.event.Event;
 import org.eclipse.edc.spi.event.EventEnvelope;
 import org.eclipse.edc.spi.event.EventSubscriber;
 import org.eclipse.edc.spi.monitor.Monitor;
-import org.eclipse.edc.spi.types.domain.asset.Asset;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
 
 public class BlockchainContractCreator implements EventSubscriber {
 
@@ -36,9 +31,10 @@ public class BlockchainContractCreator implements EventSubscriber {
 
     private final JsonLd jsonLd;
     private final BlockchainSmartContractService blockchainSmartContractService;
+    private final CcpIntegrationForContractDefinitionService ccpIntegrationForContractDefinitionService;
 
     public BlockchainContractCreator(Monitor monitor, ContractDefinitionService contractDefinitionService, String idsWebhookAddress, String edcInterfaceUrl, AssetIndex assetIndex,
-                                     ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService, String claimComplianceProviderEndpoint) {
+                                     ContractDefinitionApiController contractDefinitionApiController, JsonLd jsonLd, BlockchainSmartContractService blockchainSmartContractService, final CcpIntegrationForContractDefinitionService ccpIntegrationForContractDefinitionService, String claimComplianceProviderEndpoint) {
         this.monitor = monitor;
         this.idsWebhookAddress = idsWebhookAddress;
         this.contractDefinitionService = contractDefinitionService;
@@ -47,6 +43,7 @@ public class BlockchainContractCreator implements EventSubscriber {
         this.contractDefinitionApiController = contractDefinitionApiController;
         this.jsonLd = jsonLd;
         this.blockchainSmartContractService = blockchainSmartContractService;
+        this.ccpIntegrationForContractDefinitionService = ccpIntegrationForContractDefinitionService;
         this.claimComplianceProviderEndpoint = claimComplianceProviderEndpoint;
     }
 
@@ -79,8 +76,15 @@ public class BlockchainContractCreator implements EventSubscriber {
                     "}";
         } else {
             monitor.debug("CCP-URL is configured. Get VPs from Asset(s).");
-            verifiablePresentationsOfContract = getVerifiablePresentationsFromAssets(contractDefinition);
+            try {
+                verifiablePresentationsOfContract = ccpIntegrationForContractDefinitionService.getVerifiablePresentationsFromAssets(contractDefinition, assetIndex);
+            } catch (CcpException e) {
+                // see issue https://github.com/GAIA-X4PLC-AAD/EDC-Blockchain-Catalog/issues/13 for proper exception handling.
+                monitor.warning("Something went wrong during the CCP-Response extraction of the Contract with id " + contractDefinition.getId(), e);
+                verifiablePresentationsOfContract = null;
+            }
             if (verifiablePresentationsOfContract == null) {
+                // see issue https://github.com/GAIA-X4PLC-AAD/EDC-Blockchain-Catalog/issues/7 to remove this legacy handling.
                 monitor.info("No CCP-Responses found for Contract with id " + contractDefinition.getId() + ". Creating new VP the legacy way.");
                 verifiablePresentationsOfContract = BlockchainVerifiablePresentationCreator.createVerifiablePresentation(contractDefinition, "", idsWebhookAddress, edcInterfaceUrl, assetIndex, monitor);
                 combinedVpAndContract = "{\n" +
@@ -102,47 +106,7 @@ public class BlockchainContractCreator implements EventSubscriber {
             monitor.warning("Something went wrong during the Blockchain Contract Definition creation of the Contract with id " + contractDefinition.getId());
             return;
         }
-
         monitor.info(String.format("[%s] Created Contract %s and minted it successfully with the hash: %s\n", this.getClass().getSimpleName(), contractDefinition.getId(), returnObject.getHash()));
-
-    }
-
-    private String getVerifiablePresentationsFromAssets(final ContractDefinition contractDefinition) {
-        final List<String> ccpResponses = new ArrayList<>();
-        contractDefinition.getAssetsSelector().forEach(criterion -> {
-            final Object operandLeft = criterion.getOperandLeft();
-            if (operandLeft.equals(EDC_NAMESPACE + "id")) {
-                final Object operandRight = criterion.getOperandRight();
-                final Asset asset = assetIndex.findById(operandRight.toString());
-                if (asset != null) {
-                    monitor.debug("Asset found: " + asset.getId());
-                    final Object ccpResponse = asset.getProperty(EDC_NAMESPACE + "claimComplianceProviderResponse");
-                    if (ccpResponse == null) {
-                        monitor.warning("No CCP-Response found for Asset with id " + asset.getId());
-                    } else {
-                        monitor.debug("CCP-Response found for Asset with id " + asset.getId());
-                        ccpResponses.add(ccpResponse.toString());
-                    }
-
-                } else {
-                    monitor.warning("Asset " + operandRight + " not found. Skipping this criterion.");
-                }
-            }
-        });
-        if (ccpResponses.isEmpty()) {
-            return null;
-        }
-        return getJsonArray(ccpResponses);
-    }
-
-    private String getJsonArray(final List<String> ccpResponses) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.writeValueAsString(ccpResponses);
-        } catch (Exception e) {
-            monitor.warning("Failed to convert ccpResponses to JSON: " + e.getMessage());
-            return null;
-        }
     }
 
     private String transformToJson(ContractDefinition contractDefinition) {
@@ -157,6 +121,5 @@ public class BlockchainContractCreator implements EventSubscriber {
         monitor.debug(String.format("[%s] Contract Definition: %s", this.getClass().getSimpleName(), jsonLd.compact(contractDefinitionJson).getContent().toString()));
 
         return jsonLd.compact(contractDefinitionJson).getContent().toString();
-
     }
 }
