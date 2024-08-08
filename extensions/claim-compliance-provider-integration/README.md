@@ -34,8 +34,52 @@ When a contract definition was created this contract definition should be passed
 ## Integration into the EDC
 
 ### Code
+#### Service injection
+```java
+  @Inject
+  private CcpIntegrationForAssetService ccpIntegrationForAssetService;
+  @Inject
+  private CcpIntegrationForContractDefinitionService ccpIntegrationForContractDefinitionService;
+```
 
+#### Asset creation
+```java
+final Asset asset = assetIndex.findById(assetId);
+final Asset updatedAsset = callClaimComplianceProvider(asset);
+```
+```java
+private Asset callClaimComplianceProvider(final Asset asset) {
+    try {
+        return ccpIntegrationForAssetService.callClaimComplianceProvider(claimComplianceProviderEndpoint, assetService, asset);
+    } catch (CcpException e) {
+        // do proper error handling
+    }
+}
+```
+#### ContractDefinition creation
+```java
+private String retrieveVerifiablePresentationsFromAssets(final ContractDefinition contractDefinition, final AssetIndex assetIndex) {
+    try {
+        return ccpIntegrationForContractDefinitionService.getVerifiablePresentationsFromAssets(contractDefinition, assetIndex);
+    } catch (CcpException e) {
+        // do proper error handling
+    }
+}
+```
 ### Configuration
+Make sure to configure the Claim Compliance Provider endpoint in the application's configuration file.
+```properties
+ccp.interface.url=https://claim-compliance-provider.gxfs.gx4fm.org/v1/send-claims
+```
+Make sure to add a dependency to both `settings.gradle.kts` and `build.gradle.kts`:
+```kotlin
+include("extensions:claim-compliance-provider-integration")
+```
+```kotlin
+dependencies {
+    implementation(project(":extensions:claim-compliance-provider-integration"))
+}
+```
 
 
 

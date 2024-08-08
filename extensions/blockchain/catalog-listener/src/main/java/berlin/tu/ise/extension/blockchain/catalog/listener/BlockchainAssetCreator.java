@@ -85,6 +85,7 @@ public class BlockchainAssetCreator implements EventSubscriber {
         try {
             return ccpIntegrationForAssetService.callClaimComplianceProvider(claimComplianceProviderEndpoint, assetService, asset);
         } catch (CcpException e) {
+            // see issue  https://github.com/GAIA-X4PLC-AAD/EDC-Blockchain-Catalog/issues/13 for proper exception handling.
             this.monitor.severe("Error while processing CCP part", e);
             return asset;
         }

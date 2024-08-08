@@ -79,6 +79,7 @@ public class BlockchainContractCreator implements EventSubscriber {
             try {
                 verifiablePresentationsOfContract = ccpIntegrationForContractDefinitionService.getVerifiablePresentationsFromAssets(contractDefinition, assetIndex);
             } catch (CcpException e) {
+                // see issue https://github.com/GAIA-X4PLC-AAD/EDC-Blockchain-Catalog/issues/13 for proper exception handling.
                 monitor.warning("Something went wrong during the CCP-Response extraction of the Contract with id " + contractDefinition.getId(), e);
                 verifiablePresentationsOfContract = null;
             }
