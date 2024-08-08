@@ -44,6 +44,7 @@ public class CcpIntegrationForAssetService {
      * @throws CcpException If the Claim Compliance Provider endpoint is not set, the claimsList or gxParticipantCredentials are not valid JSON or the asset could not be updated
      */
     public Asset callClaimComplianceProvider(final String claimComplianceProviderEndpoint, final AssetService assetService, final Asset asset) throws CcpException {
+        monitor.info("Calling Claim Compliance Provider");
         if (claimComplianceProviderEndpoint == null || claimComplianceProviderEndpoint.isEmpty()) {
             throw new CcpException("ClaimComplianceProvider endpoint is not set. Please set a valid value.");
         }
