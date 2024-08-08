@@ -15,8 +15,6 @@ dependencies {
     implementation(libs.edc.control.plane.spi)
     implementation(libs.edc.api.core)
     implementation(libs.edc.monitor.jdk.logger)
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.jackson)
 
     // Test dependencies
     testImplementation(libs.mockito.core)

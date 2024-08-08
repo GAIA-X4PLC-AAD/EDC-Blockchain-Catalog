@@ -1,58 +1,69 @@
 package com.msg.plcaad.edc.ccp.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.msg.plcaad.edc.ccp.exception.CcpException;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
 import org.eclipse.edc.spi.monitor.Monitor;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class CcpCallingService {
 
-    private ClaimComplianceServiceApi claimComplianceServiceApi;
-    private Monitor monitor;
+    private final String claimComplianceServiceEndpoint;
+    private final Monitor monitor;
 
     public CcpCallingService(String url, final Monitor monitor) {
+        this.claimComplianceServiceEndpoint = url;
         this.monitor = monitor;
-        final OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
-        if (url != null && !url.endsWith("/")) {
-            // Add trailing slash if not present since retrofit requires it
-            url = url + "/";
-        }
-        final Retrofit retrofit = new Retrofit.Builder()
-                .client(okHttpClient)
-                .baseUrl(url)
-                .addConverterFactory(JacksonConverterFactory.create(new ObjectMapper()))
-                .build();
-        this.claimComplianceServiceApi = retrofit.create(ClaimComplianceServiceApi.class);
-    }
-
-    public CcpCallingService(final String url, final ClaimComplianceServiceApi claimComplianceServiceApi, final Monitor monitor) {
-        this(url, monitor);
-        this.claimComplianceServiceApi = claimComplianceServiceApi;
     }
 
     public String executeClaimComplianceProviderCall(final String claims, final String participantCredentials) throws CcpException {
-        final String jsonInputString = String.format("{\"claims\": %s, \"verifiableCredentials\": %s}", claims, participantCredentials);
-        final RequestBody body = RequestBody.create( MediaType.parse("application/json; charset=utf-8"), jsonInputString);
-        final Call<String> call = claimComplianceServiceApi.callClaimComplianceProvider(body);
-        final Response<String> response;
         try {
-            response = call.execute();
-        } catch (IOException e) {
-            throw new CcpException("IOException occurred", e);
+            final HttpURLConnection conn = getHttpUrlConnection(claims, participantCredentials);
+            final StringBuilder response = readResponse(conn);
+            final int statusCode = conn.getResponseCode();
+            if (statusCode != 200) {
+                this.monitor.severe("Unexpected response status: " + statusCode);
+                this.monitor.severe("Response: " + response);
+                throw new CcpException("Unexpected response status: " + statusCode);
+            }
+            return response.toString();
+        } catch (final IOException ioException) {
+            this.monitor.severe("IOException while calling CCP: " + ioException.getMessage(), ioException);
+            throw new CcpException("IOException while calling CCP.", ioException);
         }
-        if (!response.isSuccessful()) {
-            monitor.severe("Unexpected response status: " + response.code());
-            monitor.severe("Response body: " + response.body());
-            throw new CcpException("Unexpected response status: " + response.code());
+    }
+
+    private @NotNull StringBuilder readResponse(final HttpURLConnection conn) throws IOException {
+        final StringBuilder response = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+            String responseLine;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+            }
         }
-        return response.body();
+        return response;
+    }
+
+    protected @NotNull HttpURLConnection getHttpUrlConnection(final String claims, final String participantCredentials) throws IOException {
+        final URL url = new URL(this.claimComplianceServiceEndpoint);
+        final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json; utf-8");
+        conn.setRequestProperty("Accept", "application/json");
+        conn.setDoOutput(true);
+
+        final String jsonInputString = String.format("{\"claims\": %s, \"verifiableCredentials\": %s}", claims, participantCredentials);
+
+        try (OutputStream os = conn.getOutputStream()) {
+            final byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
+        return conn;
     }
 }

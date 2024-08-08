@@ -77,8 +77,6 @@ opentelemetry-annotations = { module = "io.opentelemetry:opentelemetry-extension
 opentelemetry = "io.opentelemetry.javaagent:opentelemetry-javaagent:2.0.0"
 opentelemetry-exporter-jaeger = { module = "io.opentelemetry:opentelemetry-exporter-jaeger", version = "1.34.1" }
 restAssured = { module = "io.rest-assured:rest-assured", version.ref = "restAssured" }
-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
-retrofit-converter-jackson = { module = "com.squareup.retrofit2:converter-jackson", version.ref = "retrofit" }
 
 postgres = { module = "org.postgresql:postgresql", version.ref = "postgres" }
 
