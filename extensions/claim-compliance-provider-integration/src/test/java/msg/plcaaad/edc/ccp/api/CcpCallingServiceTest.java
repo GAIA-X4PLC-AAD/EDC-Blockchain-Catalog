@@ -5,6 +5,7 @@ import com.msg.plcaad.edc.ccp.api.ClaimComplianceServiceApi;
 import com.msg.plcaad.edc.ccp.exception.CcpException;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import org.eclipse.edc.spi.monitor.Monitor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,13 +25,15 @@ import static org.mockito.Mockito.when;
 class CcpCallingServiceTest {
     @Mock
     private ClaimComplianceServiceApi claimComplianceServiceApi;
+    @Mock
+    private Monitor monitor;
 
     private CcpCallingService ccpCallingService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        this.ccpCallingService = new CcpCallingService("https://example.com", claimComplianceServiceApi);
+        this.ccpCallingService = new CcpCallingService("https://example.com", claimComplianceServiceApi, monitor);
     }
 
     @Test

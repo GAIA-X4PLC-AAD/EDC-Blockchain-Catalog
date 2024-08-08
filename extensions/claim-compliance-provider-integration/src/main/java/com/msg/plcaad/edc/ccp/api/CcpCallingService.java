@@ -5,6 +5,7 @@ import com.msg.plcaad.edc.ccp.exception.CcpException;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
+import org.eclipse.edc.spi.monitor.Monitor;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -15,8 +16,10 @@ import java.io.IOException;
 public class CcpCallingService {
 
     private ClaimComplianceServiceApi claimComplianceServiceApi;
+    private Monitor monitor;
 
-    public CcpCallingService(String url) {
+    public CcpCallingService(String url, final Monitor monitor) {
+        this.monitor = monitor;
         final OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
         if (url != null && !url.endsWith("/")) {
             // Add trailing slash if not present since retrofit requires it
@@ -30,8 +33,8 @@ public class CcpCallingService {
         this.claimComplianceServiceApi = retrofit.create(ClaimComplianceServiceApi.class);
     }
 
-    public CcpCallingService(String url, final ClaimComplianceServiceApi claimComplianceServiceApi) {
-        this(url);
+    public CcpCallingService(final String url, final ClaimComplianceServiceApi claimComplianceServiceApi, final Monitor monitor) {
+        this(url, monitor);
         this.claimComplianceServiceApi = claimComplianceServiceApi;
     }
 
@@ -46,6 +49,8 @@ public class CcpCallingService {
             throw new CcpException("IOException occurred", e);
         }
         if (!response.isSuccessful()) {
+            monitor.severe("Unexpected response status: " + response.code());
+            monitor.severe("Response body: " + response.body());
             throw new CcpException("Unexpected response status: " + response.code());
         }
         return response.body();

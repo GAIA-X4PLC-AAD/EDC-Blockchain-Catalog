@@ -44,7 +44,6 @@ public class CcpIntegrationForAssetService {
      * @throws CcpException If the Claim Compliance Provider endpoint is not set, the claimsList or gxParticipantCredentials are not valid JSON or the asset could not be updated
      */
     public Asset callClaimComplianceProvider(final String claimComplianceProviderEndpoint, final AssetService assetService, final Asset asset) throws CcpException {
-        monitor.info("Calling Claim Compliance Provider");
         if (claimComplianceProviderEndpoint == null || claimComplianceProviderEndpoint.isEmpty()) {
             throw new CcpException("ClaimComplianceProvider endpoint is not set. Please set a valid value.");
         }
@@ -64,7 +63,7 @@ public class CcpIntegrationForAssetService {
 
                 final String claimsListJson = getRawJson(decodedClaimsList);
                 final String gxParticipantCredentialsJson = getRawJson(decodedGxParticipantCredentials);
-                final String response = getCcpCallingService(claimComplianceProviderEndpoint).executeClaimComplianceProviderCall(claimsListJson, gxParticipantCredentialsJson);
+                final String response = getCcpCallingService(claimComplianceProviderEndpoint, monitor).executeClaimComplianceProviderCall(claimsListJson, gxParticipantCredentialsJson);
                 monitor.info("Updating asset with successful ccp response.");
                 return updateAsset(assetService, asset, response);
             } else {
@@ -113,9 +112,9 @@ public class CcpIntegrationForAssetService {
         return node.toString();
     }
 
-    private CcpCallingService getCcpCallingService(final String url) {
+    private CcpCallingService getCcpCallingService(final String url, final Monitor monitor) {
         if (this.ccpCallingService == null) {
-            this.ccpCallingService = new CcpCallingService(url);
+            this.ccpCallingService = new CcpCallingService(url, monitor);
         }
         return this.ccpCallingService;
     }
