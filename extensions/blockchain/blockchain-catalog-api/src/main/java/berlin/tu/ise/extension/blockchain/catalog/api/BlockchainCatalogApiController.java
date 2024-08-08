@@ -155,7 +155,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
         assert contractDefinitionList != null;
         for (ContractDefinition contract : contractDefinitionList) {
 
-            monitor.info(format("[%s] fetching contract %s", this.getClass().getSimpleName(), contract.getId()));
+            monitor.debug(format("[%s] fetching contract %s", this.getClass().getSimpleName(), contract.getId()));
 
 
             // TODO: Refactor - connect everything together
@@ -246,7 +246,7 @@ public class BlockchainCatalogApiController implements BlockchainCatalogApi {
 
 
         if (contractAsset == null || policyDefinition == null) {
-            monitor.severe(String.format("[%s] Not able to find the Asset with id %s or policy with id %s for the contract %s", this.getClass().getSimpleName(), assetId, policyId, contract.getId()));
+            monitor.debug(String.format("[%s] Not able to find the Asset with id %s or policy with id %s for the contract %s", this.getClass().getSimpleName(), assetId, policyId, contract.getId()));
             return null;
         }
 

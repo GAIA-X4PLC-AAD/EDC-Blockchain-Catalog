@@ -48,7 +48,7 @@ public class BlockchainPolicyCreator implements EventSubscriber {
         PolicyDefinition policyDefinition = policyDefinitionService.findById(policyId);
 
         String jsonString = transformToJson(policyDefinition);
-        System.out.println(jsonString);
+        monitor.debug(jsonString);
         ReturnObject returnObject = blockchainSmartContractService.sendToPolicySmartContract(jsonString);
         if (returnObject == null) {
             monitor.warning("Something went wrong during the Blockchain Policy creation of the Policy with id " + policyDefinition.getId());
