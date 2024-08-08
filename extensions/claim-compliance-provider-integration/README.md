@@ -19,7 +19,7 @@ When an asset was created this asset should be passed to the `CcpIntegrationForA
 
 #### Output
 * As a result an updated `Asset` is returned.
-* The `Asset` has an additional property: `org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE` + `claimComplianceProviderResponse` which contains the response of the Claim Compliance Provider as a string.
+* The `Asset` has an additional property: `org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE` + `claimComplianceProviderResponse` which contains the response of the Claim Compliance Provider encoded in `base64`.
 
 ### ContractDefinition
 When a contract definition was created this contract definition should be passed to the `CcpIntegrationForContractDefinitionService`, method `getVerifiablePresentationsFromAssets`.
