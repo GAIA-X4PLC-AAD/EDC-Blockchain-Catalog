@@ -8,7 +8,7 @@ import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 
-@Provides({ CcpIntegrationForAssetService.class })
+@Provides({ CcpIntegrationForAssetService.class, CcpIntegrationForContractDefinitionService.class })
 @Extension(value = CcpIntegrationExtension.NAME)
 public class CcpIntegrationExtension implements ServiceExtension {
     protected static final String NAME = "Claim Compliance Provider Integration";
