@@ -126,6 +126,12 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
         this.context = context;
+
+
+        final var ccpIntegrationForAssetService = new CcpIntegrationForAssetService(monitor);
+        final var ccpIntegrationForContractDefinitionService = new CcpIntegrationForContractDefinitionService(monitor);
+
+
         registerTransformers();
 
         jsonLd.registerNamespace("tuberlin", "https://ise.tu.berlin/edc/v0.0.1/ns/");
