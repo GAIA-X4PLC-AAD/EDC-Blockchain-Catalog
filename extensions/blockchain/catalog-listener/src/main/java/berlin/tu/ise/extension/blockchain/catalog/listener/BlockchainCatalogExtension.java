@@ -1,5 +1,7 @@
 package berlin.tu.ise.extension.blockchain.catalog.listener;
 
+import com.msg.plcaad.edc.ccp.asset.CcpIntegrationForAssetService;
+import com.msg.plcaad.edc.ccp.contractdefinition.CcpIntegrationForContractDefinitionService;
 import jakarta.json.Json;
 import org.eclipse.edc.connector.api.management.asset.v3.AssetApiController;
 import org.eclipse.edc.connector.api.management.asset.validation.AssetValidator;
@@ -110,6 +112,11 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     @Inject
     private JsonLd jsonLd;
 
+    @Inject
+    private CcpIntegrationForAssetService ccpIntegrationForAssetService;
+    @Inject
+    private CcpIntegrationForContractDefinitionService ccpIntegrationForContractDefinitionService;
+
     @Override
     public String name() {
         return NAME;
@@ -119,7 +126,6 @@ public class BlockchainCatalogExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
         this.context = context;
-
         registerTransformers();
 
         jsonLd.registerNamespace("tuberlin", "https://ise.tu.berlin/edc/v0.0.1/ns/");
@@ -136,17 +142,17 @@ public class BlockchainCatalogExtension implements ServiceExtension {
         // address used after (during?) negotiation to initiate the asset transfer
         String originatorAddress = context.getSetting("edc.dsp.callback.address", "http://localhost:9194/protocol");
 
-        var edcInterfaceUrl = context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL); // getEdcBlockchainInterfaceUrl();
+        var edcInterfaceUrl = context.getSetting(EDC_BLOCKCHAIN_INTERFACE_URL, DEFAULT_EDC_BLOCKCHAIN_INTERFACE_URL);
         monitor.info("BlockchainCatalogExtension: URL to blockchain interface (edc-interface): " + edcInterfaceUrl);
 
         final String ccpInterfaceUrl = context.getSetting(CCP_INTERFACE_URL, CCP_INTERFACE_URL);
-        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetIndex, assetService, edcInterfaceUrl, originatorAddress, assetApiController, jsonLd, blockchainSmartContractService, ccpInterfaceUrl);
+        BlockchainAssetCreator blockchainAssetCreator = new BlockchainAssetCreator(monitor, assetIndex, assetService, edcInterfaceUrl, originatorAddress, assetApiController, jsonLd, blockchainSmartContractService, ccpIntegrationForAssetService, ccpInterfaceUrl);
         eventRouter.registerSync(AssetCreated.class, blockchainAssetCreator); // asynchronous dispatch
 
         eventRouter.registerSync(PolicyDefinitionCreated.class, new BlockchainPolicyCreator(monitor, policyDefinitionService, edcInterfaceUrl, policyDefinitionApiController, jsonLd, blockchainSmartContractService));
 
         eventRouter.registerSync(ContractDefinitionCreated.class,
-                new BlockchainContractCreator(monitor, contractDefinitionService, originatorAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, blockchainSmartContractService, ccpInterfaceUrl));
+                new BlockchainContractCreator(monitor, contractDefinitionService, originatorAddress, edcInterfaceUrl, assetIndex, contractDefinitionApiController, jsonLd, blockchainSmartContractService, ccpIntegrationForContractDefinitionService, ccpInterfaceUrl));
 
         //initWithTestDate();
 
