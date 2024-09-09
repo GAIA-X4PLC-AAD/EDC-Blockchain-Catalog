@@ -57,6 +57,9 @@ dependencies {
     implementation(libs.edc.data.plane.core)
     implementation(libs.edc.data.plane.http)
 
+    implementation(libs.opentelemetry.exporter.jaeger)
+    implementation(libs.edc.api.observability)
+
     implementation(libs.edc.monitor.jdk.logger)
 }
 

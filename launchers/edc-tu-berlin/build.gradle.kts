@@ -25,6 +25,8 @@ val edcVersion: String by project
 
 dependencies {
 
+
+
     implementation(project(":extensions:blockchain:catalog-listener"))
     implementation(project(":extensions:blockchain:logger"))
     implementation(project(":extensions:blockchain:blockchain-catalog-api"))
@@ -36,7 +38,6 @@ dependencies {
     implementation(libs.edc.dsp)
     implementation(libs.edc.management.api)
     implementation(libs.edc.data.plane.selector.core)
-    implementation(libs.edc.iam.mock)
 
     implementation(libs.edc.transaction.local)
 
@@ -45,7 +46,6 @@ dependencies {
     implementation(libs.edc.control.plane.core)
     implementation(libs.edc.dsp)
     implementation(libs.edc.vault.filesystem)
-    implementation(libs.edc.iam.mock)
     implementation(libs.edc.management.api)
     implementation(libs.edc.transfer.data.plane)
 
@@ -68,6 +68,14 @@ dependencies {
     implementation(libs.opentelemetry.exporter.jaeger)
     implementation(libs.edc.api.observability)
     //runtimeOnly(libs.edc.monitor.jdk.logger)
+
+    implementation(project(":extensions:helper"))
+    // enable / disable oauth2 - currently not working as expected
+    //implementation(project(":external:oauth2:oauth2-service"))
+    //implementation(libs.edc.iam.oauth2)
+    implementation(libs.edc.iam.mock)
+
+
 }
 
 application {

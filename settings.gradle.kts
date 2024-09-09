@@ -39,8 +39,12 @@ include("launchers:azure")
 include("extensions:blockchain:blockchain-catalog-api")
 include("extensions:blockchain:catalog-listener")
 include("extensions:blockchain:logger")
+include("extensions:helper")
 
 include("extensions:transfer:http-push:provider-push-http-backend-service")
 
 include("extensions:claim-compliance-provider-integration")
 
+include("external:oauth2:oauth2-service")
+include("external:oauth2:oauth2-core")
+include("external:oauth2:oauth2-client")

@@ -4,6 +4,7 @@ package berlin.tu.ise.extension.blockchain.catalog.listener.model;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.json.JsonObject;
 import org.eclipse.edc.connector.policy.spi.PolicyDefinition;
+import org.eclipse.edc.jsonld.spi.JsonLd;
 
 public class TokenizedPolicyDefinition {
     @SuppressWarnings("CheckStyle")
@@ -37,8 +38,8 @@ public class TokenizedPolicyDefinition {
         this.decimals = decimals;
     }
 
-    public JsonObject getTokenData() {
-        return tokenData;
+    public JsonObject getTokenData(JsonLd jsonLd) {
+        return jsonLd.expand(tokenData).getContent();
     }
 
     public void setTokenData(JsonObject tokenData) {
