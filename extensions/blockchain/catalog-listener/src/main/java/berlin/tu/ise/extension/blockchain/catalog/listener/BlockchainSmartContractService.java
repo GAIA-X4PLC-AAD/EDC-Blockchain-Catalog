@@ -341,7 +341,6 @@ public class BlockchainSmartContractService {
     public List<Asset> getAllAssetsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
 
-        List<TokenizedObject> tokenziedAssetList;
         List<Asset> assetResponseList = new ArrayList<>();
 
 
@@ -430,7 +429,7 @@ public class BlockchainSmartContractService {
     public List<PolicyDefinition> getAllPolicyDefinitionsFromSmartContract() {
         ObjectMapper mapper = new ObjectMapper();
 
-        List<TokenizedPolicyDefinition> tokenizedPolicyDefinitionList = new ArrayList<>();
+        List<TokenizedPolicyDefinition> tokenizedPolicyDefinitionList;
         List<PolicyDefinition> policyDefinitionList = new ArrayList<>();
 
         HttpURLConnection c = null;
