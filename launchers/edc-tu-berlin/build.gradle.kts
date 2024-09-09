@@ -72,7 +72,8 @@ dependencies {
     //runtimeOnly(libs.edc.monitor.jdk.logger)
 
     implementation(project(":extensions:helper"))
-    implementation(project(":external:oauth2:oauth2-service"))
+    // enable / disable oauth2 - currently not working as expected
+    //implementation(project(":external:oauth2:oauth2-service"))
 
 
 }
