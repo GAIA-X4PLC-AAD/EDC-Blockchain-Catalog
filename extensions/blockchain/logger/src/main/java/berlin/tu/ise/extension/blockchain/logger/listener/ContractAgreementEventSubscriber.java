@@ -71,7 +71,7 @@ public class ContractAgreementEventSubscriber implements EventSubscriber {
         String contractOfferId = negotiation.getLastContractOffer().getId();
 
 
-        ContractAgreementEventLog contractAgreementEventLog = new ContractAgreementEventLog(ownConnectorId, negotiation.getCounterPartyId(), contractAgreement.getId(), contractOfferId);
+        ContractAgreementEventLog contractAgreementEventLog = new ContractAgreementEventLog(contractAgreement.getConsumerId(), negotiation.getCounterPartyId(), contractAgreement.getId(), contractOfferId);
         String jsonString;
 
         try {
