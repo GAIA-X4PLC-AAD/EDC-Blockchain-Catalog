@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.offer.store.ContractDefinitionStore;
+import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
@@ -85,13 +86,11 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
         DataRequest dataRequest = process.getDataRequest();
         String assetId = dataRequest.getAssetId();
         String contractId = dataRequest.getContractId(); // better to get aggrement id?
-
-        String connectorId = dataRequest.getConnectorId();
-
-        String agreementId = contractNegotiationStore.findContractAgreement(contractId).getId();
+        ContractAgreement contractAgreement = contractNegotiationStore.findContractAgreement(contractId);
 
         // TODO: How to get agreement Id from transfer
-        TransferProcessEventLog transferProcessEventLog = new TransferProcessEventLog(assetId, ownConnectorId, connectorId, agreementId);
+        TransferProcessEventLog transferProcessEventLog = new TransferProcessEventLog(assetId,
+                contractAgreement.getConsumerId(), contractAgreement.getProviderId(), contractAgreement.getId());
         String jsonString;
 
         try {
