@@ -45,6 +45,7 @@ dependencies {
     // provider push http example
     implementation(libs.edc.control.plane.core)
     implementation(libs.edc.control.plane.api.client)
+    implementation(libs.edc.control.plane.api)
     implementation(libs.edc.dsp)
     implementation(libs.edc.vault.filesystem)
     implementation(libs.edc.management.api)
