@@ -45,6 +45,6 @@ include("extensions:transfer:http-push:provider-push-http-backend-service")
 
 include("extensions:claim-compliance-provider-integration")
 
-include("external:oauth2:oauth2-service")
-include("external:oauth2:oauth2-core")
-include("external:oauth2:oauth2-client")
+//include("external:oauth2:oauth2-service")
+//include("external:oauth2:oauth2-core")
+//include("external:oauth2:oauth2-client")

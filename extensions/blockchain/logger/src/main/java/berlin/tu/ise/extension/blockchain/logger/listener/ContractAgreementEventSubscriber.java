@@ -55,11 +55,11 @@ public class ContractAgreementEventSubscriber implements EventSubscriber {
             try {
                 Thread.sleep(1000);
                 monitor.debug("Waiting for ContractAgreement to be created for ContractNegotiation: " + negotiationId);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            } catch (final InterruptedException e) {
+                monitor.warning("Thread interrupted", e);
             }
             if (i == 9) {
-                monitor.debug("ContractAgreement could not be created for ContractNegotiation: " + negotiationId);
+                monitor.warning("ContractAgreement could not be created for ContractNegotiation: " + negotiationId);
                 return;
             }
         }
@@ -71,7 +71,7 @@ public class ContractAgreementEventSubscriber implements EventSubscriber {
         String contractOfferId = negotiation.getLastContractOffer().getId();
 
 
-        ContractAgreementEventLog contractAgreementEventLog = new ContractAgreementEventLog(ownConnectorId, negotiation.getCounterPartyId(), contractAgreement.getId(), contractOfferId);
+        ContractAgreementEventLog contractAgreementEventLog = new ContractAgreementEventLog(contractAgreement.getConsumerId(), negotiation.getCounterPartyId(), contractAgreement.getId(), contractOfferId);
         String jsonString;
 
         try {
@@ -85,14 +85,12 @@ public class ContractAgreementEventSubscriber implements EventSubscriber {
         if (returnObject != null && Objects.equals(returnObject.getStatus(), "ok")) {
             monitor.debug("[ContractAgreementEventSubscriber] Data sent to Smart Contract");
         } else {
-            monitor.debug("[ContractAgreementEventSubscriber] Data could not be sent to Smart Contract");
+            monitor.severe("[ContractAgreementEventSubscriber] Data could not be sent to Smart Contract");
         }
-
     }
 
     public static ReturnOperationObject sendToSmartContract(String jsonString, Monitor monitor, String smartContractUrl) {
         monitor.debug("[ContractAgreementEventSubscriber] Sending data to Smart Contract, this may take some time ...");
-        String returnJson;
         ReturnOperationObject returnObject = null;
         try {
             URL url = new URL(smartContractUrl + "/agreement/add");
@@ -102,29 +100,28 @@ public class ContractAgreementEventSubscriber implements EventSubscriber {
             http.setRequestProperty("Content-Type", "application/json");
 
             byte[] out = jsonString.getBytes(StandardCharsets.UTF_8);
+            try (OutputStream stream = http.getOutputStream()) {
+                stream.write(out);
+            }
 
-            OutputStream stream = http.getOutputStream();
-            stream.write(out);
-
-            BufferedReader br;
-            if (100 <= http.getResponseCode() && http.getResponseCode() <= 399) {
-                br = new BufferedReader(new InputStreamReader(http.getInputStream()));
+            int responseCode = http.getResponseCode();
+            if (responseCode >= 100 && responseCode <= 399) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(http.getInputStream()))) {
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        response.append(line);
+                    }
+                    ObjectMapper mapper = new ObjectMapper();
+                    returnObject = mapper.readValue(response.toString(), ReturnOperationObject.class);
+                }
             } else {
-                br = new BufferedReader(new InputStreamReader(http.getErrorStream()));
+                monitor.warning("Failed to send data to Smart Contract with response code: " + responseCode);
             }
-
-            while ((returnJson = br.readLine()) != null) {
-                monitor.debug(returnJson);
-                ObjectMapper mapper = new ObjectMapper();
-                returnObject = mapper.readValue(returnJson, ReturnOperationObject.class);
-            }
-
-            System.out.println(http.getResponseCode() + " " + http.getResponseMessage());
             http.disconnect();
         } catch (Exception e) {
-            monitor.severe(e.toString());
+            monitor.severe("Failed to send data to Smart Contract", e);
         }
-
         return returnObject;
     }
 

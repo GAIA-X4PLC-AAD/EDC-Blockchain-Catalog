@@ -36,11 +36,10 @@ dependencies {
     implementation(libs.edc.data.plane.selector.core)
     implementation(libs.edc.iam.mock)
 
-//    implementation(project(":transfer:StatusChecker"))
-//    implementation(project(":transfer:TransferFileLocal"))
-
     // provider push http example
     implementation(libs.edc.control.plane.core)
+    implementation(libs.edc.control.plane.api.client)
+    implementation(libs.edc.control.plane.api)
     implementation(libs.edc.dsp)
     implementation(libs.edc.configuration.filesystem)
     implementation(libs.edc.vault.filesystem)
@@ -61,6 +60,8 @@ dependencies {
     implementation(libs.edc.api.observability)
 
     implementation(libs.edc.monitor.jdk.logger)
+
+    implementation(libs.edc.iam.mock)
 }
 
 application {

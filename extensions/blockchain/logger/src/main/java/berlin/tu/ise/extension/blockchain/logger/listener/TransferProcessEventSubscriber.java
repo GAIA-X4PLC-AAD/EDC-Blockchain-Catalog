@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.offer.store.ContractDefinitionStore;
+import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
@@ -85,13 +86,11 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
         DataRequest dataRequest = process.getDataRequest();
         String assetId = dataRequest.getAssetId();
         String contractId = dataRequest.getContractId(); // better to get aggrement id?
-
-        String connectorId = dataRequest.getConnectorId();
-
-        String agreementId = contractNegotiationStore.findContractAgreement(contractId).getId();
+        ContractAgreement contractAgreement = contractNegotiationStore.findContractAgreement(contractId);
 
         // TODO: How to get agreement Id from transfer
-        TransferProcessEventLog transferProcessEventLog = new TransferProcessEventLog(assetId, ownConnectorId, connectorId, agreementId);
+        TransferProcessEventLog transferProcessEventLog = new TransferProcessEventLog(assetId,
+                contractAgreement.getConsumerId(), contractAgreement.getProviderId(), contractAgreement.getId());
         String jsonString;
 
         try {
@@ -105,13 +104,12 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
         if (returnObject != null && Objects.equals(returnObject.getStatus(), "ok")) {
             monitor.debug("[TransferProcessEventSubscriber] Data sent to Smart Contract");
         } else {
-            monitor.debug("[TransferProcessEventSubscriber] Data could not be sent to Smart Contract");
+            monitor.severe("[TransferProcessEventSubscriber] Data could not be sent to Smart Contract");
         }
     }
 
     public static ReturnOperationObject sendToSmartContract(String jsonString, Monitor monitor, String smartContractUrl) {
         monitor.debug("[TransferProcessEventSubscriber] Sending data to Smart Contract, this may take some time ...");
-        String returnJson;
         ReturnOperationObject returnObject = null;
         try {
             URL url = new URL(smartContractUrl + "/transfer/add");
@@ -121,27 +119,27 @@ public class TransferProcessEventSubscriber implements EventSubscriber {
             http.setRequestProperty("Content-Type", "application/json");
 
             byte[] out = jsonString.getBytes(StandardCharsets.UTF_8);
+            try (OutputStream stream = http.getOutputStream()) {
+                stream.write(out);
+            }
 
-            OutputStream stream = http.getOutputStream();
-            stream.write(out);
-
-            BufferedReader br;
-            if (100 <= http.getResponseCode() && http.getResponseCode() <= 399) {
-                br = new BufferedReader(new InputStreamReader(http.getInputStream()));
+            int responseCode = http.getResponseCode();
+            if (responseCode >= 100 && responseCode <= 399) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(http.getInputStream()))) {
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        response.append(line);
+                    }
+                    ObjectMapper mapper = new ObjectMapper();
+                    returnObject = mapper.readValue(response.toString(), ReturnOperationObject.class);
+                }
             } else {
-                br = new BufferedReader(new InputStreamReader(http.getErrorStream()));
+                monitor.warning("Failed to send data to Smart Contract with response code: " + responseCode);
             }
-
-            while ((returnJson = br.readLine()) != null) {
-                monitor.debug(returnJson);
-                ObjectMapper mapper = new ObjectMapper();
-                returnObject = mapper.readValue(returnJson, ReturnOperationObject.class);
-            }
-
-            System.out.println(http.getResponseCode() + " " + http.getResponseMessage());
             http.disconnect();
         } catch (Exception e) {
-            monitor.severe(e.toString());
+            monitor.severe("Failed to send data to Smart Contract", e);
         }
 
         return returnObject;
