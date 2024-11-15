@@ -60,10 +60,10 @@ dependencies {
 
     implementation(libs.opentelemetry.exporter.jaeger)
 
-    implementation(libs.postgres)
-    implementation(libs.edc.transaction.local)
-    implementation(libs.edc.sql.pool)
-    implementation(libs.edc.control.plane.store.sql.controlPlane)
+//    implementation(libs.postgres)
+//    implementation(libs.edc.transaction.local)
+//    implementation(libs.edc.sql.pool)
+//    implementation(libs.edc.control.plane.store.sql.controlPlane)
 }
 
 application {
