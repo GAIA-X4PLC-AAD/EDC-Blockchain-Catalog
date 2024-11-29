@@ -43,7 +43,6 @@ dependencies {
     implementation(libs.edc.dsp)
     implementation(libs.edc.configuration.filesystem)
     implementation(libs.edc.vault.filesystem)
-    implementation(libs.edc.iam.mock)
     implementation(libs.edc.management.api)
     implementation(libs.edc.transfer.data.plane)
     implementation(libs.edc.data.plane.azure.storage)
@@ -56,12 +55,15 @@ dependencies {
     implementation(libs.edc.data.plane.core)
     implementation(libs.edc.data.plane.http)
 
-    implementation(libs.opentelemetry.exporter.jaeger)
     implementation(libs.edc.api.observability)
-
     implementation(libs.edc.monitor.jdk.logger)
 
-    implementation(libs.edc.iam.mock)
+    implementation(libs.opentelemetry.exporter.jaeger)
+
+    implementation(libs.postgres)
+    implementation(libs.edc.transaction.local)
+    implementation(libs.edc.sql.pool)
+    implementation(libs.edc.control.plane.store.sql.controlPlane)
 }
 
 application {
